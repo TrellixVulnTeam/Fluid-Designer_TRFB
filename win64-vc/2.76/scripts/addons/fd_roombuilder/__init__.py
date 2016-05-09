@@ -995,6 +995,8 @@ class OPERATOR_Build_Room(Operator):
     def invoke(self,context,event):
         fd.delete_obj_list(bpy.data.objects)
         props = bpy.context.scene.fd_roombuilder
+        self.wall_height = context.scene.mv.default_wall_height
+        self.wall_thickness = context.scene.mv.default_wall_depth
         
         if props.room_type == 'SQUARE':
             self.build_sqaure_room(context)
