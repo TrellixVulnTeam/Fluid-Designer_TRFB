@@ -103,10 +103,17 @@ def load_driver_functions(scene):
         if name not in bpy.app.driver_namespace:
             bpy.app.driver_namespace[name] = obj
 
+@persistent
+def sync_spec_groups(scene):
+    """ Syncs Spec Groups with the current library modules
+    """
+    bpy.context.scene.cabinetlib.sync_spec_groups_from_template()
+
 # Register Startup Events
 bpy.app.handlers.load_post.append(set_default_user_prefs)
 bpy.app.handlers.load_post.append(load_driver_functions)
 bpy.app.handlers.load_post.append(update_library_paths)
+bpy.app.handlers.load_post.append(sync_spec_groups)
 
 # Register the OpenGL Call back for dims
 bpy.types.SpaceView3D.draw_handler_add(fd.draw_opengl, (None,None), 'WINDOW', 'POST_PIXEL')

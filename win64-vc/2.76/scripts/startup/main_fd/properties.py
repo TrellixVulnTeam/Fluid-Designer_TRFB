@@ -1516,13 +1516,62 @@ class SCENE_PROPERTIES(PropertyGroup):
     
     customer_phone = StringProperty(name="Customer Phone") 
     
+    def sync_spec_groups_from_template(self):
+        ''' This adds all of the missing material
+            pointers to your exsisting spec groups
+        '''
+        modules = fd.get_library_modules()
+        
+        for module in modules:
+            mod = __import__(module)
+            if hasattr(mod, 'Material_Pointers'):
+                materials = mod.Material_Pointers
+                for name, obj in inspect.getmembers(materials):
+                    if "__" not in name:
+                        for spec_group in self.spec_groups:
+                            if name not in spec_group.materials:
+                                mat_pointer = spec_group.materials.add()
+                                mat_pointer.name = name
+                                mat_pointer.library_name = obj.library_name
+                                mat_pointer.category_name = obj.category_name
+                                mat_pointer.item_name = obj.item_name
+
+            if hasattr(mod, 'Cutpart_Pointers'):
+                materials = mod.Cutpart_Pointers
+                for name, obj in inspect.getmembers(materials):
+                    if "__" not in name:
+                        for spec_group in self.spec_groups:
+                            if name not in spec_group.cutparts:
+                                cut_pointer = spec_group.cutparts.add()
+                                cut_pointer.name = name
+                                cut_pointer.thickness = obj.thickness
+                                cut_pointer.core = obj.core
+                                cut_pointer.top = obj.top
+                                cut_pointer.bottom = obj.bottom
+                                cut_pointer.mv_pointer_name = obj.mv_pointer_name
+                                
+            if hasattr(mod, 'Edgepart_Pointers'):
+                materials = mod.Edgepart_Pointers
+                for name, obj in inspect.getmembers(materials):
+                    if "__" not in name:
+                        for spec_group in self.spec_groups:
+                            if name not in spec_group.edgeparts:
+                                edge_pointer = spec_group.edgeparts.add()
+                                edge_pointer.name = name
+                                edge_pointer.thickness = obj.thickness
+                                edge_pointer.material = obj.material
+                                edge_pointer.mv_pointer_name = obj.mv_pointer_name                           
+                                
     def reload_spec_groups_from_template(self):
+        ''' This clears all of the pointers and reloads the
+            specification groups from the library modules
+        '''
         for specgroup in self.spec_groups:
             self.spec_groups.remove(0)
             
         spec_group = self.spec_groups.add()
         spec_group.name = "Default Specification Group"
-
+        
         modules = fd.get_library_modules()
         
         for module in modules:
