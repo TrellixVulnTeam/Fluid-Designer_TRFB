@@ -2442,9 +2442,9 @@ def init_objects(obj_bp):
 
         if child.mv.type == 'BPASSEMBLY':
             init_objects(child)
+            child.hide = True
          
         if child.mv.use_as_bool_obj:
-            print('WIRE',child)
             child.draw_type = 'WIRE'
          
     if len(obj_cages) > 0:
