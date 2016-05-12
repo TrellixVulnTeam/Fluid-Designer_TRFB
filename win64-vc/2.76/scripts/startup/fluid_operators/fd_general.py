@@ -185,12 +185,13 @@ class OPS_drop_product(Operator):
             print(self.product.obj_bp.mv.name_object + ": Draw Time --- %s seconds ---" % (time.time() - start_time))
 
     def invoke(self,context,event):
+        bpy.context.window.cursor_set('WAIT')
         selected_point, selected_obj = fd.get_selection_point(context,event)
         self.get_product()
         if self.product is None:
             bpy.ops.fd_general.error('INVOKE_DEFAULT',message="Could Not Find Product Class: " + "\\" + self.library_name + "\\" + self.category_name + "\\" + self.product_name)
             return {'CANCELLED'}
-        context.window.cursor_set('PAINT_BRUSH')
+        bpy.context.window.cursor_set('PAINT_BRUSH')
         context.scene.update() # THE SCENE MUST BE UPDATED FOR RAY CAST TO WORK
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
@@ -406,6 +407,7 @@ class OPS_drop_insert(Operator):
         self.default_depth = self.insert.obj_y.location.y
 
     def invoke(self,context,event):
+        bpy.context.window.cursor_set('WAIT')
         self.get_insert()
         context.window.cursor_set('PAINT_BRUSH')
         context.scene.update() # THE SCENE MUST BE UPDATED FOR RAY CAST TO WORK
