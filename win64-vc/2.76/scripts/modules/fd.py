@@ -2000,6 +2000,37 @@ def copy_prompt_drivers(obj,obj_target):
                                     newtarget.transform_type = target.transform_type
                                     newtarget.data_path = target.data_path
 
+def replace_assembly(old_assembly,new_assembly):
+    ''' replace the old_assembly with the new_assembly
+    '''
+    new_assembly.obj_bp.mv.name_object = old_assembly.obj_bp.mv.name_object
+    new_assembly.obj_bp.parent = old_assembly.obj_bp.parent
+    new_assembly.obj_bp.location = old_assembly.obj_bp.location
+    new_assembly.obj_bp.rotation_euler = old_assembly.obj_bp.rotation_euler    
+    
+    copy_drivers(old_assembly.obj_bp,new_assembly.obj_bp)
+    copy_prompt_drivers(old_assembly.obj_bp,new_assembly.obj_bp)
+    copy_drivers(old_assembly.obj_x,new_assembly.obj_x)
+    copy_drivers(old_assembly.obj_y,new_assembly.obj_y)
+    copy_drivers(old_assembly.obj_z,new_assembly.obj_z)
+    # Go though all siblings and check if the assembly 
+    # is being referenced in any other drivers. 
+    search_obj = old_assembly.obj_bp.parent if old_assembly.obj_bp.parent else None
+    if search_obj:
+        for obj in search_obj.children:
+            if obj.animation_data:
+                for driver in obj.animation_data.drivers:
+                    for var in driver.driver.variables:
+                        for target in var.targets:
+                            if target.id.name == old_assembly.obj_bp.name:
+                                target.id = new_assembly.obj_bp
+                            if target.id.name == old_assembly.obj_x.name:
+                                target.id = new_assembly.obj_x
+                            if target.id.name == old_assembly.obj_y.name:
+                                target.id = new_assembly.obj_y
+                            if target.id.name == old_assembly.obj_z.name:
+                                target.id = new_assembly.obj_z
+
 def add_variables_to_driver(driver,driver_vars):
     """ This function adds the driver_vars to the driver
     """
