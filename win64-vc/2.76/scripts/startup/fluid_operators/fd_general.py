@@ -611,6 +611,7 @@ class OPS_drop_assembly(Operator):
     assembly = None
     
     cages = []
+    machining_objs = []
     
     header_text = "Place Assembly   (Esc, Right Click) = Cancel Command  :  (Left Click) = Place Assembly"
 
@@ -643,30 +644,32 @@ class OPS_drop_assembly(Operator):
         bpy.context.window.cursor_set('DEFAULT')
         return {'FINISHED'}
 
+    def set_child_properties(self,obj):
+        for child in obj.children:
+            fd.assign_materials_from_pointers(child)
+            if child.mv.use_as_bool_obj:
+                self.machining_objs.append(child)
+                child.hide = True
+                child.draw_type = 'WIRE'
+            if child.cabinetlib.type_mesh != 'MACHINING':
+                child.draw_type = 'TEXTURED'
+            if child.mv.type == 'CAGE':
+                self.cages.append(child)
+            self.set_child_properties(child)
+
     def assembly_drop(self,context,event):
         selected_point, selected_obj = fd.get_selection_point(context,event)
         bpy.ops.object.select_all(action='DESELECT')
-        obj_product_bp = fd.get_bp(selected_obj,'PRODUCT')
         obj_wall_bp = fd.get_wall_bp(selected_obj)
         if obj_wall_bp:
             self.assembly.obj_bp.rotation_euler = obj_wall_bp.rotation_euler
         self.assembly.obj_bp.location = selected_point
- 
+        
         if event.type == 'LEFTMOUSE' and event.value == 'PRESS':
-            machining_objs = []
-            for child in self.assembly.obj_bp.children:
-                fd.assign_materials_from_pointers(child)
-                if child.mv.use_as_bool_obj:
-                    machining_objs.append(child)
-                    child.hide = True
-                    child.draw_type = 'WIRE'
-                if child.cabinetlib.type_mesh != 'MACHINING':
-                    child.draw_type = 'TEXTURED'
-                if child.mv.type == 'CAGE':
-                    self.cages.append(child)
-                    
+            self.set_child_properties(self.assembly.obj_bp)
+
             if selected_obj:
-                for machining_obj in machining_objs:
+                for machining_obj in self.machining_objs:
                     mod = selected_obj.modifiers.new('Cutout',type='BOOLEAN')
                     mod.operation = 'DIFFERENCE'
                     mod.object = machining_obj   
