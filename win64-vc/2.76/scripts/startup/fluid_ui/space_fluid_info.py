@@ -107,12 +107,6 @@ class INFO_MT_fluidfile(Menu):
             layout.operator_context = 'INVOKE_AREA'
             layout.operator("wm.save_as_mainfile", text="Save As...", icon='SAVE_AS')
         
-        #unity 
-#         layout.operator("fd_scene.create_unity_build", text="Create Unity Build", icon='RADIO')
-        
-#         layout.separator()
-#         layout.operator("fd_material.clear_all_materials_from_file", text="Clear Materials", icon='MATERIAL')
-#         layout.operator('cabinetlib.delete_hidden_objects',text="Optimize Scene",icon='X')
         layout.separator()
 
         layout.operator_context = 'INVOKE_AREA'

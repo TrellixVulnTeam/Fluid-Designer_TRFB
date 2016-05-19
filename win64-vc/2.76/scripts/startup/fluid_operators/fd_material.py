@@ -31,25 +31,6 @@ from bpy.props import (StringProperty,
                        PointerProperty,
                        EnumProperty)
 
-class OPS_clear_all_materials_from_file(Operator):
-    bl_idname = "fd_material.clear_all_materials_from_file"
-    bl_label = "Clear All Materials From File"
-    bl_options = {'UNDO'}
-    
-    def execute(self,context):
-        for obj in bpy.data.objects:
-            for slot in obj.material_slots:
-                slot.material = None
-        
-        for mat in bpy.data.materials:
-            mat.user_clear()
-            bpy.data.materials.remove(mat)
-            
-        for image in bpy.data.images:
-            image.user_clear()
-            bpy.data.images.remove(image)
-        return{'FINISHED'}
-
 class OPS_clear_unused_materials_from_file(Operator):
     bl_idname = "fd_material.clear_unused_materials_from_file"
     bl_label = "Clear Unused Materials From File"
@@ -871,7 +852,6 @@ class OPS_assign_material_to_slot(Operator):
     
 #------REGISTER
 classes = [
-           OPS_clear_all_materials_from_file,
            OPS_clear_unused_materials_from_file,
            OPS_apply_materials_from_pointers,
            OPS_add_material_slot,
