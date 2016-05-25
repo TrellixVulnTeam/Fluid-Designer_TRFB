@@ -2874,7 +2874,7 @@ def meter_to_unit(number):
     """ converts meter to current unit
     """
     if bpy.context.scene.unit_settings.system == 'METRIC':
-        return number * 100
+        return number * 1000
     else:
         return round(number * 39.3700787,4)
 
