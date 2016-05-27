@@ -137,7 +137,7 @@ class OPS_drop_product(Operator):
     bl_idname = "fd_general.drop_product"
     bl_label = "Drop Product"
     bl_description = "This will add a product to the scene"
-    bl_options = {'UNDO'}
+#     bl_options = {'UNDO'}
 
     product_name = StringProperty(name="Product Name")
     category_name = StringProperty(name="Category Name")
@@ -373,7 +373,7 @@ class OPS_drop_insert(Operator):
     bl_idname = "fd_general.drop_insert"
     bl_label = "Drop Insert"
     bl_description = "This will add an insert to the scene"
-    bl_options = {'UNDO'}
+#     bl_options = {'UNDO'}
 
     product_name = StringProperty(name="Product Name")
     category_name = StringProperty(name="Category Name")
@@ -509,7 +509,7 @@ class OPS_drop_insert(Operator):
 class OPS_drop_material(Operator):
     bl_idname = "fd_general.drop_material"
     bl_label = "Assign Materials"
-    bl_options = {'UNDO'}
+#     bl_options = {'UNDO'}
     
     #READONLY
     filepath = StringProperty(name="Material Name")
@@ -602,7 +602,7 @@ class OPS_drop_material(Operator):
 class OPS_drop_assembly(Operator):
     bl_idname = "fd_general.drop_assembly"
     bl_label = "Drop Assembly"
-    bl_options = {'UNDO'}
+#     bl_options = {'UNDO'}
     
     #READONLY
     filepath = StringProperty(name="Material Name")
@@ -704,7 +704,7 @@ class OPS_drop_assembly(Operator):
 class OPS_drop_object(Operator):
     bl_idname = "fd_general.drop_object"
     bl_label = "Drop Object"
-    bl_options = {'UNDO'}
+#     bl_options = {'UNDO'}
     
     #READONLY
     filepath = StringProperty(name="Material Name")
@@ -793,7 +793,7 @@ class OPS_drop_object(Operator):
 class OPS_drop_world(Operator):
     bl_idname = "fd_general.drop_world"
     bl_label = "Drop World"
-    bl_options = {'UNDO'}
+#     bl_options = {'UNDO'}
   
     #READONLY
     filepath = StringProperty(name="Filepath")
