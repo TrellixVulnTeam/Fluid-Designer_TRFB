@@ -410,6 +410,7 @@ class VIEW3D_MT_grouptools(Menu):
     def draw(self, context):
         layout = self.layout
         layout.operator("fd_group.make_group_from_selection",icon='GROUP')
+        layout.operator("fd_group.make_group_from_scene",icon='SCENE_DATA')
         
 class VIEW3D_MT_producttools(Menu):
     bl_context = "objectmode"
