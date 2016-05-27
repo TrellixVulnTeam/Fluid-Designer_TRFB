@@ -170,13 +170,17 @@ class OPS_drop_product(Operator):
         start_time = time.time()
         bpy.ops.object.select_all(action='DESELECT')
         # TODO: SET WAY TO BUILD PRODUCTS FOR QUICKER DRAWING
-#         obj_bp = cabinet_utils.get_product_group(self.library_name,self.category_name,self.product_name)
-        self.product = fd.get_product_class(self.library_name,self.category_name,self.product_name)
+        obj_bp = fd.get_product_group(self.library_name,self.category_name,self.product_name)
+        if obj_bp:
+            self.product = fd.Assembly(obj_bp)
+        else:
+            self.product = fd.get_product_class(self.library_name,self.category_name,self.product_name)
         if self.product:
-#             if obj_bp:
+            if obj_bp:
+                pass
 #                 self.product.update(obj_bp)
-#             else:
-            self.product.draw()
+            else:
+                self.product.draw()
             fd.init_objects(self.product.obj_bp)
             self.default_z_loc = self.product.obj_bp.location.z
             self.default_height = self.product.obj_z.location.z
@@ -1464,13 +1468,12 @@ class OPS_brd_library_items(Operator):
         script = os.path.join(bpy.app.tempdir,'building.py')
         script_file = open(script,'w')
         script_file.write("import fd\n")
-        script_file.write("import cabinet_utils\n")
         script_file.write("import " + self.module_name + "\n")
         script_file.write("item = " + self.module_name + "." + class_name + "()\n")
         script_file.write("item.draw()\n")
-        script_file.write("cabinet_utils.save_assembly(item)\n")
+        script_file.write("fd.save_assembly(item)\n")
         script_file.close()
-        subprocess.call('blender -b --python "' + script + '"')
+        subprocess.call(bpy.app.binary_path + ' -b --python "' + script + '"')
     
     def draw_product(self,class_name):
         mod = __import__(self.module_name)

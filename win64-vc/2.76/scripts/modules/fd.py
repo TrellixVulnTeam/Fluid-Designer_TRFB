@@ -2287,6 +2287,22 @@ def get_library_dir(lib_type = ""):
     else:
         return os.path.join(root_path,lib_type)
 
+def get_product_group(library_name,category_name,product_name):
+    library_path = os.path.join(get_library_dir("products"),library_name,category_name,product_name + ".blend")
+    
+    if os.path.exists(library_path):
+        with bpy.data.libraries.load(library_path, False, False) as (data_from, data_to):
+            for group in data_from.groups:
+                if group == product_name:
+                    data_to.groups = [group]
+                    break
+
+        for grp in data_to.groups:
+            obj_bp = get_assembly_bp(grp.objects[0])
+            link_objects_to_scene(obj_bp,bpy.context.scene)
+            bpy.data.groups.remove(grp)
+            return obj_bp
+
 def get_product_class(library_name,category_name,product_name):
     modules = get_library_modules()
     for module in modules:
@@ -2322,7 +2338,7 @@ def get_assembly(folders,assembly_name):
         blendname, ext = os.path.splitext(file)
         if ext == ".blend":
             possible_files.append(os.path.join(search_directory,file))
-              
+            
     for file in possible_files:
         with bpy.data.libraries.load(file, False, False) as (data_from, data_to):
             for group in data_from.groups:
@@ -2427,6 +2443,35 @@ def render_thumbnail(assembly):
     render.filepath = thumbnail_path
     bpy.ops.render.render(write_still=True)
 
+def save_assembly(assembly):
+    if assembly.obj_bp.cabinetlib.type_group == 'PRODUCT':
+        library_path = os.path.join(get_library_dir("products"),assembly.library_name,assembly.category_name)
+    if assembly.obj_bp.cabinetlib.type_group == 'INSERT':
+        library_path = os.path.join(get_library_dir("inserts"),assembly.library_name,assembly.category_name)
+        
+    thumbnail_path = os.path.join(library_path,assembly.assembly_name + ".blend")
+    
+    for obj in bpy.data.objects:
+        obj.hide = False
+#         obj.hide_select = False
+        obj.select = True
+        for slot in obj.material_slots:
+            slot.material = None
+    
+    bpy.ops.group.create(name = assembly.assembly_name)
+    
+    for mat in bpy.data.materials:
+        mat.user_clear()
+        bpy.data.materials.remove(mat)
+        
+    for image in bpy.data.images:
+        image.user_clear()
+        bpy.data.images.remove(image)    
+        
+    bpy.ops.cabinetlib.clear_spec_group()
+
+    bpy.ops.wm.save_as_mainfile(filepath=thumbnail_path)
+    
 def set_object_name(obj):
     """ This function sets the name of an object to make the outliner easier to navigate
     """
