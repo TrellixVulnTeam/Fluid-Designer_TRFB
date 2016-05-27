@@ -782,7 +782,7 @@ class OPERATOR_Build_Room(Operator):
     
     def set_camera_position(self,context):
         view3d = context.space_data.region_3d
-        view3d.view_distance = fd.unit(self.back_wall_length) / 15
+        view3d.view_distance = fd.unit(self.back_wall_length) / 17
         view3d.view_location = (self.back_wall_length-2,self.side_wall_length,0)
         view3d.view_rotation = (.8416,.4984,-.1004,-.1824)
     
