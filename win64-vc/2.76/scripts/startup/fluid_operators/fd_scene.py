@@ -157,7 +157,7 @@ class OPS_render_scene(Operator):
             rl.use_pass_combined = False
             rl.use_pass_z = False
             freestyle_settings.crease_angle = 2.617994
-
+            
         if context.window_manager.mv.use_opengl_dimensions:
             file_format = context.scene.render.image_settings.file_format.lower()
             
@@ -165,20 +165,20 @@ class OPS_render_scene(Operator):
             
             while not os.path.exists(bpy.path.abspath(context.scene.render.filepath) + "." + file_format):
                 time.sleep(0.1)
-
+                
             img_result = fd.render_opengl(self,context)
-
+            
             if self.write_still == True:
                 abs_filepath = bpy.path.abspath(context.scene.render.filepath)
                 save_path = abs_filepath.replace("_tmp","") + "." + file_format.lower()
                 img_result.save_render(save_path)
-
+                
         else:
             bpy.ops.render.render('INVOKE_DEFAULT')
-
+            
             if self.write_still == True:
                 bpy.ops.render.render('INVOKE_DEFAULT',write_still=True)
-
+                
         return {'FINISHED'}
 
     @persistent
@@ -558,7 +558,7 @@ class OPS_Prepare_2d_elevations(Operator):
     bl_options = {'UNDO'}    
     
     padding = 0.75  
-            
+    
     def group_wall_objects(self, obj_bp, group):
         objs = []
         objs.append(obj_bp)
@@ -614,11 +614,12 @@ class OPS_Prepare_2d_elevations(Operator):
         walls = []
         existing_scenes = {}
         
-        for scene in bpy.data.scenes:
-            if scene.mv.elevation_scene:# or scene.mv.plan_view_scene:
-                existing_scenes[scene.name] = scene.mv.elevation_selected
-                context.screen.scene = scene
-                bpy.ops.scene.delete()
+        bpy.ops.fd_scene.clear_2d_views()
+#         for scene in bpy.data.scenes:
+#             if scene.mv.elevation_scene or scene.mv.plan_view_scene:
+#                 existing_scenes[scene.name] = scene.mv.elevation_selected
+#                 context.screen.scene = scene
+#                 bpy.ops.scene.delete()
          
         for obj in context.scene.objects:
             if obj.mv.type == 'BPWALL':
@@ -633,7 +634,6 @@ class OPS_Prepare_2d_elevations(Operator):
                     new_scene = context.scene
                     new_scene.name = obj.name
                     
-                    print(existing_scenes)
                     if new_scene.name in existing_scenes:
                         new_scene.mv.elevation_selected = existing_scenes[new_scene.name]
                         print("NEW SCENE",new_scene.mv.elevation_selected)
@@ -641,7 +641,7 @@ class OPS_Prepare_2d_elevations(Operator):
                     new_scene.mv.name_scene = obj.mv.name_object + " " + str(obj.cabinetlib.item_number)
                     new_scene.mv.elevation_img_name = obj.name
                     new_scene.mv.elevation_scene = True
-                      
+                    
                     new_scene.world = original_scene.world
                     self.link_vis_dim_empties_to_scene(new_scene, obj)
       
@@ -659,7 +659,7 @@ class OPS_Prepare_2d_elevations(Operator):
                     
                     if new_scene.world.name != "World":
                         new_scene.world = bpy.data.worlds["World"]
-                            
+                        
                     new_scene.world.horizon_color = (1.0, 1.0, 1.0)
                     new_scene.render.display_mode = 'NONE'
                     new_scene.render.use_lock_interface = True
@@ -693,7 +693,7 @@ class OPS_prepare_2d_views(Operator):
                            default=0.75)
     
     pv_pad = FloatProperty(name="Plan View Padding",
-                           default=0.75)  
+                           default=0.75)
             
     def link_grp_instance_to_scene(self, group, scene, obj_bp):  
         instance = bpy.data.objects.new(obj_bp.mv.name_object + " "  + "Instance" , None)
@@ -702,6 +702,9 @@ class OPS_prepare_2d_views(Operator):
         instance.dupli_group = group        
         
     def set_cameras(self, current_scene, new_scene, wall):  
+        """ Create camera in new scene, sets camear properties and sets the 
+            entire wall to be visible by camera.
+        """
         camera_data = bpy.data.cameras.new(new_scene.name)
         camera_obj = bpy.data.objects.new(name=camera_data.name + " Camera", 
                                           object_data=camera_data)
@@ -711,11 +714,11 @@ class OPS_prepare_2d_views(Operator):
         camera_obj.data.type = 'ORTHO'
         camera_obj.rotation_euler.x = math.radians(90.0) 
         camera_obj.rotation_euler.z = wall.obj_bp.rotation_euler.z    
-        camera_obj.location = wall.obj_bp.location       
+        camera_obj.location = wall.obj_bp.location
         
         bpy.ops.object.select_all(action='DESELECT')
         wall.get_wall_mesh().select = True
-        bpy.ops.view3d.camera_to_view_selected()     
+        bpy.ops.view3d.camera_to_view_selected()
         
         current_scene.camera = None
         current_scene.objects.unlink(camera_obj)
@@ -928,7 +931,7 @@ class OPS_render_all_elevation_scenes(Operator):
                         
                     context.screen.scene = scene
                     context.scene.render.filepath = "//" + file_name + "\\" + img_name
-                    bpy.ops.fd_scene.render_scene(write_still=True)            
+                    bpy.ops.fd_scene.render_scene(write_still=True)
         else:
             for scene in bpy.data.scenes:
                 if (scene.mv.elevation_scene or scene.mv.plan_view_scene) and scene.mv.elevation_selected:
@@ -971,7 +974,86 @@ class OPS_render_all_elevation_scenes(Operator):
 #         layout = self.layout
 #         layout.label("File must be saved before rendering",icon='INFO')           
 
+class OPS_render_all_2D_views(Operator):
+    bl_idname = "fd_scene.render_all_2d_views"
+    bl_label = "Render All 2D Views"
+    bl_description = "Renders all elevation scenes"
+    
+    def set_rendering_properties(self,context):
+        rd = context.scene.render
+        rl = rd.layers.active
+        freestyle_settings = rl.freestyle_settings
+        
+        rd.engine = 'BLENDER_RENDER'
+        rd.use_freestyle = True
+        rd.line_thickness = 0.75
+        rd.resolution_percentage = 100
+        rl.use_pass_combined = False
+        rl.use_pass_z = False
+        freestyle_settings.crease_angle = 2.617994
+    
+    def execute(self, context):
 
+        #Create Temp Directory
+        file_name = bpy.path.basename(context.blend_data.filepath).replace(".blend","")
+        write_dir = os.path.join(bpy.app.tempdir, file_name)
+        if not os.path.exists(write_dir): os.mkdir(write_dir)
+
+        bpy.ops.fd_scene.prepare_2d_elevations()
+
+        images = []
+        
+        #Render Each Scene
+        for scene in bpy.data.scenes:
+            if scene.mv.elevation_scene:
+                context.screen.scene = scene
+
+                rd = context.scene.render
+                rl = rd.layers.active
+                freestyle_settings = rl.freestyle_settings
+                rd.filepath = os.path.join(write_dir,scene.name)
+                rd.engine = 'BLENDER_RENDER'
+                rd.use_freestyle = True
+                rd.line_thickness = 0.75
+                rd.resolution_percentage = 100
+                rl.use_pass_combined = False
+                rl.use_pass_z = False
+                freestyle_settings.crease_angle = 2.617994
+                
+                # If file already found remove before rendering
+                if os.path.exists(bpy.path.abspath(context.scene.render.filepath) + context.scene.render.file_extension):
+                    os.remove(bpy.path.abspath(context.scene.render.filepath) + context.scene.render.file_extension)
+                
+                bpy.ops.render.render('INVOKE_DEFAULT', write_still=True)
+                
+                render_image = bpy.path.abspath(context.scene.render.filepath) + context.scene.render.file_extension
+                
+                while not os.path.exists(render_image):
+                    time.sleep(0.1)
+                
+                img_result = fd.render_opengl(self,context)
+                img_result.save_render(render_image)
+                
+                if os.path.exists(render_image):
+                    images.append(render_image)
+                    
+        for image in images:
+            print('Picture',image)
+            
+        bpy.ops.fd_scene.clear_2d_views()
+            
+        imgs_to_remove = []
+            
+        for img in bpy.data.images:
+            if img.users == 0:
+                imgs_to_remove.append(img)
+            
+        for im in imgs_to_remove:
+            bpy.data.images.remove(im)
+            
+        bpy.ops.fd_general.open_browser_window(path=write_dir)
+        
+        return{'FINISHED'}
 
 class OPS_export_mvfd(Operator):
     bl_idname = "cabinetlib.export_mvfd"
@@ -1253,6 +1335,7 @@ classes = [
            OPS_clear_2d_views,
            OPS_prepare_2d_views,
            OPS_render_2d_views,
+           OPS_render_all_2D_views,
            OPS_render_all_elevation_scenes,
            OPS_export_mvfd
            ]

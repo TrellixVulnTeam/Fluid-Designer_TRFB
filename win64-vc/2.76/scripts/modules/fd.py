@@ -32,6 +32,7 @@ import sys
 import bpy_extras.image_utils as img_utils
 
 import xml.etree.ElementTree as ET
+import time
 
 from bpy.types import PropertyGroup
 
@@ -1740,7 +1741,6 @@ class MV_XML():
             
         self.format_xml_file(path)
 
-    
 #-------OBJECT CREATION
 
 def create_cube_mesh(name,size):
@@ -3442,6 +3442,65 @@ def get_render_image(outpath):
     except:
         print("Unexpected render image error")
         return None
+
+def get_2d_renderings(context):
+    file_name = bpy.path.basename(context.blend_data.filepath).replace(".blend","")
+    write_dir = os.path.join(bpy.app.tempdir, file_name)
+    if not os.path.exists(write_dir): os.mkdir(write_dir)
+
+    bpy.ops.fd_scene.prepare_2d_elevations()
+
+    images = []
+    
+    #Render Each Scene
+    for scene in bpy.data.scenes:
+        if scene.mv.elevation_scene:
+            context.screen.scene = scene
+
+            # Set Render 2D Properties
+            rd = context.scene.render
+            rl = rd.layers.active
+            freestyle_settings = rl.freestyle_settings
+            rd.filepath = os.path.join(write_dir,scene.name)
+            rd.image_settings.file_format = 'JPEG'
+            rd.engine = 'BLENDER_RENDER'
+            rd.use_freestyle = True
+            rd.line_thickness = 0.75
+            rd.resolution_percentage = 100
+            rl.use_pass_combined = False
+            rl.use_pass_z = False
+            freestyle_settings.crease_angle = 2.617994
+            
+            # If File already exists then first remove it or this will cause Blender to crash
+            if os.path.exists(bpy.path.abspath(context.scene.render.filepath) + context.scene.render.file_extension):
+                os.remove(bpy.path.abspath(context.scene.render.filepath) + context.scene.render.file_extension)            
+            
+            bpy.ops.render.render('INVOKE_DEFAULT', write_still=True)
+            
+            render_image = bpy.path.abspath(context.scene.render.filepath) + context.scene.render.file_extension
+            
+            # Wait for Image to render before drawing opengl 
+            while not os.path.exists(render_image):
+                time.sleep(0.1)
+            
+            img_result = render_opengl(None,context)
+            img_result.save_render(render_image)
+             
+            if os.path.exists(render_image):
+                images.append(render_image)
+
+    bpy.ops.fd_scene.clear_2d_views()
+    imgs_to_remove = []
+        
+    for img in bpy.data.images:
+        if img.users == 0:
+            imgs_to_remove.append(img)
+        
+    for im in imgs_to_remove:
+        bpy.data.images.remove(im)
+            
+    return images
+
 
 #----------- COMMON INTERFACES
 

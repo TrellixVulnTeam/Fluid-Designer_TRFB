@@ -408,7 +408,16 @@ class OPERATOR_Add_Obstacle(Operator):
             if self.base_point == 'BOTTOM_RIGHT':
                 self.obstacle.obj_bp.location.x = self.wall.obj_x.location.x - self.x_location - self.obstacle_width
                 self.obstacle.obj_bp.location.z = self.z_location
-            
+                
+        #SET VIEW FOR USER
+#         view3d = context.space_data.region_3d
+#         print(view3d.view_rotation)
+#         view3d.view_distance = 7
+#         view3d.view_location = (self.wall.obj_bp.location.x+self.wall.obj_x.location.x,
+#                                 self.wall.obj_bp.location.y,
+#                                 self.wall.obj_bp.location.z)
+#         view3d.view_rotation = (.8416,.4984,-.1004,-.1824)
+
         return True
     
     def __del__(self):
@@ -782,7 +791,13 @@ class OPERATOR_Build_Room(Operator):
     
     def set_camera_position(self,context):
         view3d = context.space_data.region_3d
-        view3d.view_distance = fd.unit(self.back_wall_length) / 17
+        if fd.unit(self.back_wall_length) / 17 < 7:
+            distance = 7
+        elif fd.unit(self.back_wall_length) / 17 > 12:
+            distance = 12
+        else:
+            distance = fd.unit(self.back_wall_length) / 17
+        view3d.view_distance = distance
         view3d.view_location = (self.back_wall_length-2,self.side_wall_length,0)
         view3d.view_rotation = (.8416,.4984,-.1004,-.1824)
     
