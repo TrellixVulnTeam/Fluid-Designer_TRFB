@@ -169,7 +169,6 @@ class OPS_drop_product(Operator):
         import time
         start_time = time.time()
         bpy.ops.object.select_all(action='DESELECT')
-        # TODO: SET WAY TO BUILD PRODUCTS FOR QUICKER DRAWING
         obj_bp = fd.get_product_group(self.library_name,self.category_name,self.product_name)
         if obj_bp:
             self.product = fd.Assembly(obj_bp)
@@ -398,21 +397,29 @@ class OPS_drop_insert(Operator):
 
     def get_insert(self):
         bpy.ops.object.select_all(action='DESELECT')
-#         obj_bp = cabinet_utils.get_insert_group(self.library_name,self.category_name,self.product_name)
-        self.insert = fd.get_insert_class(self.library_name,self.category_name,self.product_name)
-        self.insert.draw()
-        self.show_openings()
-#         if obj_bp:
-#             self.insert.update(obj_bp)
-#         else:
-        fd.init_objects(self.insert.obj_bp)
-        self.default_z_loc = self.insert.obj_bp.location.z
-        self.default_height = self.insert.obj_z.location.z
-        self.default_depth = self.insert.obj_y.location.y
+        obj_bp = fd.get_insert_group(self.library_name,self.category_name,self.product_name)
+        if obj_bp:
+            self.insert = fd.Assembly(obj_bp)
+        else:
+            self.insert = fd.get_insert_class(self.library_name,self.category_name,self.product_name)        
+        if self.insert:
+            if obj_bp:
+                pass
+#                 self.insert.update(obj_bp)
+            else:
+                self.insert.draw()
+            self.show_openings()
+            fd.init_objects(self.insert.obj_bp)
+            self.default_z_loc = self.insert.obj_bp.location.z
+            self.default_height = self.insert.obj_z.location.z
+            self.default_depth = self.insert.obj_y.location.y
 
     def invoke(self,context,event):
         context.window.cursor_set('WAIT')
         self.get_insert()
+        if self.insert is None:
+            bpy.ops.fd_general.error('INVOKE_DEFAULT',message="Could Not Find Insert Class: " + "\\" + self.library_name + "\\" + self.category_name + "\\" + self.product_name)
+            return {'CANCELLED'}        
         context.window.cursor_set('PAINT_BRUSH')
         context.scene.update() # THE SCENE MUST BE UPDATED FOR RAY CAST TO WORK
         context.window_manager.modal_handler_add(self)
@@ -455,11 +462,11 @@ class OPS_drop_insert(Operator):
             return opening
             
     def place_insert(self,opening):
-        if self.insert.placement_type == 'INTERIOR':
+        if self.insert.obj_bp.cabinetlib.placement_type == 'INTERIOR':
             opening.obj_bp.cabinetlib.interior_open = False
-        if self.insert.placement_type == 'EXTERIOR':
+        if self.insert.obj_bp.cabinetlib.placement_type == 'EXTERIOR':
             opening.obj_bp.cabinetlib.exterior_open = False
-        if self.insert.placement_type == 'SPLITTER':
+        if self.insert.obj_bp.cabinetlib.placement_type == 'SPLITTER':
             opening.obj_bp.cabinetlib.interior_open = False
             opening.obj_bp.cabinetlib.exterior_open = False
 
@@ -488,6 +495,7 @@ class OPS_drop_insert(Operator):
                     # THIS NEEDS TO BE RUN TWICE TO AVOID RECAL ERRORS
                     fd.run_calculators(self.insert.obj_bp)
                     fd.run_calculators(self.insert.obj_bp)
+
                     bpy.context.window.cursor_set('DEFAULT')
                     return {'FINISHED'}
 

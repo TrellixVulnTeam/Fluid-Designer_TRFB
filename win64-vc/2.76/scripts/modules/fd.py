@@ -2303,6 +2303,22 @@ def get_product_group(library_name,category_name,product_name):
             bpy.data.groups.remove(grp)
             return obj_bp
 
+def get_insert_group(library_name,category_name,product_name):
+    library_path = os.path.join(get_library_dir("inserts"),library_name,category_name,product_name + ".blend")
+    
+    if os.path.exists(library_path):
+        with bpy.data.libraries.load(library_path, False, False) as (data_from, data_to):
+            for group in data_from.groups:
+                if group == product_name:
+                    data_to.groups = [group]
+                    break
+
+        for grp in data_to.groups:
+            obj_bp = get_assembly_bp(grp.objects[0])
+            link_objects_to_scene(obj_bp,bpy.context.scene)
+            bpy.data.groups.remove(grp)
+            return obj_bp
+        
 def get_product_class(library_name,category_name,product_name):
     modules = get_library_modules()
     for module in modules:
