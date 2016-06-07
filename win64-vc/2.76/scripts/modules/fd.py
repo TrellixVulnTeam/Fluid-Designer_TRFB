@@ -2124,7 +2124,7 @@ def assign_materials_from_pointers(obj):
         # MAKE A SIMPLE BLACK MATERIAL FOR MACHINING
         for slot in obj.cabinetlib.material_slots:
             slot.library_name = "Plastics"
-            slot.category_name = ""
+            slot.category_name = "Melamine"
             slot.item_name = "Gloss Black Plastic"
             
     else:
