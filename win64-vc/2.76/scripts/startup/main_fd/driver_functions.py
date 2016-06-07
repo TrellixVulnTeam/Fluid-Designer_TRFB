@@ -64,6 +64,7 @@ def INCH(value):
     return value * .0254
 
 def MILLIMETER(value):
+    """ Converts value to meters: expecting value in millimeter
     """
     return value * .001
 
