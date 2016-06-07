@@ -59,9 +59,13 @@ def EQ1(opening_quantity,start_point,end_point):
     return mid_point
 
 def INCH(value):
-    """ Converts value to meters
+    """ Converts value to meters: expecing value in inches
     """
     return value * .0254
+
+def MILLIMETER(value):
+    """
+    return value * .001
 
 def LIMIT(val,val_min,val_max):
     """ Returns par1 if value is between min and max else
