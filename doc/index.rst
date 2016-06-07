@@ -1,3 +1,0 @@
-Fluid Designer Documentation
-=======================
-
