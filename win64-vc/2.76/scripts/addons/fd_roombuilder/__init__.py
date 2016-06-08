@@ -798,7 +798,7 @@ class OPERATOR_Build_Room(Operator):
         else:
             distance = fd.unit(self.back_wall_length) / 17
         view3d.view_distance = distance
-        view3d.view_location = (self.back_wall_length-2,self.side_wall_length,0)
+        view3d.view_location = (self.back_wall_length/2,self.side_wall_length,0)
         view3d.view_rotation = (.8416,.4984,-.1004,-.1824)
     
     def update_square_room(self):
