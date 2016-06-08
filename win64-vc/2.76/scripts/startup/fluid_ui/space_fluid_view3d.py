@@ -257,6 +257,10 @@ class VIEW3D_MT_fluidview(Menu):
 
         layout.separator()
 
+        layout.operator("view3d.navigate",icon='RESTRICT_VIEW_OFF',text="First Person View")
+        
+        layout.separator()
+
         layout.operator("view3d.viewnumpad", text="Camera",icon='CAMERA_DATA').type = 'CAMERA'
         layout.operator("view3d.viewnumpad", text="Top",icon='TRIA_DOWN').type = 'TOP'
         layout.operator("view3d.viewnumpad", text="Front",icon='TRIA_UP').type = 'FRONT'
@@ -266,9 +270,9 @@ class VIEW3D_MT_fluidview(Menu):
         layout.separator()
 
         layout.operator("view3d.view_persportho",icon='SCENE')
-
+        
         layout.operator_context = 'INVOKE_REGION_WIN'
-
+        
         layout.separator()
 
         layout.operator("screen.area_dupli",icon='GHOST')
