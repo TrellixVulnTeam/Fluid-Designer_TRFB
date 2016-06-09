@@ -1135,6 +1135,7 @@ class OPERATOR_Collect_Walls(Operator):
         ceiling.mv.name_object = "Ceiling"
         ceiling.location.z = mv.default_wall_height
         ceiling.hide = True
+        ceiling.hide_render = True
         ceiling.fd_roombuilder.is_ceiling = True
         
         bpy.ops.fd_object.add_room_lamp()
