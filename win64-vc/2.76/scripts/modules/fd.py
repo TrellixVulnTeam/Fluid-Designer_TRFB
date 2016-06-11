@@ -1608,7 +1608,7 @@ class Wall(Assembly):
         
     def get_wall_mesh(self):
         for child in self.obj_bp.children:
-            if child.type == 'MESH' and child.mv.type == 'NONE':
+            if child.type == 'MESH' and child.mv.type == 'NONE' and len(child.data.vertices) != 1:
                 return child
     
     def create_wall_group(self):
