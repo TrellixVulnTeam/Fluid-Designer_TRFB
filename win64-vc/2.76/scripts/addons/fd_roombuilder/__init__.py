@@ -85,6 +85,29 @@ def enum_wall_material(self,context):
     pcoll = preview_collections["paint"]
     return fd.get_previews(icon_dir,pcoll)
 
+def update_wall_index(self,context): 
+    bpy.ops.object.select_all(action='DESELECT')
+    wall = self.walls[self.wall_index]
+    
+    obj = bpy.data.objects[wall.bp_name]
+    for child in obj.children:
+        if child.type == 'MESH' and child.mv.type!= 'BPASSEMBLY':
+            child.select = True
+            context.scene.objects.active = child
+
+def update_obstacle_index(self,context): 
+    bpy.ops.object.select_all(action='DESELECT')
+    wall = context.scene.fd_roombuilder.walls[context.scene.fd_roombuilder.wall_index]
+    obstacle = wall.obstacles[wall.obstacle_index]
+    
+    obj = bpy.data.objects[obstacle.bp_name]
+    for child in obj.children:
+        print(child)
+        if child.type == 'MESH' and child.mv.type!= 'BPASSEMBLY':
+            child.hide_select = False
+            child.select = True
+            context.scene.objects.active = child
+            
 class Obstacle(PropertyGroup):
     
     bp_name = StringProperty("BP Name")
@@ -96,7 +119,7 @@ class Wall(PropertyGroup):
     
     bp_name = StringProperty("BP Name")
     
-    obstacle_index = IntProperty(name="ObstacleIndex")
+    obstacle_index = IntProperty(name="ObstacleIndex",update=update_obstacle_index)
     obstacles = CollectionProperty(name="Obstacles",type=Obstacle)
 
     def add_obstacle(self,objstacle,base_point):
@@ -117,7 +140,7 @@ class Scene_Props(PropertyGroup):
                                     ('SQUARE',"Square Room",'Sqaure Room')],
                              default = 'SQUARE')
     
-    wall_index = IntProperty(name="Wall Index")
+    wall_index = IntProperty(name="Wall Index",update=update_wall_index)
     walls = CollectionProperty(name="Walls",type=Wall)
 
     background_image_scale = FloatProperty(name="Backgroud Image Scale",
@@ -334,8 +357,12 @@ class FD_UL_obstacles(UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         wall = context.scene.fd_roombuilder.walls[context.scene.fd_roombuilder.wall_index]
         wall_obj = context.scene.objects[wall.bp_name]
+        obs_obj = context.scene.objects[item.bp_name]
         layout.label(text="",icon='PLUG')
         layout.label(text=item.name)
+        for child in obs_obj.children:
+            if child.mv.type =='CAGE':
+                layout.prop(child,'draw_type',text="")
         if wall_obj.fd_roombuilder.is_floor or wall_obj.fd_roombuilder.is_ceiling:
             layout.operator('fd_roombuilder.add_floor_obstacle',text="",icon='INFO').obstacle_bp_name = item.bp_name
         else:
@@ -389,6 +416,7 @@ class OPERATOR_Add_Obstacle(Operator):
     obstacle = None
     wall = None
     wall_item = None
+    click_ok = False
     
     def check(self, context):
         if self.obstacle and self.wall:
@@ -421,19 +449,39 @@ class OPERATOR_Add_Obstacle(Operator):
         return True
     
     def __del__(self):
-        if self.obstacle and self.obstacle_bp_name == "": # Only delete The obstacle if user didn't click OK
+        self.set_draw_type(bpy.context, 'TEXTURED')
+
+        if self.click_ok == False: # Only delete The obstacle if user didn't click OK
             fd.delete_object_and_children(self.obstacle.obj_bp)
+        
+    def set_draw_type(self,context,draw_type='WIRE'):
+        for obj in context.scene.objects:
+            if obj.parent:
+                if obj.parent.name == self.wall.obj_bp.name:
+                    pass
+                else:
+                    obj.draw_type = draw_type
+        if self.obstacle:
+            for child in self.obstacle.obj_bp.children:
+                child.draw_type = 'WIRE'
     
     def invoke(self,context,event):
         wm = context.window_manager
+        self.click_ok = False
         
         self.wall_item = context.scene.fd_roombuilder.walls[context.scene.fd_roombuilder.wall_index]
         wall_bp = context.scene.objects[self.wall_item.bp_name]
         self.wall = fd.Wall(wall_bp)
             
+        self.set_draw_type(context)
+        
+        obstacle_item = None
+        
+        #Get Existing obstacle assembly so we can set properties then delete it. 
         if self.obstacle_bp_name in context.scene.objects:
             for obstacle in self.wall_item.obstacles:
                 if obstacle.bp_name == self.obstacle_bp_name:
+                    obstacle_item = obstacle
                     self.base_point = obstacle.base_point
             
             obj_bp = context.scene.objects[self.obstacle_bp_name]
@@ -455,10 +503,12 @@ class OPERATOR_Add_Obstacle(Operator):
                 self.z_location = self.obstacle.obj_bp.location.z
             fd.delete_object_and_children(obj_bp)
             
+        #Create Obstacle Assembly 
         self.obstacle = fd.Assembly()
         self.obstacle.create_assembly()
         cage = self.obstacle.get_cage()
         cage.select = True
+        cage.show_x_ray = True
         self.obstacle.obj_x.hide = True
         self.obstacle.obj_y.hide = True
         self.obstacle.obj_z.hide = True
@@ -468,12 +518,15 @@ class OPERATOR_Add_Obstacle(Operator):
         self.obstacle.obj_y.location.y = self.wall.obj_y.location.y + fd.inches(2)
         self.obstacle.obj_z.location.z = self.obstacle_height
         self.obstacle.obj_bp.location.y = - fd.inches(1)
-        
+        #Set bp_name for obstacle item just in case user doesn't click OK.
+        if obstacle_item:
+            obstacle_item.bp_name = self.obstacle.obj_bp.name
         self.check(context)
         
         return wm.invoke_props_dialog(self, width=400)
     
     def execute(self, context):
+        self.click_ok = True
         Width = self.obstacle.get_var('dim_x','Width')
         
         dim = fd.Dimension()
@@ -494,9 +547,13 @@ class OPERATOR_Add_Obstacle(Operator):
             if obstacle.bp_name == self.obstacle_bp_name:
                 obstacle.name = self.obstacle_name
                 obstacle.bp_name = self.obstacle.obj_bp.name
-            
-        self.obstacle = None
-        self.obstacle_bp_name = ""
+                
+        if self.obstacle:
+            for child in self.obstacle.obj_bp.children:
+                child.draw_type = 'WIRE'
+                
+#         self.obstacle = None
+#         self.obstacle_bp_name = ""
         return {'FINISHED'}
         
     def draw(self,context):
@@ -584,6 +641,7 @@ class OPERATOR_Add_Floor_Obstacle(Operator):
                                unit='LENGTH',
                                precision=4)
 
+    obstacle = None
     plane = None
     wall_item = None
     
@@ -610,6 +668,18 @@ class OPERATOR_Add_Floor_Obstacle(Operator):
             
         return True
     
+    def set_draw_type(self,context,draw_type='WIRE'):
+        for obj in context.scene.objects:
+            if obj.parent:
+                if obj.parent.name == self.plane.name:
+                    pass
+                else:
+                    obj.draw_type = draw_type
+        if self.obstacle:
+            self.obstacle.obj_bp.draw_type = 'WIRE'
+            for child in self.obstacle.obj_bp.children:
+                child.draw_type = 'WIRE'    
+    
     def set_obstacle_defaults(self,context):
         if self.obstacle_bp_name in context.scene.objects:
             obj_bp = context.scene.objects[self.obstacle_bp_name]
@@ -635,6 +705,8 @@ class OPERATOR_Add_Floor_Obstacle(Operator):
 #         fd.delete_object_and_children(obj_bp)
     
     def __del__(self):
+        self.set_draw_type(bpy.context,'TEXTURED')
+        
         if self.obstacle and self.obstacle_bp_name == "": # Only delete The obstacle if user didn't click OK
             fd.delete_object_and_children(self.obstacle.obj_bp)
     
@@ -643,6 +715,8 @@ class OPERATOR_Add_Floor_Obstacle(Operator):
         
         self.wall_item = context.scene.fd_roombuilder.walls[context.scene.fd_roombuilder.wall_index]
         self.plane = context.scene.objects[self.wall_item.bp_name]
+        
+        self.set_draw_type(context)
         
         if self.obstacle_bp_name in context.scene.objects:
             for obstacle in self.wall_item.obstacles:
