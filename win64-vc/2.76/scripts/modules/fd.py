@@ -2645,8 +2645,8 @@ def get_collision_location(obj_product_bp,direction='LEFT',get_product_bp=None):
 #         if math.radians(wall.obj_bp.rotation_euler.z) < 0:
         left_wall =  wall.get_connected_wall('LEFT')
         if left_wall:
-            rotation_difference = wall.obj_bp.rotation_euler.z - left_wall.obj_bp.rotation_euler.z
-            if rotation_difference < 0:
+            rotation_difference = math.degrees(wall.obj_bp.rotation_euler.z) - math.degrees(left_wall.obj_bp.rotation_euler.z)
+            if rotation_difference < 0 or rotation_difference > 180:
                 list_obj_bp = left_wall.get_wall_groups()
                 for obj in list_obj_bp:
                     prev_group = Assembly(obj)
@@ -2668,8 +2668,8 @@ def get_collision_location(obj_product_bp,direction='LEFT',get_product_bp=None):
         # CHECK NEXT WALL
         right_wall =  wall.get_connected_wall('RIGHT')
         if right_wall:
-            rotation_difference = wall.obj_bp.rotation_euler.z - right_wall.obj_bp.rotation_euler.z
-            if rotation_difference > 0:
+            rotation_difference = math.degrees(wall.obj_bp.rotation_euler.z) - math.degrees(right_wall.obj_bp.rotation_euler.z)
+            if rotation_difference > 0 or rotation_difference < -180:
                 list_obj_bp = right_wall.get_wall_groups()
                 for obj in list_obj_bp:
                     next_group = Assembly(obj)
