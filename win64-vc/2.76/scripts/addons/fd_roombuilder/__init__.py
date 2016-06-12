@@ -102,7 +102,6 @@ def update_obstacle_index(self,context):
     
     obj = bpy.data.objects[obstacle.bp_name]
     for child in obj.children:
-        print(child)
         if child.type == 'MESH' and child.mv.type!= 'BPASSEMBLY':
             child.hide_select = False
             child.select = True
