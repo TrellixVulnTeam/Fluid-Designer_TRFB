@@ -1128,6 +1128,8 @@ class OPS_show_wall(Operator):
         for child in children:
             if child.type != 'EMPTY':
                 child.hide = False
+                
+        wall_bp.location = wall_bp.location
         
         wall_bp.hide = False
         
