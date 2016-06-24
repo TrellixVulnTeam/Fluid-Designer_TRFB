@@ -1204,7 +1204,6 @@ class OPS_open_new_window(Operator):
         for window in context.window_manager.windows:
             if len(window.screen.areas) == 1 and window.screen.areas[0].type == 'USER_PREFERENCES':
                 window.screen.areas[0].type = self.space_type
-                print(window.screen.areas[0].type)
         return {'FINISHED'}
 
 class OPS_properties(Operator):
