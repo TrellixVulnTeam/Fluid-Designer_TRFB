@@ -138,15 +138,13 @@ class OPS_clear_material_copies(Operator):
              
         for obj in bpy.context.scene.objects:
             for mat_slot in obj.material_slots:
-                if mat_slot.material:
-                
-                    if re.search('[.][0-9][0-9][0-9]', mat_slot.material.name):
-                        
-                        try: 
-                            mat_slot.material = materials[mat_slot.material.name.split(sep=".")[0]]
-                        
-                        except:
-                            mat_slot.material.name = mat_slot.material.name.split(sep=".")[0]
+                if re.search('[.][0-9][0-9][0-9]', mat_slot.material.name):
+                    
+                    try: 
+                        mat_slot.material = materials[mat_slot.material.name.split(sep=".")[0]]
+                    
+                    except:
+                        mat_slot.material.name = mat_slot.material.name.split(sep=".")[0]
         
         for mat in materials:
             if mat.users < 1:
