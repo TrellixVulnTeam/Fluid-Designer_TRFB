@@ -1484,6 +1484,7 @@ class OPS_brd_library_items(Operator):
     
     def draw_product(self,class_name):
         mod = __import__(self.module_name)
+        print(self.module_name)
         item = eval("mod." + class_name + "()")
         item.draw()
         fd.init_objects(item.obj_bp)

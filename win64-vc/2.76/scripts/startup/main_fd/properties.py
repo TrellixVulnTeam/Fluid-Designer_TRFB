@@ -1754,6 +1754,22 @@ class fd_object(PropertyGroup):
                                            description="Custom properties assigned to the object. Only access from base point object.",
                                            type=mvPromptPage)
     
+    is_wall_mesh = BoolProperty(name="Is Wall Mesh",
+                                description="Determines if the object is a wall mesh.",
+                                default=False)
+    
+    is_cabinet_door = BoolProperty(name="Is Wall Mesh",
+                                   description="Determines if the object is a cabinet door.",
+                                   default=False)
+    
+    is_cabinet_drawer_box = BoolProperty(name="Is Wall Mesh",
+                                         description="Determines if the object is a drawer box.",
+                                         default=False)    
+    
+    is_cabinet_pull = BoolProperty(name="Is Wall Mesh",
+                                   description="Determines if the object is a cabinet pull.",
+                                   default=False)
+    
     opengl_dim = PointerProperty(type=opengl_dim)
 
 bpy.utils.register_class(fd_object)
@@ -1795,6 +1811,24 @@ class fd_interface(PropertyGroup):
                                 update=update_library)
     
 bpy.utils.register_class(fd_interface)
+
+class fd_image(PropertyGroup):
+    image_name = StringProperty(name="Image Name",
+                                description="The Image name that is assign to the image view")
+    
+    is_plan_view = BoolProperty(name="Is Plan View",
+                                default = False,
+                                description="This determines if the image is a 2D Plan View")
+    
+    use_as_cover_image = BoolProperty(name="Use as Cover Image",
+                                      default = False,
+                                      description="This determines if the image should be printed on the first page")
+    
+    is_elv_view = BoolProperty(name="Is Elv View",
+                               default = False,
+                               description="This determines if the image is a 2D Elevation View")
+    
+bpy.utils.register_class(fd_image)
 
 class fd_item(PropertyGroup):
     pass
@@ -1877,6 +1911,8 @@ class fd_scene(PropertyGroup):
                                         default=fd.inches(6),
                                         unit='LENGTH')
 
+
+    
 bpy.utils.register_class(fd_scene)
 
 class fd_window_manager(PropertyGroup):
@@ -1909,8 +1945,15 @@ class fd_window_manager(PropertyGroup):
     material_library_path = StringProperty(name="Material Library Path",default="",subtype='DIR_PATH',update=update_library_paths)
     world_library_path = StringProperty(name="World Library Path",default="",subtype='DIR_PATH',update=update_library_paths)
     
-bpy.utils.register_class(fd_window_manager)
+    image_views = CollectionProperty(name="Image Views",
+                                     type=fd_image,
+                                     description="Collection of all of the views to be printed.")
 
+    image_view_index = IntProperty(name="Image View Index",
+                                   default=0)    
+    
+bpy.utils.register_class(fd_window_manager)
+    
 class extend_blender_data():
     bpy.types.Object.mv = PointerProperty(type = fd_object)
     bpy.types.Scene.mv = PointerProperty(type = fd_scene)
@@ -1918,7 +1961,8 @@ class extend_blender_data():
     bpy.types.Object.cabinetlib = PointerProperty(type = OBJECT_PROPERTIES)
     bpy.types.Scene.cabinetlib = PointerProperty(type = SCENE_PROPERTIES)
     bpy.types.WindowManager.cabinetlib = PointerProperty(type = WM_PROPERTIES)
-
+    bpy.types.Image.mv = PointerProperty(type = fd_image)
+    
 def register():
     extend_blender_data()
     

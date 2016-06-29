@@ -346,15 +346,16 @@ class OPS_draw_walls(Operator):
                 fd.hook_vertex_group_to_object(obj,'Y Dimension',self.previous_wall.obj_y)
                 fd.hook_vertex_group_to_object(obj,'Z Dimension',self.previous_wall.obj_z)
                 
+                #We shouldn't need this anymore now that we rebuild the mesh.
                 #THIS IS NEEDED FOR A RETURN WALL TO BE CREATED FOR 2D ELEVATION DRAWINGS
-                return_obj = fd.create_cube_mesh('Return Wall',(fd.inches(.1),fd.inches(.2),size[2]))
-                return_obj.parent = self.previous_wall.obj_bp
-                return_obj.mv.type = 'CAGE'
-                return_obj.location.x = self.previous_wall.obj_x.location.x
-                fd.create_vertex_group_for_hooks(return_obj,[0,1,2,3,4,5,6,7],'X Dimension')
-                fd.create_vertex_group_for_hooks(return_obj,[4,5,6,7],'Z Dimension')
-                fd.hook_vertex_group_to_object(return_obj,'X Dimension',self.previous_wall.obj_x)
-                fd.hook_vertex_group_to_object(return_obj,'Z Dimension',self.previous_wall.obj_z)
+#                 return_obj = fd.create_cube_mesh('Return Wall',(fd.inches(.1),fd.inches(.2),size[2]))
+#                 return_obj.parent = self.previous_wall.obj_bp
+#                 return_obj.mv.type = 'CAGE'
+#                 return_obj.location.x = self.previous_wall.obj_x.location.x
+#                 fd.create_vertex_group_for_hooks(return_obj,[0,1,2,3,4,5,6,7],'X Dimension')
+#                 fd.create_vertex_group_for_hooks(return_obj,[4,5,6,7],'Z Dimension')
+#                 fd.hook_vertex_group_to_object(return_obj,'X Dimension',self.previous_wall.obj_x)
+#                 fd.hook_vertex_group_to_object(return_obj,'Z Dimension',self.previous_wall.obj_z)
                 self.previous_wall.obj_x.hide = True
                 self.previous_wall.obj_y.hide = True
                 self.previous_wall.obj_z.hide = True

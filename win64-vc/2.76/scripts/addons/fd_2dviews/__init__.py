@@ -29,8 +29,17 @@ bl_info = {
 }
 
 import bpy
+import fd
+import math
+import os
+import time
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import legal, inch, A4, landscape
+from reportlab.platypus import Paragraph, Table, TableStyle, SimpleDocTemplate, Image, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+import reportlab.lib.colors as colors
 
-class PANEL_2D_Views(bpy.types.Panel):
+class PANEL_2d_views(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
     bl_context = "objectmode"
@@ -38,16 +47,14 @@ class PANEL_2D_Views(bpy.types.Panel):
     bl_category = "Fluid Designer"
     bl_options = {'DEFAULT_CLOSED'}    
     
-    index = bpy.props.IntProperty(name="Scene Index")
-    
     @classmethod
     def poll(cls, context):
         return True
-
+    
     def draw_header(self, context):
         layout = self.layout
         layout.label('',icon='ALIGN')
-
+    
     def draw(self, context):
         layout = self.layout
         scene = context.scene
@@ -62,19 +69,26 @@ class PANEL_2D_Views(bpy.types.Panel):
                 elv_scenes.append(scene)
                 
         if len(elv_scenes) < 1:
-            row.operator("fd_scene.prepare_2d_views",text="Prepare 2D Views",icon='SCENE_DATA')
+            row.operator("2dviews.genereate_2d_views",text="Prepare 2D Views",icon='SCENE_DATA')
         else:
-            row.operator("fd_scene.prepare_2d_views",text="",icon='FILE_REFRESH')
-            row.operator("fd_scene.render_2d_views",text="Render Selected Scenes",icon='SCENE_DATA')
-            row.menu('MENU_Elevation_Scene_Options',text="",icon='DOWNARROW_HLT')
+            row.operator("2dviews.genereate_2d_views",text="",icon='FILE_REFRESH')
+            row.operator("2dviews.render_2d_views",text="Render Selected Scenes",icon='SCENE_DATA')
+            row.menu('MENU_elevation_scene_options',text="",icon='DOWNARROW_HLT')
             panel_box.template_list("LIST_scenes", 
                                     " ", 
                                     bpy.data, 
                                     "scenes", 
                                     bpy.context.window_manager.mv, 
                                     "elevation_scene_index")
-                
-class MENU_Elevation_Scene_Options(bpy.types.Menu):
+        image_views = context.window_manager.mv.image_views
+        
+        if len(image_views) > 0:
+            panel_box.label("Image Views",icon='RENDERLAYERS')
+            panel_box.template_list("LIST_2d_images"," ",context.window_manager.mv,"image_views",context.window_manager.mv,"image_view_index")
+            
+            panel_box.operator('2dviews.create_pdf',text="Create PDF")
+            
+class MENU_elevation_scene_options(bpy.types.Menu):
     bl_label = "Elevation Scene Options"
 
     def draw(self, context):
@@ -82,15 +96,433 @@ class MENU_Elevation_Scene_Options(bpy.types.Menu):
         layout.operator("fd_general.select_all_elevation_scenes",text="Select All",icon='CHECKBOX_HLT').select_all = True
         layout.operator("fd_general.select_all_elevation_scenes",text="Deselect All",icon='CHECKBOX_DEHLT').select_all = False
         layout.separator()
+        layout.operator("2dviews.create_new_view",text="Create Snap Shot",icon='SCENE')
+        layout.separator()
         layout.operator("fd_scene.clear_2d_views",text="Clear All 2D Views",icon='X')
 
+class LIST_scenes(bpy.types.UIList):
+
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        
+        if item.mv.plan_view_scene or item.mv.elevation_scene:
+            layout.label(item.mv.name_scene,icon='RENDER_REGION')
+            layout.prop(item.mv, 'elevation_selected', text="")
+        else:
+            layout.label(item.name,icon='SCENE_DATA')
+
+class LIST_2d_images(bpy.types.UIList):
+
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        show_cover_option = True
+        for iv in data.image_views:
+            if iv.use_as_cover_image:
+                show_cover_option = False
+        
+        layout.label(item.name,icon='RENDER_RESULT')
+        if item.use_as_cover_image or show_cover_option:
+            layout.prop(item,"use_as_cover_image")
+        layout.operator('2dviews.view_image',text="",icon='RESTRICT_VIEW_OFF',emboss=False).image_name = item.name
+        layout.operator('2dviews.delete_image',text="",icon='X',emboss=False).image_name = item.name
+        
+class OPERATOR_genereate_2d_views(bpy.types.Operator):
+    bl_idname = "2dviews.genereate_2d_views"    
+    bl_label = "Generate 2d Views"
+    bl_description = "Generates 2D Views"
+    bl_options = {'UNDO'}
+
+    ev_pad = bpy.props.FloatProperty(name="Elevation View Padding",
+                                     default=0.75)
+    
+    pv_pad = bpy.props.FloatProperty(name="Plan View Padding",
+                                     default=1)
+    
+    main_scene = None
+    
+    def create_camera(self,scene):
+        camera_data = bpy.data.cameras.new(scene.name)
+        camera_obj = bpy.data.objects.new(name=scene.name,object_data=camera_data)
+        scene.objects.link(camera_obj)
+        scene.camera = camera_obj                        
+        camera_obj.data.type = 'ORTHO'
+        scene.render.resolution_y = 1280
+        
+        scene.mv.ui.render_type_tabs = 'NPR'
+        lineset = scene.render.layers["RenderLayer"].freestyle_settings.linesets.new("LineSet")
+        lineset.linestyle = \
+        self.main_scene.render.layers["RenderLayer"].freestyle_settings.linesets["LineSet"].linestyle 
+        
+        #TODO: Create a new world and assign it to the new scenes
+        scene.world = bpy.data.worlds[0]
+        scene.world.horizon_color = (1.0, 1.0, 1.0)
+        scene.render.display_mode = 'NONE'
+        scene.render.use_lock_interface = True        
+        
+        scene.mv.ui.render_type_tabs = 'NPR'
+        lineset = scene.render.layers["RenderLayer"].freestyle_settings.linesets.new("LineSet")
+        lineset.linestyle = \
+        self.main_scene.render.layers["RenderLayer"].freestyle_settings.linesets["LineSet"].linestyle                
+        
+        scene.world.horizon_color = (1.0, 1.0, 1.0)
+        scene.render.display_mode = 'NONE'
+        scene.render.use_lock_interface = True        
+        
+        return camera_obj
+    
+    def link_dims_to_scene(self, scene, obj_bp):
+        for child in obj_bp.children:
+            if child.mv.type in ('VISDIM_A','VISDIM_B'):
+                scene.objects.link(child)
+            if len(child.children) > 0:
+                self.link_dims_to_scene(scene, child)     
+    
+    def group_children(self,grp,obj):
+        if obj.mv.type != 'CAGE':
+            grp.objects.link(obj)   
+        for child in obj.children:
+            if len(child.children) > 0:
+                self.group_children(grp,child)
+            else:
+                if not child.mv.is_wall_mesh:
+                    if child.mv.type != 'CAGE':
+                        grp.objects.link(child)  
+        return grp
+    
+    def create_plan_view_scene(self,context):
+        bpy.ops.scene.new('INVOKE_DEFAULT',type='EMPTY')   
+        pv_scene = context.scene
+        pv_scene.name = "Plan View"
+        pv_scene.mv.name_scene = "Plan View"
+        pv_scene.mv.plan_view_scene = True
+    
+        for obj in self.main_scene.objects:
+            if obj.mv.type == 'BPWALL':
+                pv_scene.objects.link(obj)
+                #Only link all of the wall meshes
+                for child in obj.children:
+                    if child.mv.is_wall_mesh:
+                        child.select = True
+                        pv_scene.objects.link(child)
+                wall = fd.Wall(obj_bp = obj)
+                
+                dim = fd.Dimension()
+                dim.parent(wall.obj_bp)
+                dim.start_y(value = fd.inches(4) + wall.obj_y.location.y)
+                dim.start_z(value = 0)
+                dim.end_x(value = wall.obj_x.location.x)  
+                
+                dim = fd.Dimension()
+                dim.parent(wall.obj_bp)
+                dim.start_x(value = wall.obj_x.location.x/2)
+                dim.start_y(value = wall.obj_y.location.y/2)
+                dim.start_z(value = 0)
+                dim.end_x(value = 0)
+                dim.set_label(wall.obj_bp.mv.name_object)                  
+                
+                obj_bps = wall.get_wall_groups()
+                #Create Cubes for all products
+                for obj_bp in obj_bps:
+                    assembly = fd.Assembly(obj_bp)
+                    #TODO: Look for Custom Plan View Drawing
+                    assembly_mesh = fd.create_cube_mesh(assembly.obj_bp.mv.name_object,
+                                                        (assembly.obj_x.location.x,
+                                                         assembly.obj_y.location.y,
+                                                         assembly.obj_z.location.z))
+                    assembly_mesh.parent = wall.obj_bp
+                    assembly_mesh.location = assembly.obj_bp.location
+                    assembly_mesh.rotation_euler = assembly.obj_bp.rotation_euler
+                    assembly_mesh.mv.type = 'CAGE'
+                    distance = fd.inches(14) if assembly.obj_bp.location.z > 1 else fd.inches(8)
+                    distance += wall.obj_y.location.y
+                    dim = fd.Dimension()
+                    dim.parent(assembly_mesh)
+                    dim.start_y(value = distance)
+                    dim.start_z(value = 0)
+                    dim.end_x(value = assembly.obj_x.location.x)
+                    
+                wall.get_wall_mesh().select = True
+                
+        camera = self.create_camera(pv_scene)
+        camera.rotation_euler.z = math.radians(-90.0)
+        bpy.ops.view3d.camera_to_view_selected()
+        camera.data.ortho_scale += self.pv_pad
+    
+    def create_elv_view_scene(self,context,wall):
+        bpy.ops.scene.new('INVOKE_DEFAULT',type='EMPTY')
+        wall_group = bpy.data.groups.new(wall.obj_bp.mv.name_object)
+        
+        new_scene = context.scene
+        new_scene.name = wall_group.name
+        new_scene.mv.name_scene = wall.obj_bp.mv.name_object
+        new_scene.mv.elevation_img_name = wall.obj_bp.name
+        new_scene.mv.plan_view_scene = False
+        new_scene.mv.elevation_scene = True
+        
+        self.group_children(wall_group,wall.obj_bp)                    
+        wall_mesh = fd.create_cube_mesh(wall.obj_bp.mv.name_object,(wall.obj_x.location.x,wall.obj_y.location.y,wall.obj_z.location.z))
+        wall_mesh.parent = wall.obj_bp
+        wall_group.objects.link(wall_mesh)
+        
+        instance = bpy.data.objects.new(wall.obj_bp.mv.name_object + " "  + "Instance" , None)
+        new_scene.objects.link(instance)
+        instance.dupli_type = 'GROUP'
+        instance.dupli_group = wall_group
+        
+        new_scene.world = self.main_scene.world
+        
+        self.link_dims_to_scene(new_scene, wall.obj_bp)
+        
+        camera = self.create_camera(new_scene)
+        camera.rotation_euler.x = math.radians(90.0)
+        camera.rotation_euler.z = wall.obj_bp.rotation_euler.z   
+        bpy.ops.object.select_all(action='DESELECT')
+        wall_mesh.select = True
+        bpy.ops.view3d.camera_to_view_selected()
+        camera.data.ortho_scale += self.pv_pad
+        
+    def execute(self, context):
+        context.window_manager.mv.use_opengl_dimensions = True
+        
+        bpy.ops.fd_scene.clear_2d_views()
+        
+        self.main_scene = context.scene
+        context.scene.name = "_Main"
+        self.create_plan_view_scene(context)
+        
+        for obj in self.main_scene.objects:
+            if obj.mv.type == 'BPWALL':
+                wall = fd.Wall(obj_bp = obj)
+                if len(wall.get_wall_groups()) > 0:
+                    self.create_elv_view_scene(context, wall)
+
+        bpy.context.screen.scene = self.main_scene
+        context.window_manager.mv.elevation_scene_index = 0
+        return {'FINISHED'}
+
+class OPERATOR_render_2d_views(bpy.types.Operator):
+    bl_idname = "2dviews.render_2d_views"
+    bl_label = "Render 2D Views"
+    bl_description = "Renders 2d Scenes"
+    
+    def render_scene(self,context,scene):
+        context.screen.scene = scene
+        scene.mv.opengl_dim.gl_default_color = (0.1, 0.1, 0.1, 1.0)
+        rd = scene.render
+        rl = rd.layers.active
+        freestyle_settings = rl.freestyle_settings
+        
+        rd.engine = 'BLENDER_RENDER'
+        rd.use_freestyle = True
+        rd.image_settings.file_format = 'JPEG'
+        rd.line_thickness = 0.75
+        rd.resolution_percentage = 100
+        rl.use_pass_combined = False
+        rl.use_pass_z = False
+        freestyle_settings.crease_angle = 2.617994
+        
+#         file_format = scene.render.image_settings.file_format.lower()
+        
+        bpy.ops.render.render('INVOKE_DEFAULT', write_still=True)
+        
+        while not os.path.exists(bpy.path.abspath(scene.render.filepath) + ".jpg"):
+            time.sleep(0.1)
+        
+        img_result = fd.render_opengl(self,context)
+        
+        image_view = context.window_manager.mv.image_views.add()
+        image_view.name = img_result.name
+        image_view.image_name = img_result.name
+        if scene.mv.plan_view_scene:
+            image_view.is_plan_view = True
+        
+        if scene.mv.elevation_scene:
+            image_view.is_elv_view = True
+                
+    def execute(self, context):
+        file_path = bpy.app.tempdir if bpy.data.filepath == "" else os.path.dirname(bpy.data.filepath)
+        
+        current_scene = context.screen.scene
+        
+        for scene in bpy.data.scenes:
+            if scene.mv.elevation_selected:
+                self.render_scene(context,scene)
+        
+        context.screen.scene = current_scene
+#                 context.scene.render.filepath = os.path.join(file_path,scene.name)
+#                 bpy.ops.fd_scene.render_scene(write_still=False)
+                 
+#         for image in bpy.data.images:
+#             if image.type == 'RENDER_RESULT':
+#                 print(image.name)
+
+        return {'FINISHED'}
+
+
+class OPERATOR_view_image(bpy.types.Operator):
+    bl_idname = "2dviews.view_image"
+    bl_label = "View Image"
+    bl_description = "Opens the image editor to view the 2D view."
+    
+    image_name = bpy.props.StringProperty(name="Object Name",
+                                          description="This is the readable name of the object")
+    
+    def execute(self, context):
+        bpy.ops.fd_general.open_new_window(space_type = 'IMAGE_EDITOR')
+        
+        image_view = context.window_manager.mv.image_views[self.image_name]
+        
+        print(image_view.name,image_view.image_name)
+        
+        areas = context.screen.areas
+        
+        for area in areas:
+            for space in area.spaces:
+                if space.type == 'IMAGE_EDITOR':
+                    for image in bpy.data.images:
+                        if image.name == image_view.image_name:
+                            space.image = image
+                    # This causing blender to crash :(
+                    # TODO: Figure out how to view the entire image automatically
+#                     override = {'area':area}
+#                     bpy.ops.image.view_all(override,fit_view=True)
+
+        return {'FINISHED'}
+    
+class OPERATOR_delete_image(bpy.types.Operator):
+    bl_idname = "2dviews.delete_image"
+    bl_label = "View Image"
+    bl_description = "Delete the Image"
+    
+    image_name = bpy.props.StringProperty(name="Object Name",
+                                          description="This is the readable name of the object")
+    
+    def execute(self, context):
+        for index, iv in enumerate(context.window_manager.mv.image_views):
+            if iv.name == self.image_name:
+                context.window_manager.mv.image_views.remove(index)
+        
+        for image in bpy.data.images:
+            if image.name == self.image_name:
+                bpy.data.images.remove(image)
+                break
+
+        return {'FINISHED'}    
+    
+class OPERATOR_create_new_view(bpy.types.Operator):
+    bl_idname = "2dviews.create_new_view"
+    bl_label = "Create New View"
+    bl_description = "Renders 2d Scenes"
+
+    def execute(self, context):
+        bpy.ops.view3d.toolshelf()
+        context.area.header_text_set(text="Position view then LEFT CLICK to take screen shot. ESC to Cancel.")
+        context.window_manager.modal_handler_add(self)
+        return {'RUNNING_MODAL'}
+        
+    def get_file_path(self):
+        counter = 1
+        while os.path.exists(os.path.join(bpy.app.tempdir,"View " + str(counter) + ".png")):
+            counter += 1
+        return os.path.join(bpy.app.tempdir,"View " + str(counter) + ".png")
+        
+    def modal(self, context, event):
+        context.area.tag_redraw()
+        
+        if event.type in {'MIDDLEMOUSE', 'WHEELUPMOUSE', 'WHEELDOWNMOUSE'}:
+            return {'PASS_THROUGH'}
+            
+        if event.type in {'ESC', 'RIGHTMOUSE'}:
+            context.area.header_text_set()
+            bpy.ops.view3d.toolshelf()
+            return {'FINISHED'}
+            
+        if event.type in {'LEFTMOUSE'}:
+            context.area.header_text_set(" ")
+            file_path = self.get_file_path()
+            # The PDF writter can only use JPEG images
+            context.scene.render.image_settings.file_format = 'JPEG'
+            bpy.ops.screen.screenshot(filepath=file_path,full=False) 
+            bpy.ops.view3d.toolshelf()
+            context.area.header_text_set()
+            image = bpy.data.images.load(file_path)
+            image_view = context.window_manager.mv.image_views.add()
+            image_view.name = os.path.splitext(image.name)[0]
+            image_view.image_name = image.name
+            
+            return {'FINISHED'}
+            
+        return {'RUNNING_MODAL'}
+        
+class OPERATOR_create_pdf(bpy.types.Operator):
+    bl_idname = "2dviews.create_pdf"
+    bl_label = "Create PDF"
+    bl_description = "This creates a pdf of all of the images"
+    
+    image_name = bpy.props.StringProperty(name="Object Name",
+                                          description="This is the readable name of the object")
+    
+    def sort_images(self,images):
+        image_list = []
+        for image in images:
+            pass
+        
+        imgs = []
+        for img in images:
+            if img.use_as_cover_image:
+                imgs.append()
+
+    def execute(self, context):
+        pdf_images = []
+        images = context.window_manager.mv.image_views
+        for img in images:
+            image = bpy.data.images[img.image_name]
+            image.save_render(os.path.join(bpy.app.tempdir, image.name + ".jpg"))
+            pdf_images.append(os.path.join(bpy.app.tempdir, image.name + ".jpg"))
+
+        bpy.ops.fd_general.open_browser_window(path=bpy.app.tempdir)
+        # TODO: Save images to temp directory then sort them
+        #COVER PAGE
+        #PLAN VIEW
+        #Elevations
+#         width, height = legal
+         
+        file_path = bpy.app.tempdir if bpy.data.filepath == "" else os.path.dirname(bpy.data.filepath)
+        file_name = 'Fluid Views.pdf'
+
+        c = canvas.Canvas(os.path.join(file_path,file_name), pagesize=landscape(legal))
+        for img in pdf_images:
+            print('IMG',img)
+            c.drawImage(img,0,0,width=1920/2, height=1280/2, mask='auto')    
+            c.showPage()
+        
+        c.save()
+         
+        os.system('start "Title" /D "'+file_path+'" "' + file_name + '"')
+        
+        return {'FINISHED'}
+        
 def register():
-    bpy.utils.register_class(PANEL_2D_Views)
-    bpy.utils.register_class(MENU_Elevation_Scene_Options)
+    bpy.utils.register_class(PANEL_2d_views)
+    bpy.utils.register_class(LIST_scenes)
+    bpy.utils.register_class(LIST_2d_images)
+    bpy.utils.register_class(MENU_elevation_scene_options)
+    bpy.utils.register_class(OPERATOR_genereate_2d_views)
+    bpy.utils.register_class(OPERATOR_render_2d_views)
+    bpy.utils.register_class(OPERATOR_view_image)
+    bpy.utils.register_class(OPERATOR_delete_image)
+    bpy.utils.register_class(OPERATOR_create_new_view)
+    bpy.utils.register_class(OPERATOR_create_pdf)
 
 def unregister():
-    bpy.utils.unregister_class(PANEL_2D_Views)
-    bpy.utils.unregister_class(MENU_Elevation_Scene_Options)
+    bpy.utils.unregister_class(PANEL_2d_views)
+    bpy.utils.unregister_class(LIST_scenes)
+    bpy.utils.unregister_class(LIST_2d_images)
+    bpy.utils.unregister_class(MENU_elevation_scene_options)
+    bpy.utils.unregister_class(OPERATOR_genereate_2d_views)
+    bpy.utils.unregister_class(OPERATOR_render_2d_views)
+    bpy.utils.unregister_class(OPERATOR_view_image)
+    bpy.utils.unregister_class(OPERATOR_delete_image)
+    bpy.utils.unregister_class(OPERATOR_create_new_view)
+    bpy.utils.unregister_class(OPERATOR_create_pdf)
 
 if __name__ == "__main__":
     register()

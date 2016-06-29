@@ -1594,6 +1594,7 @@ class Wall(Assembly):
     def build_wall_mesh(self):
         self.obj_bp.mv.name = "BPWALL.Wall"
         obj_mesh = self.build_cage()
+        obj_mesh.mv.is_wall_mesh = True
         obj_mesh.mv.name = 'Wall Mesh'
         obj_mesh.name = "Wall Mesh"
         obj_mesh.mv.type = 'NONE'
@@ -1611,24 +1612,21 @@ class Wall(Assembly):
             if child.type == 'MESH' and child.mv.type == 'NONE' and len(child.data.vertices) != 1:
                 return child
     
+    #NOT BEING USED DELETE
     def create_wall_group(self):
         wall_group = bpy.data.groups.new(self.obj_bp.name)
         return self.group_children(wall_group,self.obj_bp)
     
+    #NOT BEING USED DELETE
     def group_children(self,grp,obj):
-        objs = []
-
-        objs.append(obj)
-    
+        grp.objects.link(obj)   
         for child in obj.children:
             if len(child.children) > 0:
                 self.group_children(grp,child)
             else:
-                objs.append(child)              
-
-        for obj in objs:
-            grp.objects.link(obj)        
-            
+                
+                if not child.mv.is_wall_mesh:
+                    grp.objects.link(child)   
         return grp
         
     def get_wall_groups(self, loc_sort='X'):
@@ -2157,7 +2155,7 @@ def format_material_name(thickness,core,exterior,interior):
     if core == interior:
         interior = "-"
         
-    return thickness + " " + core + " _ " + exterior + " _ " + interior
+    return thickness + " " + core + " [" + exterior + "] [" + interior + "]"
 
 def get_material_name_from_pointer(pointer,spec_group):
     
@@ -3309,9 +3307,10 @@ def render_opengl(self, context):
     width = int(scene.render.resolution_x * render_scale)
     height = int(scene.render.resolution_y * render_scale)
     
-    file_format = context.scene.render.image_settings.file_format.lower()
-    
-    ren_path = bpy.path.abspath(bpy.context.scene.render.filepath) + "." + file_format
+    # I cant use file_format becuase the pdf writer needs jpg format
+    # the file_format returns 'JPEG' not 'JPG'
+#     file_format = context.scene.render.image_settings.file_format.lower()
+    ren_path = bpy.path.abspath(bpy.context.scene.render.filepath) + ".jpg"
     
 #     if len(ren_path) > 0:
 #         if ren_path.endswith(os.path.sep):
@@ -3513,6 +3512,7 @@ def get_2d_renderings(context):
             imgs_to_remove.append(img)
         
     for im in imgs_to_remove:
+        print(im.name)
         bpy.data.images.remove(im)
             
     return images

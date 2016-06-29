@@ -182,15 +182,7 @@ class LIST_edgebanding(UIList):
         layout.prop(item,'thickness')
         layout.operator('mvcabients.change_edgebanding_info',text="",icon='INFO',emboss=False).material_name = item.name
 
-class LIST_scenes(UIList):
 
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        
-        if item.mv.plan_view_scene or item.mv.elevation_scene:
-            layout.label(item.mv.name_scene)
-            layout.prop(item.mv, 'elevation_selected', text="")
-        else:
-            layout.label(item.name)
 
 classes = [
            FD_UL_materials,
@@ -209,8 +201,7 @@ classes = [
            LIST_lib_insertlist,
            LIST_sheetstock,
            LIST_sheetsizes,
-           LIST_edgebanding,
-           LIST_scenes
+           LIST_edgebanding
            ]
 
 def register():
