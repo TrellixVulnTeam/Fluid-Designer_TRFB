@@ -1758,15 +1758,15 @@ class fd_object(PropertyGroup):
                                 description="Determines if the object is a wall mesh.",
                                 default=False)
     
-    is_cabinet_door = BoolProperty(name="Is Wall Mesh",
+    is_cabinet_door = BoolProperty(name="Is Cabinet Door",
                                    description="Determines if the object is a cabinet door.",
                                    default=False)
     
-    is_cabinet_drawer_box = BoolProperty(name="Is Wall Mesh",
+    is_cabinet_drawer_box = BoolProperty(name="Is Cabinet Drawer Box",
                                          description="Determines if the object is a drawer box.",
                                          default=False)    
     
-    is_cabinet_pull = BoolProperty(name="Is Wall Mesh",
+    is_cabinet_pull = BoolProperty(name="Is Cabinet Pull",
                                    description="Determines if the object is a cabinet pull.",
                                    default=False)
     
