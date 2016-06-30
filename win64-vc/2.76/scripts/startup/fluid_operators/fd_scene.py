@@ -1599,12 +1599,18 @@ class OPS_export_mvfd(Operator):
 
             elm_parts = self.xml.add_element(elm_product,"Parts")
             self.write_stl_files_for_product(elm_parts,obj_product,spec_group)
-                
+            
             elm_hardware = self.xml.add_element(elm_product,"Hardware")
             self.write_hardware_for_product(elm_hardware,obj_product)
-                
+            
+            elm_buyout = self.xml.add_element(elm_product,"Buyout")
+            self.write_buyout_for_product(elm_buyout,obj_product)                
+            
+            elm_subassemblies = self.xml.add_element(elm_product,"Subassemblies")
+            self.write_subassemblies_for_product(elm_subassemblies,obj_product)                 
+            
             item_number += 1
-    
+            
     def write_materials(self,project_node):
         elm_materials = self.xml.add_element(project_node,"Materials")
         for material in bpy.context.scene.cabinetlib.sheets:
@@ -1648,14 +1654,57 @@ class OPS_export_mvfd(Operator):
                 mat_name = fd.get_edgebanding_name_from_pointer_name(edgepart.name,spec_group)
                 self.xml.add_element_with_text(elm_edgepart,'MaterialName',mat_name)
                 
+    def write_subassemblies_for_product(self,elm_subassembly,obj_bp):
+        for child in obj_bp.children:
+            
+            if child.mv.is_cabinet_door:
+                assembly = fd.Assembly(child)
+                comment = ""
+                for achild in assembly.obj_bp.children:
+                    if achild.cabinetlib.comment != "":
+                        comment = achild.cabinetlib.comment
+                        break
+                elm_item = self.xml.add_element(elm_subassembly,'Subassembly',assembly.obj_bp.mv.name_object)
+                self.xml.add_element_with_text(elm_item,'XLocation',self.distance(assembly.obj_bp.location.x))
+                self.xml.add_element_with_text(elm_item,'YLocation',self.distance(assembly.obj_bp.location.y))
+                self.xml.add_element_with_text(elm_item,'ZLocation',self.distance(assembly.obj_bp.location.z))
+                self.xml.add_element_with_text(elm_item,'XDimension',self.distance(assembly.obj_x.location.x))
+                self.xml.add_element_with_text(elm_item,'YDimension',self.distance(assembly.obj_y.location.y))
+                self.xml.add_element_with_text(elm_item,'ZDimension',self.distance(assembly.obj_z.location.z))                
+                self.xml.add_element_with_text(elm_item,'Comment',comment)
+                
+            if child.mv.is_cabinet_drawer_box:
+                assembly = fd.Assembly(child)
+                elm_item = self.xml.add_element(elm_subassembly,'Subassembly',assembly.obj_bp.mv.name_object)
+                self.xml.add_element_with_text(elm_item,'XLocation',self.distance(assembly.obj_bp.location.x))
+                self.xml.add_element_with_text(elm_item,'YLocation',self.distance(assembly.obj_bp.location.y))
+                self.xml.add_element_with_text(elm_item,'ZLocation',self.distance(assembly.obj_bp.location.z))
+                self.xml.add_element_with_text(elm_item,'XDimension',self.distance(assembly.obj_x.location.x))
+                self.xml.add_element_with_text(elm_item,'YDimension',self.distance(assembly.obj_y.location.y))
+                self.xml.add_element_with_text(elm_item,'ZDimension',self.distance(assembly.obj_z.location.z))                
+                self.xml.add_element_with_text(elm_item,'Comment',assembly.obj_bp.cabinetlib.comment)
+                
+            self.write_subassemblies_for_product(elm_subassembly, child)
+            
     def write_hardware_for_product(self,elm_hardware,obj_bp):
         for child in obj_bp.children:
             if child.cabinetlib.type_mesh == 'HARDWARE':
                 if not child.hide:
-#                     self.write_hardware_node(elm_hardware, child)
-                    self.xml.add_element(elm_hardware,'Hardware',child.mv.name_object)
+                    elm_item = self.xml.add_element(elm_hardware,'Hardware',child.mv.name_object)
+                    self.xml.add_element_with_text(elm_item,'XDimension',self.distance(child.dimensions.x))
+                    self.xml.add_element_with_text(elm_item,'YDimension',self.distance(child.dimensions.y))
+                    self.xml.add_element_with_text(elm_item,'ZDimension',self.distance(child.dimensions.z))
+                    self.xml.add_element_with_text(elm_item,'Comment',child.cabinetlib.comment)
             self.write_hardware_for_product(elm_hardware, child)
 
+    def write_buyout_for_product(self,elm_buyout,obj_bp):
+        for child in obj_bp.children:
+            if child.cabinetlib.type_mesh == 'BUYOUT':
+                if not child.hide:
+                    elm_item = self.xml.add_element(elm_buyout,'Buyout',child.mv.name_object)
+                    self.xml.add_element_with_text(elm_item,'Comment',child.cabinetlib.comment)
+            self.write_buyout_for_product(elm_buyout, child)
+            
     def write_stl_files_for_product(self,elm_parts,obj_bp,spec_group):
         for child in obj_bp.children:
             if child.cabinetlib.type_mesh == 'CUTPART':
