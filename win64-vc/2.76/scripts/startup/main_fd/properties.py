@@ -763,7 +763,7 @@ class opengl_dim(PropertyGroup):
                                        ('3', "TShape", "The point of the arrow is a T")),
                                  name="Arrow Type",
                                  description="Dimension Arrow Type",
-                                 default='2')
+                                 default='99')
      
     gl_arrow_size = IntProperty(name="Size",
                                 description="Arrow size",
