@@ -1661,6 +1661,7 @@ class OPS_export_mvfd(Operator):
                         comment = achild.cabinetlib.comment
                         break
                 elm_item = self.xml.add_element(elm_subassembly,'Subassembly',assembly.obj_bp.mv.name_object)
+                self.xml.add_element_with_text(elm_item,'LinkID',assembly.obj_bp.name)
                 self.xml.add_element_with_text(elm_item,'XLocation',self.distance(assembly.obj_bp.location.x))
                 self.xml.add_element_with_text(elm_item,'YLocation',self.distance(assembly.obj_bp.location.y))
                 self.xml.add_element_with_text(elm_item,'ZLocation',self.distance(assembly.obj_bp.location.z))
@@ -1716,6 +1717,7 @@ class OPS_export_mvfd(Operator):
         self.xml.add_element_with_text(elm_part,'Thickness',self.distance(fd.get_part_thickness(obj)))
         self.xml.add_element_with_text(elm_part,'UseSMA','True' if obj.mv.use_sma else 'False')
         self.xml.add_element_with_text(elm_part,'LinkIDProduct',fd.get_bp(obj,'PRODUCT').name)
+        self.xml.add_element_with_text(elm_part,'LinkIDParent',assembly.obj_bp.parent.name)
         self.xml.add_element_with_text(elm_part,'PartLength',str(fd.unit(obj.dimensions.x)))
         self.xml.add_element_with_text(elm_part,'PartWidth',str(fd.unit(obj.dimensions.y)))
         self.xml.add_element_with_text(elm_part,'Comment',assembly.obj_bp.cabinetlib.comment)
