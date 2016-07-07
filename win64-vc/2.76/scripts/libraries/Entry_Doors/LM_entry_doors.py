@@ -7,13 +7,14 @@ Stores the logic and product defs for entry doors.
 import bpy
 import fd
 import math
+import os
 
-HIDDEN_FOLDER_NAME = "_HIDDEN"
-DOOR_LIBRARY_NAME = "Entry Door Assemblies"
-DOOR_FRAME_CATEGORY_NAME = "Door Frames"
-DOOR_PANEL_CATEGORY_NAME = "Door Panels"
-DOOR_HANDLE_LIBRARY = "Hardware"
-DOOR_HANDLE_CATEGORY = "Entry Door Handles"
+ROOT_PATH = os.path.join(os.path.dirname(__file__),"assemblies")
+DOOR_LIBRARY_NAME = os.path.join(ROOT_PATH,"Entry Door Assemblies")
+DOOR_FRAME = os.path.join(DOOR_LIBRARY_NAME,"Door Frames","Door_Frame.blend")
+DOOR_PANEL_CATEGORY_NAME = os.path.join(DOOR_LIBRARY_NAME,"Door Panels")
+
+DOOR_HANDLE = os.path.join(os.path.dirname(__file__),"Entry Door Handles","Door_Handle.blend")
 
 SINGLE_PANEL_WIDTH = fd.inches(42)
 DOUBLE_PANEL_WIDTH = fd.inches(84)
@@ -56,14 +57,14 @@ class Entry_Door(fd.Library_Assembly):
         if self.double_door != True:
             Swing = self.get_var('Door Swing')
 
-        door_frame = self.add_assembly((HIDDEN_FOLDER_NAME,DOOR_LIBRARY_NAME,DOOR_FRAME_CATEGORY_NAME,self.door_frame))
+        door_frame = self.add_assembly(filepath = DOOR_FRAME)
         door_frame.set_name("Door Frame")
         door_frame.x_dim('Width',[Width])
         door_frame.y_dim('Depth',[Depth])
         door_frame.z_dim('Height',[Height])        
         
         if self.door_panel != "":
-            door_panel = self.add_assembly((HIDDEN_FOLDER_NAME,DOOR_LIBRARY_NAME,DOOR_PANEL_CATEGORY_NAME,self.door_panel))
+            door_panel = self.add_assembly(filepath = os.path.join(DOOR_PANEL_CATEGORY_NAME,self.door_panel))
             door_panel.set_name("Door Panel")
             if self.double_door != True:
                 door_panel.x_loc('IF(Door_Swing==1,Width-INCH(3),INCH(3))',[Width, Swing])
@@ -80,7 +81,7 @@ class Entry_Door(fd.Library_Assembly):
             door_panel.z_dim('Height-INCH(3.25)',[Height])
 
         if self.door_handle != "":
-            door_handle = self.add_object((HIDDEN_FOLDER_NAME,DOOR_HANDLE_CATEGORY,self.door_handle))
+            door_handle = self.add_object(filepath = DOOR_HANDLE)
             door_handle.obj.parent = door_panel.obj_bp
             door_handle.set_name("Door Handle")
             door_handle.x_loc('Width-INCH(9)',[Width])
@@ -91,7 +92,7 @@ class Entry_Door(fd.Library_Assembly):
             door_panel.x_dim('(Width-INCH(6))*0.5',[Width])
             door_handle.x_loc('(Width*0.5)-INCH(6)',[Width])
         
-            door_panel_right = self.add_assembly((HIDDEN_FOLDER_NAME,DOOR_LIBRARY_NAME,DOOR_PANEL_CATEGORY_NAME,self.door_panel))
+            door_panel_right = self.add_assembly(filepath = os.path.join(DOOR_PANEL_CATEGORY_NAME,self.door_panel))
             door_panel_right.set_name("Door Panel Right")
             door_panel_right.x_loc('Width-INCH(3)',[Width])
             door_panel_right.y_loc('Depth-INCH(1.75)-IF(Reverse_Swing,INCH(4.25),INCH(0))',[Reverse_Swing, Depth])
@@ -101,7 +102,7 @@ class Entry_Door(fd.Library_Assembly):
             
             Dpr_Width = door_panel_right.get_var('dim_x','Dpr_Width')
             
-            door_handle_right = self.add_object((HIDDEN_FOLDER_NAME,DOOR_HANDLE_CATEGORY,self.door_handle))
+            door_handle_right = self.add_object(filepath = DOOR_HANDLE)
             door_handle_right.set_name("Door Handle Right")
             door_handle_right.obj.parent = door_panel_right.obj_bp
             door_handle_right.x_loc('Dpr_Width-INCH(3)', [Dpr_Width])
@@ -131,7 +132,7 @@ class PRODUCT_Entry_Door_Double_Panel(Entry_Door):
         self.depth = DOOR_DEPTH
         
         self.door_frame = "Door_Frame"
-        self.door_panel = "Door_Panel_Double"
+        self.door_panel = "Door_Panel_Double.blend"
         self.door_handle = "Door_Handle"  
  
 class PRODUCT_Entry_Door_Inset_Panel(Entry_Door):
@@ -144,7 +145,7 @@ class PRODUCT_Entry_Door_Inset_Panel(Entry_Door):
         self.depth = DOOR_DEPTH
         
         self.door_frame = "Door_Frame"
-        self.door_panel = "Door_Panel_Inset"
+        self.door_panel = "Door_Panel_Inset.blend"
         self.door_handle = "Door_Handle"   
  
 class PRODUCT_Entry_Door_Glass_Panel(Entry_Door):
@@ -157,7 +158,7 @@ class PRODUCT_Entry_Door_Glass_Panel(Entry_Door):
         self.depth = DOOR_DEPTH
         
         self.door_frame = "Door_Frame"
-        self.door_panel = "Door_Panel_Glass"
+        self.door_panel = "Door_Panel_Glass.blend"
         self.door_handle = "Door_Handle"   
         
 class PRODUCT_Entry_Door_Glass_Georgian_Panel(Entry_Door):
@@ -170,7 +171,7 @@ class PRODUCT_Entry_Door_Glass_Georgian_Panel(Entry_Door):
         self.depth = DOOR_DEPTH
         
         self.door_frame = "Door_Frame"
-        self.door_panel = "Door_Panel_Glass_Georgian"
+        self.door_panel = "Door_Panel_Glass_Georgian.blend"
         self.door_handle = "Door_Handle"         
         
 class PRODUCT_Entry_Door_Glass_Border_Panel(Entry_Door):
@@ -183,7 +184,7 @@ class PRODUCT_Entry_Door_Glass_Border_Panel(Entry_Door):
         self.depth = DOOR_DEPTH
         
         self.door_frame = "Door_Frame"
-        self.door_panel = "Door_Panel_Glass_Marginal_Border"
+        self.door_panel = "Door_Panel_Glass_Marginal_Border.blend"
         self.door_handle = "Door_Handle"          
         
 class PRODUCT_Entry_Double_Door_Double_Panel(Entry_Door):
@@ -197,7 +198,7 @@ class PRODUCT_Entry_Double_Door_Double_Panel(Entry_Door):
         
         self.double_door = True
         self.door_frame = "Door_Frame"
-        self.door_panel = "Door_Panel_Double"
+        self.door_panel = "Door_Panel_Double.blend"
         self.door_handle = "Door_Handle"         
         
 class PRODUCT_Entry_Double_Door_Inset_Panel(Entry_Door):
@@ -211,7 +212,7 @@ class PRODUCT_Entry_Double_Door_Inset_Panel(Entry_Door):
         
         self.double_door = True
         self.door_frame = "Door_Frame"
-        self.door_panel = "Door_Panel_Inset"
+        self.door_panel = "Door_Panel_Inset.blend"
         self.door_handle = "Door_Handle"         
         
 class PRODUCT_Entry_Double_Door_Glass_Panel(Entry_Door):
@@ -225,7 +226,7 @@ class PRODUCT_Entry_Double_Door_Glass_Panel(Entry_Door):
         
         self.double_door = True
         self.door_frame = "Door_Frame"
-        self.door_panel = "Door_Panel_Glass"
+        self.door_panel = "Door_Panel_Glass.blend"
         self.door_handle = "Door_Handle"        
         
 class PRODUCT_Entry_Double_Door_Glass_Georgian_Panel(Entry_Door):
@@ -239,7 +240,7 @@ class PRODUCT_Entry_Double_Door_Glass_Georgian_Panel(Entry_Door):
         
         self.double_door = True
         self.door_frame = "Door_Frame"
-        self.door_panel = "Door_Panel_Glass_Georgian"
+        self.door_panel = "Door_Panel_Glass_Georgian.blend"
         self.door_handle = "Door_Handle"       
         
 class PRODUCT_Entry_Double_Door_Glass_Border_Panel(Entry_Door):
@@ -253,7 +254,7 @@ class PRODUCT_Entry_Double_Door_Glass_Border_Panel(Entry_Door):
         
         self.double_door = True
         self.door_frame = "Door_Frame"
-        self.door_panel = "Door_Panel_Glass_Marginal_Border"
+        self.door_panel = "Door_Panel_Glass_Marginal_Border.blend"
         self.door_handle = "Door_Handle"             
         
 class PROMPTS_Entry_Door_Prompts(bpy.types.Operator):

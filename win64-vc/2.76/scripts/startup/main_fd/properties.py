@@ -843,6 +843,7 @@ bpy.utils.register_class(List_Library_Item)
 
 class List_Library(PropertyGroup):
     module_name = StringProperty(name="Module Name")
+    lib_path = StringProperty(name="Library Path")
     items = CollectionProperty(name="Items",type=List_Library_Item)
     index = IntProperty(name="Index")
 
