@@ -2991,7 +2991,7 @@ def draw_dimensions(context, obj, opengl_dim, region, rv3d):
     for child in obj.children:
         if child.mv.type == 'VISDIM_B':
             b_p1 = get_location(child)
-
+    
     dist = calc_distance(a_p1, b_p1)  
 
     loc = get_location(obj)
@@ -3015,7 +3015,7 @@ def draw_dimensions(context, obj, opengl_dim, region, rv3d):
     bgl.glColor4f(rgb[0], rgb[1], rgb[2], rgb[3])
         
     midpoint3d = interpolate3d(v1, v2, math.fabs(dist / 2))
-    gap3d = (midpoint3d[0], midpoint3d[1], midpoint3d[2] + 0.014)
+    gap3d = (midpoint3d[0], midpoint3d[1], midpoint3d[2])
     txtpoint2d = get_2d_point(region, rv3d, gap3d)
     
     if opengl_dim.gl_label == "":
@@ -3023,8 +3023,8 @@ def draw_dimensions(context, obj, opengl_dim, region, rv3d):
     else:
         txt_dist = opengl_dim.gl_label
 
-    draw_text(txtpoint2d[0] + opengl_dim.gl_text_x, 
-              txtpoint2d[1] + opengl_dim.gl_text_y,
+    draw_text(txtpoint2d[0], 
+              txtpoint2d[1],
               txt_dist, 
               rgb, 
               fsize)
@@ -3055,7 +3055,7 @@ def draw_text(x_pos, y_pos, display_text, rgb, fsize):
         # calculate new Y position
         new_y = y_pos + (mheight * idx)
         # Draw
-        blf.position(font_id, x_pos - (text_width/2), new_y, 0)
+        blf.position(font_id, x_pos - (text_width/2), new_y - (text_height/2), 0)
         bgl.glColor4f(rgb[0], rgb[1], rgb[2], rgb[3])
         blf.draw(font_id, " " + line)
         

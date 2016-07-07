@@ -134,9 +134,19 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
                                      default=0.75)
     
     pv_pad = bpy.props.FloatProperty(name="Plan View Padding",
-                                     default=1)
+                                     default=1.5)
     
     main_scene = None
+    
+    ignore_obj_list = []
+    
+    def get_world(self):
+        if "2D Environment" in bpy.data.worlds:
+            return bpy.data.worlds["2D Environment"]
+        else:
+            world = bpy.data.worlds.new("2D Environment")
+            world.horizon_color = (1.0, 1.0, 1.0) 
+            return world
     
     def create_camera(self,scene):
         camera_data = bpy.data.cameras.new(scene.name)
@@ -147,43 +157,38 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
         scene.render.resolution_y = 1280
         
         scene.mv.ui.render_type_tabs = 'NPR'
-        lineset = scene.render.layers["RenderLayer"].freestyle_settings.linesets.new("LineSet")
-        lineset.linestyle = \
-        self.main_scene.render.layers["RenderLayer"].freestyle_settings.linesets["LineSet"].linestyle 
+         
+        fs = scene.render.layers[0].freestyle_settings
+          
+        lineset = fs.linesets.new("LineSet")
+        lineset.linestyle = fs.linesets["LineSet"].linestyle
         
         #TODO: Create a new world and assign it to the new scenes
-        scene.world = bpy.data.worlds[0]
-        scene.world.horizon_color = (1.0, 1.0, 1.0)
+        scene.world = self.get_world()
         scene.render.display_mode = 'NONE'
         scene.render.use_lock_interface = True        
-        
-        scene.mv.ui.render_type_tabs = 'NPR'
-        lineset = scene.render.layers["RenderLayer"].freestyle_settings.linesets.new("LineSet")
-        lineset.linestyle = \
-        self.main_scene.render.layers["RenderLayer"].freestyle_settings.linesets["LineSet"].linestyle                
-        
-        scene.world.horizon_color = (1.0, 1.0, 1.0)
-        scene.render.display_mode = 'NONE'
-        scene.render.use_lock_interface = True        
+        scene.render.image_settings.file_format = 'JPEG'
+#         scene.mv.ui.render_type_tabs = 'NPR'
         
         return camera_obj
     
     def link_dims_to_scene(self, scene, obj_bp):
         for child in obj_bp.children:
-            if child.mv.type in ('VISDIM_A','VISDIM_B'):
-                scene.objects.link(child)
-            if len(child.children) > 0:
-                self.link_dims_to_scene(scene, child)     
+            if child not in self.ignore_obj_list:
+                if child.mv.type in ('VISDIM_A','VISDIM_B'):
+                    scene.objects.link(child)
+                if len(child.children) > 0:
+                    self.link_dims_to_scene(scene, child)     
     
     def group_children(self,grp,obj):
-        if obj.mv.type != 'CAGE':
+        if obj.mv.type != 'CAGE' and obj not in self.ignore_obj_list:
             grp.objects.link(obj)   
         for child in obj.children:
             if len(child.children) > 0:
                 self.group_children(grp,child)
             else:
                 if not child.mv.is_wall_mesh:
-                    if child.mv.type != 'CAGE':
+                    if child.mv.type != 'CAGE' and obj not in self.ignore_obj_list:
                         grp.objects.link(child)  
         return grp
     
@@ -207,17 +212,23 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
                 dim = fd.Dimension()
                 dim.parent(wall.obj_bp)
                 dim.start_y(value = fd.inches(4) + wall.obj_y.location.y)
-                dim.start_z(value = 0)
+                dim.start_z(value = wall.obj_z.location.z + fd.inches(6))
                 dim.end_x(value = wall.obj_x.location.x)  
+                
+                self.ignore_obj_list.append(dim.anchor)
+                self.ignore_obj_list.append(dim.end_point)
                 
                 dim = fd.Dimension()
                 dim.parent(wall.obj_bp)
                 dim.start_x(value = wall.obj_x.location.x/2)
                 dim.start_y(value = wall.obj_y.location.y/2)
-                dim.start_z(value = 0)
+                dim.start_z(value = wall.obj_z.location.z + fd.inches(1))
                 dim.end_x(value = 0)
-                dim.set_label(wall.obj_bp.mv.name_object)                  
-                
+                dim.set_label(wall.obj_bp.mv.name_object)     
+                 
+                self.ignore_obj_list.append(dim.anchor)
+                self.ignore_obj_list.append(dim.end_point)
+                 
                 obj_bps = wall.get_wall_groups()
                 #Create Cubes for all products
                 for obj_bp in obj_bps:
@@ -233,16 +244,21 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
                     assembly_mesh.mv.type = 'CAGE'
                     distance = fd.inches(14) if assembly.obj_bp.location.z > 1 else fd.inches(8)
                     distance += wall.obj_y.location.y
+                    
                     dim = fd.Dimension()
                     dim.parent(assembly_mesh)
                     dim.start_y(value = distance)
                     dim.start_z(value = 0)
                     dim.end_x(value = assembly.obj_x.location.x)
                     
+                    self.ignore_obj_list.append(dim.anchor)
+                    self.ignore_obj_list.append(dim.end_point)
+                    
                 wall.get_wall_mesh().select = True
                 
         camera = self.create_camera(pv_scene)
         camera.rotation_euler.z = math.radians(-90.0)
+        bpy.ops.object.select_all(action="SELECT")
         bpy.ops.view3d.camera_to_view_selected()
         camera.data.ortho_scale += self.pv_pad
     
@@ -463,16 +479,39 @@ class OPERATOR_create_pdf(bpy.types.Operator):
     def sort_images(self,images):
         image_list = []
         for image in images:
-            pass
+            image_list.append(image)
         
         imgs = []
-        for img in images:
+        
+        cover_image = None
+        plan_view_image = None
+        
+        while len(image_list) > 0:
+            img = image_list.pop()
             if img.use_as_cover_image:
-                imgs.append()
+                cover_image = img
+            elif img.is_plan_view:
+                plan_view_image = img
+            else:
+                imgs.append(img)
+               
+        file_images = []
+                
+        if cover_image:
+            file_images.append(cover_image)
+        
+        if plan_view_image:
+            file_images.append(plan_view_image)
+        
+        for img in imgs:
+            file_images.append(img)
+                
+        return file_images
 
     def execute(self, context):
         pdf_images = []
-        images = context.window_manager.mv.image_views
+        
+        images = self.sort_images(context.window_manager.mv.image_views)
         for img in images:
             image = bpy.data.images[img.image_name]
             image.save_render(os.path.join(bpy.app.tempdir, image.name + ".jpg"))
@@ -489,6 +528,10 @@ class OPERATOR_create_pdf(bpy.types.Operator):
         file_name = 'Fluid Views.pdf'
 
         c = canvas.Canvas(os.path.join(file_path,file_name), pagesize=landscape(legal))
+        
+        for img in pdf_images:
+            print('IMAGE',img)
+        
         for img in pdf_images:
             print('IMG',img)
             c.drawImage(img,0,0,width=1920/2, height=1280/2, mask='auto')    
