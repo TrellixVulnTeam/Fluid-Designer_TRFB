@@ -174,7 +174,6 @@ class OPS_drop_product(Operator):
             self.product = fd.Assembly(obj_bp)
         else:
             self.product = fd.get_product_class(self.library_name,self.category_name,self.product_name)
-            print(self.library_name,self.category_name,self.product_name)
         if self.product:
             if obj_bp:
                 pass

@@ -1110,7 +1110,7 @@ class Library_Assembly(Assembly):
         part = Part(assembly.obj_bp)
         return part
     
-    def add_object(self,path=[],filepath=""):
+    def add_object(self,path):
         """ Returns:Assembly_Object - adds an assembly to this assembly
                                       and returns it as a fd.Part
                               
@@ -1118,10 +1118,7 @@ class Library_Assembly(Assembly):
                                     split into strings.
                                     i.e ("Library Name","Category Name","Object Name")
         """
-        if filepath != "":
-            obj = get_object_from_path(filepath)
-        else:
-            obj = get_object(path[:-1], path[-1])
+        obj = get_object(path[:-1], path[-1])
         obj.parent = self.obj_bp
         ass_obj = Assembly_Object(obj)
         return ass_obj
@@ -2331,7 +2328,6 @@ def get_product_class(library_name,category_name,product_name):
     
     for modname, modobj in inspect.getmembers(mod):
         for name, obj in inspect.getmembers(modobj):
-
             if "PRODUCT_" in name:
                 product = obj()
                 if product.library_name == library_name and product.category_name == category_name and product.assembly_name == product_name:
@@ -2452,18 +2448,6 @@ def get_object(folders,object_name):
         for obj in data_to.objects:
             link_objects_to_scene(obj,bpy.context.scene)
             return obj
-
-def get_object_from_path(file_path):
-    
-    with bpy.data.libraries.load(file_path, False, False) as (data_from, data_to):
-        for object in data_from.objects:
-            data_to.objects = [object]
-            break
-    
-    for obj in data_to.objects:
-        print('PRINTEE',obj)
-        link_objects_to_scene(obj,bpy.context.scene)
-        return obj
 
 def render_thumbnail(assembly):
     if assembly.obj_bp.cabinetlib.type_group == 'PRODUCT':
