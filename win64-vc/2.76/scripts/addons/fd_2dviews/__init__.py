@@ -338,7 +338,7 @@ class OPERATOR_render_2d_views(bpy.types.Operator):
 #         file_format = scene.render.image_settings.file_format.lower()
         
         bpy.ops.render.render('INVOKE_DEFAULT', write_still=True)
-        
+
         while not os.path.exists(bpy.path.abspath(scene.render.filepath) + ".jpg"):
             time.sleep(0.1)
         
@@ -355,6 +355,11 @@ class OPERATOR_render_2d_views(bpy.types.Operator):
                 
     def execute(self, context):
         file_path = bpy.app.tempdir if bpy.data.filepath == "" else os.path.dirname(bpy.data.filepath)
+        
+        # HACK: YOU HAVE TO SET THE CURRENT SCENE TO RENDER JPEG BECAUSE
+        # OF REPORTS LAB AND BLENDER LIMITATIONS. :(
+        rd = context.scene.render
+        rd.image_settings.file_format = 'JPEG'
         
         current_scene = context.screen.scene
         
