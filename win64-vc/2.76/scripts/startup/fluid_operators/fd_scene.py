@@ -1482,7 +1482,7 @@ class OPS_export_mvfd(Operator):
     bl_idname = "cabinetlib.export_mvfd"
     bl_label = "Export MVFD File"
     bl_description = "This will export a mvfd file. The file must be saved first."
- 
+    
     walls = []
     products = []
     
@@ -1564,10 +1564,6 @@ class OPS_export_mvfd(Operator):
             else:
                 self.xml.add_element_with_text(elm_product,'LinkIDWall','None')
             
-            if obj_product.cabinetlib.is_custom:
-                self.xml.add_element_with_text(elm_product,'IsCustom','True')
-            else:
-                self.xml.add_element_with_text(elm_product,'IsCustom','True')
             self.xml.add_element_with_text(elm_product,'IsCorner','False')
             self.xml.add_element_with_text(elm_product,'LinkIDLocation',obj_product.users_scene[0].name)
             self.xml.add_element_with_text(elm_product,'LinkIDSpecificationGroup',spec_group.name)
