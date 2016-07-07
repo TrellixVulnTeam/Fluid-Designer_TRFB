@@ -122,37 +122,38 @@ bpy.types.SpaceView3D.draw_handler_add(fd.draw_opengl, (None,None), 'WINDOW', 'P
 path = os.path.join(os.path.dirname(bpy.app.binary_path),str(bpy.app.version[0]) + "." + str(bpy.app.version[1]),"python","lib","tkinter")
 sys.path.append(path)
 
-@persistent
-def load_library_modules(scene):
-    """ Register Every Library Module on Startup
-    """
-    if bpy.context.window_manager.mv.library_module_path == "":
-        path = fd.get_library_scripts_dir()
-    else:
-        path = bpy.context.window_manager.mv.library_module_path
-    dirs = os.listdir(path)
-    for folder in dirs:
-        if os.path.isdir(os.path.join(path,folder)):
-            files = os.listdir(os.path.join(path,folder))
-            for file in files:
-                if file == '__init__.py':
-                    sys.path.append(path)
-                    mod = __import__(folder)
-                    if hasattr(mod, "register"):
-                        mod.register()
+# @persistent
+# def load_library_modules(scene):
+#     """ Register Every Library Module on Startup
+#     """
+#     if bpy.context.window_manager.mv.library_module_path == "":
+#         path = fd.get_library_scripts_dir()
+#     else:
+#         path = bpy.context.window_manager.mv.library_module_path
+#     dirs = os.listdir(path)
+#     for folder in dirs:
+#         if os.path.isdir(os.path.join(path,folder)):
+#             files = os.listdir(os.path.join(path,folder))
+#             for file in files:
+#                 if file == '__init__.py':
+#                     sys.path.append(path)
+#                     mod = __import__(folder)
+#                     if hasattr(mod, "register"):
+#                         mod.register()
+# 
+#     scene = bpy.context.scene
+# 
+#     if scene.mv.product_library_name not in bpy.context.window_manager.cabinetlib.lib_products:
+#         scene.mv.product_library_name = bpy.context.window_manager.cabinetlib.lib_products[0].name
+# 
+# bpy.app.handlers.load_post.append(load_library_modules)
 
-    scene = bpy.context.scene
-
-    if scene.mv.product_library_name not in bpy.context.window_manager.cabinetlib.lib_products:
-        scene.mv.product_library_name = bpy.context.window_manager.cabinetlib.lib_products[0].name
-
-bpy.app.handlers.load_post.append(load_library_modules)
-
-#     modules = fd.get_library_modules()
-#     for module in modules:
-#         mod = __import__(module)
-#         if hasattr(mod, "register"):
-#             mod.register()
+def load_library_modules():
+    modules = fd.get_library_modules()
+    for module in modules:
+        mod = __import__(module)
+        if hasattr(mod, "register"):
+            mod.register()
     
 def register():
     import sys
@@ -169,7 +170,7 @@ def register():
     sys.path.append(fd.get_library_scripts_dir())
     
     #Register All Library Modules
-#     load_library_modules()
+    load_library_modules()
     
     #Add/Overwrite Default Hot Key Commands
     wm = bpy.context.window_manager

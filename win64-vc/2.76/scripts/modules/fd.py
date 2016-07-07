@@ -2322,25 +2322,25 @@ def get_insert_group(library_name,category_name,product_name):
         
 def get_product_class(library_name,category_name,product_name):
 
-    lib = bpy.context.window_manager.cabinetlib.lib_products[bpy.context.scene.mv.product_library_name]
-    
-    mod = __import__(lib.module_name)
-    
-    for modname, modobj in inspect.getmembers(mod):
-        for name, obj in inspect.getmembers(modobj):
-            if "PRODUCT_" in name:
-                product = obj()
-                if product.library_name == library_name and product.category_name == category_name and product.assembly_name == product_name:
-                    return product
-    
-#     modules = get_library_modules()
-#     for module in modules:
-#         mod = __import__(module)
-#         for name, obj in inspect.getmembers(mod):
-#             if inspect.isclass(obj) and "PRODUCT_" in name:
+#     lib = bpy.context.window_manager.cabinetlib.lib_products[bpy.context.scene.mv.product_library_name]
+#     
+#     mod = __import__(lib.module_name)
+#     
+#     for modname, modobj in inspect.getmembers(mod):
+#         for name, obj in inspect.getmembers(modobj):
+#             if "PRODUCT_" in name:
 #                 product = obj()
 #                 if product.library_name == library_name and product.category_name == category_name and product.assembly_name == product_name:
 #                     return product
+    
+    modules = get_library_modules()
+    for module in modules:
+        mod = __import__(module)
+        for name, obj in inspect.getmembers(mod):
+            if inspect.isclass(obj) and "PRODUCT_" in name:
+                product = obj()
+                if product.library_name == library_name and product.category_name == category_name and product.assembly_name == product_name:
+                    return product
 
 def get_insert_class(library_name,category_name,product_name):
     modules = get_library_modules()
