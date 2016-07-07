@@ -1043,8 +1043,9 @@ class OPS_change_library(Operator):
                     context.scene.mv.scene_category_name = ""        
         
         if library_tabs == 'PRODUCT':
-            path = os.path.join(fd.get_library_dir("products"),self.library_name)
             context.scene.mv.product_library_name = self.library_name
+            lib = context.window_manager.cabinetlib.lib_products[self.library_name]
+            path = lib.lib_path
             dirs = os.listdir(path)
             for cat in dirs:
                 target_path = os.path.join(path,cat)
@@ -1053,7 +1054,19 @@ class OPS_change_library(Operator):
                     path = target_path
                     break
                 else:
-                    context.scene.mv.product_category_name = ""
+                    context.scene.mv.product_category_name = ""       
+
+#             path = os.path.join(fd.get_library_dir("products"),self.library_name)
+#             context.scene.mv.product_library_name = self.library_name
+#             dirs = os.listdir(path)
+#             for cat in dirs:
+#                 target_path = os.path.join(path,cat)
+#                 if os.path.isdir(target_path):
+#                     context.scene.mv.product_category_name = cat
+#                     path = target_path
+#                     break
+#                 else:
+#                     context.scene.mv.product_category_name = ""
             
         elif library_tabs == 'INSERT':
             path = os.path.join(fd.get_library_dir("inserts"),self.library_name)
