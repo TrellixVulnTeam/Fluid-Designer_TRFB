@@ -1751,6 +1751,10 @@ class fd_object(PropertyGroup):
                                    description="Use this object cut a hole in the selected mesh",
                                    default=False)
 
+    use_sma = BoolProperty(name="Use Solid Model Analyzer",
+                           description="Use Solid Model Analyzer to read geometry",
+                           default=False)
+
     PromptPage = bpy.props.PointerProperty(name="Prompt Page",
                                            description="Custom properties assigned to the object. Only access from base point object.",
                                            type=mvPromptPage)

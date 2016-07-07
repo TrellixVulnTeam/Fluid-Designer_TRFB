@@ -4438,6 +4438,7 @@ def draw_object_properties(layout,obj):
         draw_object_drivers(col,obj)
     if ui.interface_object_tabs == 'TOKENS':
         if obj.type == 'MESH':
+            col.prop(obj.mv,"use_sma")
             col.operator_menu_enum("cabinetlib.add_machine_token", "token_type", icon='SCULPTMODE_HLT')
             obj.cabinetlib.mp.draw_machine_tokens(col)
         
