@@ -1655,32 +1655,36 @@ class OPS_export_mvfd(Operator):
             
             if child.mv.is_cabinet_door:
                 assembly = fd.Assembly(child)
-                comment = ""
-                for achild in assembly.obj_bp.children:
-                    if achild.cabinetlib.comment != "":
-                        comment = achild.cabinetlib.comment
-                        break
-                elm_item = self.xml.add_element(elm_subassembly,'Subassembly',assembly.obj_bp.mv.name_object)
-                self.xml.add_element_with_text(elm_item,'LinkID',assembly.obj_bp.name)
-                self.xml.add_element_with_text(elm_item,'XLocation',self.distance(assembly.obj_bp.location.x))
-                self.xml.add_element_with_text(elm_item,'YLocation',self.distance(assembly.obj_bp.location.y))
-                self.xml.add_element_with_text(elm_item,'ZLocation',self.distance(assembly.obj_bp.location.z))
-                self.xml.add_element_with_text(elm_item,'XDimension',self.distance(assembly.obj_x.location.x))
-                self.xml.add_element_with_text(elm_item,'YDimension',self.distance(assembly.obj_y.location.y))
-                self.xml.add_element_with_text(elm_item,'ZDimension',self.distance(assembly.obj_z.location.z))                
-                self.xml.add_element_with_text(elm_item,'Comment',comment)
+                hide = assembly.get_prompt("Hide")
+                if hide and not hide.value():
+                    comment = ""
+                    for achild in assembly.obj_bp.children:
+                        if achild.cabinetlib.comment != "":
+                            comment = achild.cabinetlib.comment
+                            break
+                    elm_item = self.xml.add_element(elm_subassembly,'Subassembly',assembly.obj_bp.mv.name_object)
+                    self.xml.add_element_with_text(elm_item,'LinkID',assembly.obj_bp.name)
+                    self.xml.add_element_with_text(elm_item,'XLocation',self.distance(assembly.obj_bp.location.x))
+                    self.xml.add_element_with_text(elm_item,'YLocation',self.distance(assembly.obj_bp.location.y))
+                    self.xml.add_element_with_text(elm_item,'ZLocation',self.distance(assembly.obj_bp.location.z))
+                    self.xml.add_element_with_text(elm_item,'XDimension',self.distance(assembly.obj_x.location.x))
+                    self.xml.add_element_with_text(elm_item,'YDimension',self.distance(assembly.obj_y.location.y))
+                    self.xml.add_element_with_text(elm_item,'ZDimension',self.distance(assembly.obj_z.location.z))                
+                    self.xml.add_element_with_text(elm_item,'Comment',comment)
                 
             if child.mv.is_cabinet_drawer_box:
                 assembly = fd.Assembly(child)
-                elm_item = self.xml.add_element(elm_subassembly,'Subassembly',assembly.obj_bp.mv.name_object)
-                self.xml.add_element_with_text(elm_item,'LinkID',assembly.obj_bp.name)
-                self.xml.add_element_with_text(elm_item,'XLocation',self.distance(assembly.obj_bp.location.x))
-                self.xml.add_element_with_text(elm_item,'YLocation',self.distance(assembly.obj_bp.location.y))
-                self.xml.add_element_with_text(elm_item,'ZLocation',self.distance(assembly.obj_bp.location.z))
-                self.xml.add_element_with_text(elm_item,'XDimension',self.distance(assembly.obj_x.location.x))
-                self.xml.add_element_with_text(elm_item,'YDimension',self.distance(assembly.obj_y.location.y))
-                self.xml.add_element_with_text(elm_item,'ZDimension',self.distance(assembly.obj_z.location.z))                
-                self.xml.add_element_with_text(elm_item,'Comment',assembly.obj_bp.cabinetlib.comment)
+                hide = assembly.get_prompt("Hide")
+                if hide and not hide.value():
+                    elm_item = self.xml.add_element(elm_subassembly,'Subassembly',assembly.obj_bp.mv.name_object)
+                    self.xml.add_element_with_text(elm_item,'LinkID',assembly.obj_bp.name)
+                    self.xml.add_element_with_text(elm_item,'XLocation',self.distance(assembly.obj_bp.location.x))
+                    self.xml.add_element_with_text(elm_item,'YLocation',self.distance(assembly.obj_bp.location.y))
+                    self.xml.add_element_with_text(elm_item,'ZLocation',self.distance(assembly.obj_bp.location.z))
+                    self.xml.add_element_with_text(elm_item,'XDimension',self.distance(assembly.obj_x.location.x))
+                    self.xml.add_element_with_text(elm_item,'YDimension',self.distance(assembly.obj_y.location.y))
+                    self.xml.add_element_with_text(elm_item,'ZDimension',self.distance(assembly.obj_z.location.z))                
+                    self.xml.add_element_with_text(elm_item,'Comment',assembly.obj_bp.cabinetlib.comment)
                 
             self.write_subassemblies_for_product(elm_subassembly, child)
             
