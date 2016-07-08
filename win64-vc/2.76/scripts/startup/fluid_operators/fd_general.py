@@ -2319,6 +2319,29 @@ class OPS_create_screen_shot(Operator):
         bpy.ops.screen.screenshot(filepath=os.path.join(save_path,file+".png"),full=False)
         return{'FINISHED'}
 
+class OPS_project_info(Operator):
+    bl_idname = "fd_general.project_info"
+    bl_label = "Create Project"
+
+    def check(self,context):
+        return True
+    
+    def execute(self, context):
+        return {'FINISHED'}
+        
+    def invoke(self,context,event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(350))
+        
+    def draw(self, context):
+        props = context.scene.cabinetlib
+        layout = self.layout
+        layout.prop(props,"job_name")
+        layout.prop(props,"designer_name")
+        layout.prop(props,"client_name")
+        layout.prop(props,"client_phone")
+        layout.prop(props,"client_email")
+
 def select_all_items(self,context):
     wm = context.window_manager.mv
     
@@ -2753,7 +2776,8 @@ classes = [
            OPS_select_all_elevation_scenes,
            OPS_create_thumbnails,
            OPS_append_items,
-           OPS_create_screen_shot
+           OPS_create_screen_shot,
+           OPS_project_info
            ]
 
 def register():

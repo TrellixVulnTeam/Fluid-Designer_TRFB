@@ -86,7 +86,7 @@ class PANEL_2d_views(bpy.types.Panel):
             panel_box.label("Image Views",icon='RENDERLAYERS')
             panel_box.template_list("LIST_2d_images"," ",context.window_manager.mv,"image_views",context.window_manager.mv,"image_view_index")
             
-            panel_box.operator('2dviews.create_pdf',text="Create PDF")
+            panel_box.operator('2dviews.create_pdf',text="Create PDF",icon='FILE_BLANK')
             
 class MENU_elevation_scene_options(bpy.types.Menu):
     bl_label = "Elevation Scene Options"
@@ -96,6 +96,7 @@ class MENU_elevation_scene_options(bpy.types.Menu):
         layout.operator("fd_general.select_all_elevation_scenes",text="Select All",icon='CHECKBOX_HLT').select_all = True
         layout.operator("fd_general.select_all_elevation_scenes",text="Deselect All",icon='CHECKBOX_DEHLT').select_all = False
         layout.separator()
+        layout.operator('fd_general.project_info',text="View Project Info",icon='INFO')
         layout.operator("2dviews.create_new_view",text="Create Snap Shot",icon='SCENE')
         layout.separator()
         layout.operator("fd_scene.clear_2d_views",text="Clear All 2D Views",icon='X')
@@ -159,9 +160,24 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
         scene.mv.ui.render_type_tabs = 'NPR'
          
         fs = scene.render.layers[0].freestyle_settings
-          
-        lineset = fs.linesets.new("LineSet")
-        lineset.linestyle = fs.linesets["LineSet"].linestyle
+
+        lineset = fs.linesets.new("Visible")
+#         lineset.linestyle = lineset.linestyle
+        
+#         lineset = fs.linesets.new("Hidden")
+#         lineset.linestyle = lineset.linestyle
+#         lineset.visibility = 'HIDDEN'
+#         lineset.edge_type_combination = 'AND'
+#         lineset.select_edge_mark = True
+#         lineset.select_crease = False
+#         lineset.linestyle.name = "Dashed"
+#         lineset.linestyle.use_dashed_line = True
+#         lineset.linestyle.dash1 = 30
+#         lineset.linestyle.dash2 = 30
+#         lineset.linestyle.dash3 = 30
+#         lineset.linestyle.gap1 = 30
+#         lineset.linestyle.gap2 = 30
+#         lineset.linestyle.gap3 = 30
         
         #TODO: Create a new world and assign it to the new scenes
         scene.world = self.get_world()
@@ -217,14 +233,14 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
                 
                 self.ignore_obj_list.append(dim.anchor)
                 self.ignore_obj_list.append(dim.end_point)
-                
-                dim = fd.Dimension()
-                dim.parent(wall.obj_bp)
-                dim.start_x(value = wall.obj_x.location.x/2)
-                dim.start_y(value = wall.obj_y.location.y/2)
-                dim.start_z(value = wall.obj_z.location.z + fd.inches(1))
-                dim.end_x(value = 0)
-                dim.set_label(wall.obj_bp.mv.name_object)     
+  
+                bpy.ops.object.text_add()
+                text = context.active_object
+                text.parent = wall.obj_bp
+                text.location = (wall.obj_x.location.x/2,fd.inches(1.5),wall.obj_z.location.z)
+                text.data.size = .1
+                text.data.body = wall.obj_bp.mv.name_object
+                text.data.align = 'CENTER'                 
                  
                 self.ignore_obj_list.append(dim.anchor)
                 self.ignore_obj_list.append(dim.end_point)
@@ -286,6 +302,17 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
         new_scene.world = self.main_scene.world
         
         self.link_dims_to_scene(new_scene, wall.obj_bp)
+        
+        bpy.ops.object.text_add()
+        
+        text = context.active_object
+        text.parent = wall.obj_bp
+        text.location.x = fd.inches(-2)
+        text.location.z = fd.inches(-10)
+        text.rotation_euler.x = math.radians(90)
+        text.data.size = .1
+        text.data.body = wall.obj_bp.mv.name_object
+        text.data.align = 'RIGHT'
         
         camera = self.create_camera(new_scene)
         camera.rotation_euler.x = math.radians(90.0)
@@ -515,6 +542,8 @@ class OPERATOR_create_pdf(bpy.types.Operator):
 
     def execute(self, context):
         pdf_images = []
+        props = context.scene.cabinetlib
+        width, height = landscape(legal)
         
         images = self.sort_images(context.window_manager.mv.image_views)
         for img in images:
@@ -522,28 +551,46 @@ class OPERATOR_create_pdf(bpy.types.Operator):
             image.save_render(os.path.join(bpy.app.tempdir, image.name + ".jpg"))
             pdf_images.append(os.path.join(bpy.app.tempdir, image.name + ".jpg"))
 
-        bpy.ops.fd_general.open_browser_window(path=bpy.app.tempdir)
-        # TODO: Save images to temp directory then sort them
-        #COVER PAGE
-        #PLAN VIEW
-        #Elevations
-#         width, height = legal
-         
         file_path = bpy.app.tempdir if bpy.data.filepath == "" else os.path.dirname(bpy.data.filepath)
         file_name = 'Fluid Views.pdf'
-
+        
         c = canvas.Canvas(os.path.join(file_path,file_name), pagesize=landscape(legal))
-        
+        logo = os.path.join(os.path.dirname(__file__),"logo.jpg")
         for img in pdf_images:
-            print('IMAGE',img)
-        
-        for img in pdf_images:
-            print('IMG',img)
-            c.drawImage(img,0,0,width=1920/2, height=1280/2, mask='auto')    
+            #PICTURE
+            c.drawImage(img,20,80,width=width-40, height=height-100, mask='auto',preserveAspectRatio=True)  
+            #LOGO
+            c.drawImage(logo,25,20,width=200, height=60, mask='auto',preserveAspectRatio=True) 
+            #PICTURE BOX
+            c.rect(20,80,width-40,height-100)
+            #LOGO BOX
+            c.rect(20,20,220,60)
+            #COMMENT BOX
+            c.setFont("Times-Roman",9)
+            c.drawString(width-20-250+5, 67, "COMMENTS:")
+            c.rect(width-20-248,20,248,60)
+            #CLIENT
+            c.drawString(245, 67, "CLIENT: " + props.client_name)
+            c.rect(240,60,250,20)
+            #PHONE
+            c.drawString(245, 47, "PHONE: " + props.client_phone)
+            c.rect(240,40,250,20)
+            #EMAIL
+            c.drawString(245, 27, "EMAIL: " + props.client_email)
+            c.rect(240,20,250,20)                  
+            #JOBNAME
+            c.drawString(495, 67, "JOB NAME: " + props.job_name)
+            c.rect(490,60,250,20)
+            #JOBNAME
+            c.drawString(495, 47, "ROOM: " )
+            c.rect(490,40,250,20)
+            #DRAWN BY
+            c.drawString(495, 27, "DRAWN BY: " + props.designer_name)
+            c.rect(490,20,250,20)
             c.showPage()
-        
+            
         c.save()
-         
+        
         os.system('start "Title" /D "'+file_path+'" "' + file_name + '"')
         
         return {'FINISHED'}

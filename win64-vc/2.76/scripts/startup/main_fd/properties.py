@@ -1497,25 +1497,15 @@ class SCENE_PROPERTIES(PropertyGroup):
                                 description="Product Tabs",
                                 default='INFO')
     
-    project_name = StringProperty(name="Project Name")
-    
-    job_number = StringProperty(name="Job Number")
-    
-    job_email = StringProperty(name="Job E-Mail")
-    
-    architect = StringProperty(name="Architect")
-    
-    estimator = StringProperty(name="Estimator")
-    
-    contractor = StringProperty(name="Contractor")
+    job_name = StringProperty(name="Job Name")
     
     designer_name = StringProperty(name="Designer Name")
     
-    customer_name = StringProperty(name="Customer Name")
+    client_name = StringProperty(name="Client Name")
+
+    client_phone = StringProperty(name="Client Phone") 
     
-    customer_address = StringProperty(name="Customer Address")
-    
-    customer_phone = StringProperty(name="Customer Phone") 
+    client_email = StringProperty(name="Client Email")
     
     def sync_spec_groups_from_template(self):
         ''' This adds all of the missing material

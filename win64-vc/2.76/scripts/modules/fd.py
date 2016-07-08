@@ -3035,7 +3035,7 @@ def draw_dimensions(context, obj, opengl_dim, region, rv3d):
     
     screen_point_ap1 = get_2d_point(region, rv3d, a_p1)
     screen_point_bp1 = get_2d_point(region, rv3d, b_p1)
-    
+
     if None in (screen_point_ap1,screen_point_bp1):
         return
     
@@ -3061,6 +3061,12 @@ def draw_dimensions(context, obj, opengl_dim, region, rv3d):
     bgl.glColor4f(rgb[0], rgb[1], rgb[2], rgb[3])      
 
     draw_arrow(screen_point_ap1, screen_point_bp1, a_size, a_type, b_type)  
+
+    draw_line(screen_point_ap1, screen_point_bp1)
+    
+    #TODO: FIGURE OUT HOW TO DRAW TWO LINES
+#     draw_line(screen_point_ap1, end_line_point1)
+#     draw_line(start_line_point1, screen_point_bp1)
     
     draw_extension_lines(screen_point_ap1, screen_point_bp1, a_size)
 
@@ -3079,11 +3085,14 @@ def draw_text(x_pos, y_pos, display_text, rgb, fsize):
     #---------- Draw all lines-+
     for line in mylines:
         text_width, text_height = blf.dimensions(font_id, line)
-            
         # calculate new Y position
         new_y = y_pos + (mheight * idx)
         # Draw
-        blf.position(font_id, x_pos - (text_width/2), new_y - (text_height/2), 0)
+        # Figure out how to draw the text right in the middle of the dimesion line
+        # and break the line where the text is.
+#         blf.position(font_id, x_pos - (text_width/2), new_y - (text_height/2), 0)
+
+        blf.position(font_id, x_pos - (text_width/2), new_y + 3, 0)
         bgl.glColor4f(rgb[0], rgb[1], rgb[2], rgb[3])
         blf.draw(font_id, " " + line)
         
@@ -3256,7 +3265,7 @@ def draw_arrow(v1, v2, size=20, a_typ="1", b_typ="1"):
     if b_typ == "2":
         draw_triangle(v2, v2a, v2b)
 
-    draw_line(v1, v2)
+#     draw_line(v1, v2)
 
 def draw_line(v1, v2):
     # noinspection PyBroadException
@@ -3490,9 +3499,9 @@ def get_2d_renderings(context):
     file_name = bpy.path.basename(context.blend_data.filepath).replace(".blend","")
     write_dir = os.path.join(bpy.app.tempdir, file_name)
     if not os.path.exists(write_dir): os.mkdir(write_dir)
-
+    
     bpy.ops.fd_scene.prepare_2d_elevations()
-
+    
     images = []
     
     #Render Each Scene
