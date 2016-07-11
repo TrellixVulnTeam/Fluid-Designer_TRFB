@@ -1678,11 +1678,11 @@ class WM_PROPERTIES(PropertyGroup):
         row.prop_enum(self, "library_types", 'INSERT', icon='STICKY_UVS_LOC', text="Inserts")
         if self.library_types == 'PRODUCT':
             if len(self.lib_products) < 1:
-                box.operator('cabinetlib.load_library_modules',text="Load Library Modules",icon='FILE_REFRESH')
+                box.operator('fd_general.load_library_modules',text="Load Library Modules",icon='FILE_REFRESH')
             else:
                 row = box.row(align=True)
                 row.scale_y = 1.3
-                row.operator("cabinetlib.load_library_modules",text="",icon='FILE_REFRESH')
+                row.operator("fd_general.load_library_modules",text="",icon='FILE_REFRESH')
                 props = row.operator('cabinetlib.brd_library_items',text="Build",icon='FILE_BLEND')
                 props.operation_type = 'BUILD'
                 props.library_type = 'PRODUCT'
@@ -1699,11 +1699,11 @@ class WM_PROPERTIES(PropertyGroup):
                 
         if self.library_types == 'INSERT':
             if len(self.lib_inserts) < 1:
-                box.operator('cabinetlib.load_library_modules',text="Load Library Modules",icon='FILE_REFRESH')
+                box.operator('fd_general.load_library_modules',text="Load Library Modules",icon='FILE_REFRESH')
             else:
                 row = box.row(align=True)
                 row.scale_y = 1.3
-                row.operator("cabinetlib.load_library_modules",text="",icon='FILE_REFRESH')
+                row.operator("fd_general.load_library_modules",text="",icon='FILE_REFRESH')
                 props = row.operator('cabinetlib.brd_library_items',text="Build",icon='FILE_BLEND')
                 props.operation_type = 'BUILD'
                 props.library_type = 'INSERT'

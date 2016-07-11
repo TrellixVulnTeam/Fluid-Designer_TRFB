@@ -1281,12 +1281,10 @@ class OPS_properties(Operator):
 class OPS_load_library_modules(Operator):
     """ This will load all of the products from the products module.
     """
-    bl_idname = "cabinetlib.load_library_modules"
+    bl_idname = "fd_general.load_library_modules"
     bl_label = "Load Library Modules"
     bl_description = "This will load the available product library modules"
     bl_options = {'UNDO'}
-    
-    
 
     def get_library(self,libraries,library_name,module_name):
         if library_name in libraries:
@@ -1859,6 +1857,37 @@ class OPS_dimension_interface(Operator):
         row = box.row()
         row.label("Arrow Size:")        
         row.prop(scene.mv.opengl_dim, 'gl_arrow_size', text="")
+
+class OPS_toggle_dimension_handles(Operator):
+    bl_idname = "fd_general.toggle_dimension_handles"
+    bl_label = "Toggle Dimension Handles"
+
+    turn_on = BoolProperty(name="Turn On",default=False)
+
+    def execute(self, context):
+        for obj in context.scene.objects:
+            if obj.mv.type == 'VISDIM_A':
+                obj.empty_draw_type = 'SPHERE'
+                obj.empty_draw_size = fd.inches(1)
+                obj.hide = False if self.turn_on else True
+            elif obj.mv.type == 'VISDIM_B':
+                obj.rotation_euler.z = math.radians(-90)
+                obj.empty_draw_type = 'CONE'
+                obj.empty_draw_size = fd.inches(2)
+                obj.hide = False if self.turn_on else True
+        return {'FINISHED'}
+
+class OPS_create_single_dimension(Operator):
+    bl_idname = "fd_general.create_single_dimension"
+    bl_label = "Create Single Dimension"
+
+    def execute(self, context):
+        bpy.ops.select_all(action='DESELECT')
+        dim = fd.Dimension()
+        dim.end_x(value = fd.inches(100))
+        dim.anchor.select = True
+        context.scene.objects.active = dim.anchor
+        return {'FINISHED'}
 
 class OPS_Add_Dimension(Operator):
     bl_idname = "fd_general.add_dimension"
@@ -2770,6 +2799,8 @@ classes = [
            OPS_check_for_updates,
            OPS_create_project,
            OPS_dimension_interface,
+           OPS_toggle_dimension_handles,
+           OPS_create_single_dimension,
            OPS_Add_Dimension,
            OPS_select_all_products,
            OPS_select_all_inserts,
