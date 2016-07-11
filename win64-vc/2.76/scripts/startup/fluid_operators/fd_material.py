@@ -374,7 +374,7 @@ class OPS_change_product_spec_group(Operator):
 class OPS_change_active_spec_group(Operator):
     """ This change the products spec group.
     """
-    bl_idname = "cabinetlib.change_active_spec_group"
+    bl_idname = "fd_material.change_active_spec_group"
     bl_label = "Change Product Specification Group"
     bl_description = "This changes the active specification group"
     bl_options = {'UNDO'}
@@ -391,7 +391,7 @@ class OPS_change_active_spec_group(Operator):
 class OPS_clear_spec_group(Operator):
     """ This will clear all the spec groups to save on file size.
     """
-    bl_idname = "cabinetlib.clear_spec_group"
+    bl_idname = "fd_material.clear_spec_group"
     bl_label = "Clear Specification Groups"
     bl_description = "This will clear all the spec group information from this file"
     bl_options = {'UNDO'}
@@ -413,7 +413,7 @@ class OPS_clear_spec_group(Operator):
 class OPS_copy_selected_spec_group(Operator):
     """ This will copy the selected specification group.
     """
-    bl_idname = "cabinetlib.copy_selected_spec_group"
+    bl_idname = "fd_material.copy_selected_spec_group"
     bl_label = "Copy Selected Spec Group"
     bl_description = "This will copy the selected specification group"
     bl_options = {'UNDO'}
@@ -467,7 +467,7 @@ class OPS_copy_selected_spec_group(Operator):
 class OPS_delete_spec_group(Operator):
     """ This will delete the a specification group.
     """
-    bl_idname = "cabinetlib.delete_spec_group"
+    bl_idname = "fd_material.delete_spec_group"
     bl_label = "Delete Specification Group"
     bl_description = "This will delete the selected specification group. You must have at least one specification group"
     bl_options = {'UNDO'}
@@ -505,7 +505,7 @@ class OPS_delete_spec_group(Operator):
 class OPS_rename_spec_group(Operator):
     """ This will delete the a specification group.
     """
-    bl_idname = "cabinetlib.rename_spec_group"
+    bl_idname = "fd_material.rename_spec_group"
     bl_label = "Rename Specification Group"
     bl_description = "This will allow you to rename the selected specification group."
     bl_options = {'UNDO'}
@@ -538,7 +538,7 @@ class OPS_rename_spec_group(Operator):
 class OPS_reload_spec_group_from_library_modules(Operator):
     """ This will reload all of the defaults for the template.
     """
-    bl_idname = "cabinetlib.reload_spec_group_from_library_modules"
+    bl_idname = "fd_material.reload_spec_group_from_library_modules"
     bl_label = "Reload Specification Group From Library Modules"
     bl_description = "This will clear all of the specification group information and reload from the template"
     bl_options = {'UNDO'}
@@ -549,7 +549,7 @@ class OPS_reload_spec_group_from_library_modules(Operator):
         return {'FINISHED'}
 
 class OPS_set_pointer(Operator):
-    bl_idname = "cabinetlib.set_pointer"
+    bl_idname = "fd_material.set_pointer"
     bl_label = "Set Pointer"
     bl_description = "This will set the selected item in the file browser to this pointer."
     
@@ -587,7 +587,7 @@ class OPS_set_pointer(Operator):
         return {'FINISHED'}
     
 class OPS_assign_materials_from_pointers(Operator):
-    bl_idname = "cabinetlib.assign_materials_from_pointers"
+    bl_idname = "fd_material.assign_materials_from_pointers"
     bl_label = "Assign Materials From Pointers"
     bl_description = "This will assign the materials based on the pointers assigned to the object."
 
@@ -597,6 +597,7 @@ class OPS_assign_materials_from_pointers(Operator):
         fd.assign_materials_from_pointers(context.object)
         return {'FINISHED'}
     
+#TODO: Update operator to remove cabinetlib. Many libraries use this as a way to update all materials
 class OPS_update_scene_from_pointers(Operator):
     bl_idname = "cabinetlib.update_scene_from_pointers"
     bl_label = "Update Scene From Pointers"
@@ -613,12 +614,8 @@ class OPS_update_scene_from_pointers(Operator):
         return {'FINISHED'}
     
 class OPS_get_materials(Operator):
-    bl_idname = "cabinetlib.get_materials"
+    bl_idname = "fd_material.get_materials"
     bl_label = "Get Materials"
-    
-    @classmethod
-    def poll(cls, context):
-        return True
     
     def execute(self, context):
         sheets = context.scene.cabinetlib.sheets
@@ -659,16 +656,13 @@ class OPS_get_materials(Operator):
         
         return {'FINISHED'}
     
+#TODO: Update operator to remove cabinetlib. Many libraries use this as a way to update all materials
 class OPS_sync_material_slots(Operator):
     bl_idname = "cabinetlib.sync_material_slots"
     bl_label = "Sync Material Slots"
     bl_options = {'UNDO'}
     
     object_name = StringProperty(name="Object Name")
-    
-    @classmethod
-    def poll(cls, context):
-        return True
     
     def execute(self, context):
         obj = bpy.data.objects[self.object_name]
@@ -726,7 +720,7 @@ class OPS_sync_material_slots(Operator):
         return {'FINISHED'}
     
 class OPS_assign_material_interface(bpy.types.Operator):
-    bl_idname = "cabinetlib.assign_material_interface"
+    bl_idname = "fd_material.assign_material_interface"
     bl_label = "Assign Materials"
     bl_options = {'UNDO'}
     
@@ -791,7 +785,7 @@ class OPS_assign_material_interface(bpy.types.Operator):
             row.prop(material,'assign_material',text="")
     
 class OPS_assign_material(Operator):
-    bl_idname = "materiallib.assign_material"
+    bl_idname = "fd_material.assign_material"
     bl_label = "Assign Material"
     bl_options = {'UNDO'}
     
@@ -823,7 +817,7 @@ class OPS_assign_material(Operator):
                 row.label('No Material')
             else:
                 row.prop(mat_slot,"name",text="")
-            props = row.operator('materiallib.assign_material_to_slot',text="Assign",icon='BACK')
+            props = row.operator('fd_material.assign_material_to_slot',text="Assign",icon='BACK')
             props.object_name = self.obj.name
             props.material_name = self.material.name
             props.index = index
@@ -832,7 +826,7 @@ class OPS_assign_material(Operator):
         return {'FINISHED'}
         
 class OPS_assign_material_to_slot(Operator):
-    bl_idname = "materiallib.assign_material_to_slot"
+    bl_idname = "fd_material.assign_material_to_slot"
     bl_label = "Assign Material to Slot"
     bl_options = {'UNDO'}
     

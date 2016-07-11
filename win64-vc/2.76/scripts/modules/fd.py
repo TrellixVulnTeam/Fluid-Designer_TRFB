@@ -2510,7 +2510,7 @@ def save_assembly(assembly):
         image.user_clear()
         bpy.data.images.remove(image)    
         
-    bpy.ops.cabinetlib.clear_spec_group()
+    bpy.ops.fd_material.clear_spec_group()
 
     bpy.ops.wm.save_as_mainfile(filepath=thumbnail_path)
     
@@ -4640,7 +4640,7 @@ def draw_object_materials(layout,obj):
         row.label('Material Slots:')
         row.operator("object.material_slot_add", icon='ZOOMIN', text="")
         row.operator("object.material_slot_remove", icon='ZOOMOUT', text="")
-        row.operator("cabinetlib.assign_materials_from_pointers", icon='FILE_REFRESH', text="").object_name = obj.name
+        row.operator("fd_material.assign_materials_from_pointers", icon='FILE_REFRESH', text="").object_name = obj.name
         row.operator('fd_general.open_new_window',text="",icon='NODETREE').space_type = 'NODE_EDITOR'
         layout.template_list("FD_UL_materials", "", obj, "material_slots", obj, "active_material_index", rows=1)
         layout.template_ID(obj, "active_material", new="material.new")

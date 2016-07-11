@@ -560,7 +560,7 @@ class OPS_drop_material(Operator):
                 if len(selected_obj.data.uv_textures) == 0:
                     bpy.ops.fd_object.unwrap_mesh(object_name=selected_obj.name)
                 if len(selected_obj.material_slots) > 1:
-                    bpy.ops.materiallib.assign_material('INVOKE_DEFAULT',material_name = self.material.name, object_name = selected_obj.name)
+                    bpy.ops.fd_material.assign_material('INVOKE_DEFAULT',material_name = self.material.name, object_name = selected_obj.name)
                     return self.cancel_drop(context,event)
                 else:
                     if len(selected_obj.material_slots) == 0:
@@ -580,7 +580,7 @@ class OPS_drop_material(Operator):
                     return self.cancel_drop(context,event)
                 
         if event.type == 'RIGHTMOUSE' and event.value == 'PRESS':
-            bpy.ops.cabinetlib.assign_material_interface('INVOKE_DEFAULT',filepath = self.filepath)
+            bpy.ops.fd_material.assign_material_interface('INVOKE_DEFAULT',filepath = self.filepath)
             return self.cancel_drop(context,event)
             
         if event.type in {'MIDDLEMOUSE', 'WHEELUPMOUSE', 'WHEELDOWNMOUSE'}:
@@ -1474,7 +1474,7 @@ class OPS_brd_library_items(Operator):
         script_file = open(script,'w')
         script_file.write("import bpy\n")
         script_file.write("import fd\n")
-        script_file.write("bpy.ops.cabinetlib.reload_spec_group_from_library_modules()\n")
+        script_file.write("bpy.ops.fd_material.reload_spec_group_from_library_modules()\n")
         script_file.write("import " + self.module_name + "\n")
         script_file.write("item = " + self.module_name + "." + class_name + "()\n")
         script_file.write("item.draw()\n")

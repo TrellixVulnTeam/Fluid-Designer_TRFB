@@ -1511,7 +1511,7 @@ class OPS_export_mvfd(Operator):
         for wall in self.walls:
             self.walls.remove(wall)
              
-        bpy.ops.cabinetlib.get_materials()
+        bpy.ops.fd_material.get_materials()
         for obj in context.visible_objects:
             if obj.mv.type == 'BPWALL':
                 self.walls.append(obj)

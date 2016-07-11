@@ -95,13 +95,13 @@ class LIST_specgroups(UIList):
     
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         layout.label(text=item.name,icon='SOLO_ON')
-        props = layout.operator('cabinetlib.delete_spec_group',text="",icon='X',emboss=False)
+        props = layout.operator('fd_material.delete_spec_group',text="",icon='X',emboss=False)
         props.spec_group_name = item.name
         
 class LIST_material_pointers(UIList):
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        props = layout.operator("cabinetlib.set_pointer",text='',icon='FORWARD')
+        props = layout.operator("fd_material.set_pointer",text='',icon='FORWARD')
         props.pointer_name = item.name
         props.pointer_type = 'MATERIAL'
         layout.label(text=item.name,icon='HAND')
