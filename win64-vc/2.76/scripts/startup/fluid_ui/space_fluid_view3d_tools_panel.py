@@ -101,11 +101,11 @@ class MENU_Change_Cabinet_Spec_Group(Menu):
         product_bp = fd.get_bp(context.object,'PRODUCT')
         for spec_group in spec_groups:
             if product_bp.cabinetlib.spec_group_name == spec_group.name:
-                props = layout.operator('cabinetlib.change_product_spec_group',text=spec_group.name,icon='FILE_TICK')
+                props = layout.operator('fd_material.change_product_spec_group',text=spec_group.name,icon='FILE_TICK')
                 props.spec_group_name = spec_group.name
                 props.object_name = product_bp.name
             else:
-                props = layout.operator('cabinetlib.change_product_spec_group',text=spec_group.name,icon='LINK')
+                props = layout.operator('fd_material.change_product_spec_group',text=spec_group.name,icon='LINK')
                 props.spec_group_name = spec_group.name
                 props.object_name = product_bp.name
                 

@@ -1165,7 +1165,7 @@ class Library_Assembly(Assembly):
                 self.obj_z = child
                 
         default_spec_group = bpy.context.scene.cabinetlib.spec_groups[bpy.context.scene.cabinetlib.spec_group_index]
-        bpy.ops.cabinetlib.change_product_spec_group(object_name=self.obj_bp.name,spec_group_name=default_spec_group.name)
+        bpy.ops.fd_material.change_product_spec_group(object_name=self.obj_bp.name,spec_group_name=default_spec_group.name)
         
         self.obj_bp.cabinetlib.type_group = self.type_assembly
         self.obj_bp.cabinetlib.placement_type = self.placement_type

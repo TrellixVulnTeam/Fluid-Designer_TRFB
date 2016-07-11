@@ -344,7 +344,7 @@ class OPS_create_material_template(Operator):
 class OPS_change_product_spec_group(Operator):
     """ This change the products spec group.
     """
-    bl_idname = "cabinetlib.change_product_spec_group"
+    bl_idname = "fd_material.change_product_spec_group"
     bl_label = "Change Product Specification Group"
     bl_description = "This changes the products specification group"
     bl_options = {'UNDO'}
