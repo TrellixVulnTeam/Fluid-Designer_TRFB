@@ -2266,7 +2266,7 @@ class OPS_Add_Dimension(Operator):
         col.prop(self, "offset", text="Offset")
 
 class OPS_select_all_products(Operator):   
-    bl_idname = "cabinetlib.select_all_products"
+    bl_idname = "fd_general.select_all_products"
     bl_label = "Select All Products"
     bl_description = "This will select all of the products in the library list"
     
@@ -2288,7 +2288,7 @@ class OPS_select_all_products(Operator):
         return{'FINISHED'}
     
 class OPS_select_all_inserts(Operator):   
-    bl_idname = "cabinetlib.select_all_inserts"
+    bl_idname = "fd_general.select_all_inserts"
     bl_label = "Select All Inserts"
     bl_description = "This will select all of the inserts in the library list"    
     

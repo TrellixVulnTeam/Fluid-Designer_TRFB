@@ -53,16 +53,16 @@ class MENU_Product_Library_Options(Menu):
 
     def draw(self, context):
         layout = self.layout
-        layout.operator("cabinetlib.select_all_products",text="Select All",icon='CHECKBOX_HLT').select_all = True
-        layout.operator("cabinetlib.select_all_products",text="Deselect All",icon='CHECKBOX_DEHLT').select_all = False
+        layout.operator("fd_general.select_all_products",text="Select All",icon='CHECKBOX_HLT').select_all = True
+        layout.operator("fd_general.select_all_products",text="Deselect All",icon='CHECKBOX_DEHLT').select_all = False
 
 class MENU_Insert_Library_Options(Menu):
     bl_label = "Insert Library Options"
 
     def draw(self, context):
         layout = self.layout
-        layout.operator("cabinetlib.select_all_inserts",text="Select All",icon='CHECKBOX_HLT').select_all = True
-        layout.operator("cabinetlib.select_all_inserts",text="Deselect All",icon='CHECKBOX_DEHLT').select_all = False
+        layout.operator("fd_general.select_all_inserts",text="Select All",icon='CHECKBOX_HLT').select_all = True
+        layout.operator("fd_general.select_all_inserts",text="Deselect All",icon='CHECKBOX_DEHLT').select_all = False
 
 class MENU_Spec_Group_Options(Menu):
     bl_label = "Specification Groups"
