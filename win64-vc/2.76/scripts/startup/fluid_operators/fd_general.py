@@ -1393,7 +1393,7 @@ class OPS_load_library_modules(Operator):
 class OPS_brd_library_items(Operator):
     """ This will rebuild the entire library.
     """
-    bl_idname = "cabinetlib.brd_library_items"
+    bl_idname = "fd_general.brd_library_items"
     bl_label = "Build Render Draw Library Items"
     bl_description = "This operator will build render or draw every selected item in the library"
     bl_options = {'UNDO'}

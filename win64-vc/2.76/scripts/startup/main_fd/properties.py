@@ -1683,13 +1683,13 @@ class WM_PROPERTIES(PropertyGroup):
                 row = box.row(align=True)
                 row.scale_y = 1.3
                 row.operator("fd_general.load_library_modules",text="",icon='FILE_REFRESH')
-                props = row.operator('cabinetlib.brd_library_items',text="Build",icon='FILE_BLEND')
+                props = row.operator('fd_general.brd_library_items',text="Build",icon='FILE_BLEND')
                 props.operation_type = 'BUILD'
                 props.library_type = 'PRODUCT'
-                props = row.operator('cabinetlib.brd_library_items',text="Render",icon='RENDER_RESULT')
+                props = row.operator('fd_general.brd_library_items',text="Render",icon='RENDER_RESULT')
                 props.operation_type = 'RENDER'
                 props.library_type = 'PRODUCT'
-                props = row.operator('cabinetlib.brd_library_items',text="Draw",icon='GREASEPENCIL')
+                props = row.operator('fd_general.brd_library_items',text="Draw",icon='GREASEPENCIL')
                 props.operation_type = 'DRAW'
                 props.library_type = 'PRODUCT'
                 row.menu('MENU_Product_Library_Options',text="",icon='DOWNARROW_HLT')
@@ -1704,13 +1704,13 @@ class WM_PROPERTIES(PropertyGroup):
                 row = box.row(align=True)
                 row.scale_y = 1.3
                 row.operator("fd_general.load_library_modules",text="",icon='FILE_REFRESH')
-                props = row.operator('cabinetlib.brd_library_items',text="Build",icon='FILE_BLEND')
+                props = row.operator('fd_general.brd_library_items',text="Build",icon='FILE_BLEND')
                 props.operation_type = 'BUILD'
                 props.library_type = 'INSERT'
-                props = row.operator('cabinetlib.brd_library_items',text="Render",icon='RENDER_RESULT')
+                props = row.operator('fd_general.brd_library_items',text="Render",icon='RENDER_RESULT')
                 props.operation_type = 'RENDER'
                 props.library_type = 'INSERT'
-                props = row.operator('cabinetlib.brd_library_items',text="Draw",icon='GREASEPENCIL')
+                props = row.operator('fd_general.brd_library_items',text="Draw",icon='GREASEPENCIL')
                 props.operation_type = 'DRAW'
                 props.library_type = 'INSERT'
                 row.menu('MENU_Insert_Library_Options',text="",icon='DOWNARROW_HLT')
