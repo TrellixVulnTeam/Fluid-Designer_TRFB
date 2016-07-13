@@ -1717,7 +1717,6 @@ class OPS_export_mvfd(Operator):
     def write_stl_node(self,node,obj,spec_group):
         assembly = fd.Assembly(obj.parent)
         elm_part = self.xml.add_element(node,'Part',assembly.obj_bp.mv.name_object)
-        self.xml.add_element_with_text(elm_part,'PartType',fd.get_material_name(obj))
         self.xml.add_element_with_text(elm_part,'Qty',"1")
         self.xml.add_element_with_text(elm_part,'MaterialName',fd.get_material_name(obj))
         self.xml.add_element_with_text(elm_part,'Thickness',self.distance(fd.get_part_thickness(obj)))
@@ -1745,9 +1744,10 @@ class OPS_export_mvfd(Operator):
         self.xml.add_element_with_text(elm_part,'Par2',"")
         self.xml.add_element_with_text(elm_part,'Par3',"")
         self.write_machine_tokens(elm_part, obj)
-        global_matrix = axis_conversion(to_forward='Y',to_up='Z').to_4x4() * Matrix.Scale(1.0, 4)
-        faces = faces_from_mesh(obj, global_matrix, True)
-        self.write_geometry(elm_part, faces)
+        if obj.mv.use_sma:
+            global_matrix = axis_conversion(to_forward='Y',to_up='Z').to_4x4() * Matrix.Scale(1.0, 4)
+            faces = faces_from_mesh(obj, global_matrix, True)
+            self.write_geometry(elm_part, faces)
 
     def write_geometry(self,elm_part,faces):
         elm_geo = self.xml.add_element(elm_part,"Geometry")
