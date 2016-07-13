@@ -2182,6 +2182,10 @@ def get_edgebanding_name_from_pointer_name(pointer_name,spec_group):
         pointer = spec_group.edgeparts[pointer_name]
         thickness = str(round(meter_to_unit(pointer.thickness),4))
         material = spec_group.materials[pointer.material].item_name
+        if thickness + " " + material not in bpy.context.scene.cabinetlib.edgebanding:
+            mat = bpy.context.scene.cabinetlib.edgebanding.add()
+            mat.thickness = pointer.thickness
+            mat.name = thickness + " " + material
         return thickness + " " + material
     else:
         return ""
