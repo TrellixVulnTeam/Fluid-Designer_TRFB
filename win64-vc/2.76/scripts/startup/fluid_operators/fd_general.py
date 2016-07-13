@@ -593,7 +593,6 @@ class OPS_drop_material(Operator):
         
     def execute(self,context):
         path, ext = os.path.splitext(self.filepath)
-        print('TEST',path)
         if ext == '.blend':
             bpy.ops.fd_general.open_blend_file('INVOKE_DEFAULT',filepath=self.filepath)
             return {'FINISHED'}
@@ -1882,11 +1881,13 @@ class OPS_create_single_dimension(Operator):
     bl_label = "Create Single Dimension"
 
     def execute(self, context):
-        bpy.ops.select_all(action='DESELECT')
+        bpy.ops.object.select_all(action='DESELECT')
         dim = fd.Dimension()
         dim.end_x(value = fd.inches(100))
         dim.anchor.select = True
         context.scene.objects.active = dim.anchor
+        bpy.ops.fd_general.toggle_dimension_handles(turn_on=True)
+        context.window_manager.mv.use_opengl_dimensions = True
         return {'FINISHED'}
 
 class OPS_Add_Dimension(Operator):
