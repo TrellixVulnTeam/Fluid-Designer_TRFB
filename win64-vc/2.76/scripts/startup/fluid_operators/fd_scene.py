@@ -1603,7 +1603,7 @@ class OPS_export_mvfd(Operator):
             self.write_buyout_for_product(elm_buyout,obj_product)                
             
             elm_subassemblies = self.xml.add_element(elm_product,"Subassemblies")
-            self.write_subassemblies_for_product(elm_subassemblies,obj_product)                 
+            self.write_subassemblies_for_product(elm_subassemblies,obj_product,spec_group)                 
             
             item_number += 1
             
@@ -1651,7 +1651,7 @@ class OPS_export_mvfd(Operator):
                 mat_name = fd.get_edgebanding_name_from_pointer_name(edgepart.name,spec_group)
                 self.xml.add_element_with_text(elm_edgepart,'MaterialName',mat_name)
                 
-    def write_subassemblies_for_product(self,elm_subassembly,obj_bp):
+    def write_subassemblies_for_product(self,elm_subassembly,obj_bp,spec_group):
         for child in obj_bp.children:
             
             if child.mv.is_cabinet_door:
@@ -1672,7 +1672,9 @@ class OPS_export_mvfd(Operator):
                     self.xml.add_element_with_text(elm_item,'YDimension',self.distance(assembly.obj_y.location.y))
                     self.xml.add_element_with_text(elm_item,'ZDimension',self.distance(assembly.obj_z.location.z))                
                     self.xml.add_element_with_text(elm_item,'Comment',comment)
-                
+                    elm_parts = self.xml.add_element(elm_item,"Parts")
+                    self.write_stl_files_for_product(elm_parts,assembly.obj_bp,spec_group)
+            
             if child.mv.is_cabinet_drawer_box:
                 assembly = fd.Assembly(child)
                 hide = assembly.get_prompt("Hide")
@@ -1686,8 +1688,10 @@ class OPS_export_mvfd(Operator):
                     self.xml.add_element_with_text(elm_item,'YDimension',self.distance(assembly.obj_y.location.y))
                     self.xml.add_element_with_text(elm_item,'ZDimension',self.distance(assembly.obj_z.location.z))                
                     self.xml.add_element_with_text(elm_item,'Comment',assembly.obj_bp.cabinetlib.comment)
-                
-            self.write_subassemblies_for_product(elm_subassembly, child)
+                    elm_parts = self.xml.add_element(elm_item,"Parts")
+                    self.write_stl_files_for_product(elm_parts,assembly.obj_bp,spec_group)
+                    
+            self.write_subassemblies_for_product(elm_subassembly, child,spec_group)
             
     def write_hardware_for_product(self,elm_hardware,obj_bp):
         for child in obj_bp.children:
