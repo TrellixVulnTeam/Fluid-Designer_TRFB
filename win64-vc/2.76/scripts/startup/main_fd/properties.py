@@ -1059,6 +1059,7 @@ class Machine_Token(PropertyGroup):
     show_expanded = BoolProperty(name="Show Expanded",default=False)
     type_token = EnumProperty(name="Mesh Type",
                               items=[('NONE',"None","None"),
+                                     ('CORNERNOTCH',"CORNERNOTCH","CORNERNOTCH"),
                                      ('CONST',"CONST","CONST"),
                                      ('HOLES',"HOLES","HOLES"),
                                      ('SHLF',"SHLF","SHLF"),
@@ -1179,7 +1180,7 @@ class Machine_Token(PropertyGroup):
             param_dict['Par3'] = str(fd.unit(self.beginning_depth))
             param_dict['Par4'] = str(fd.unit(self.lead_out))
             param_dict['Par5'] = str(fd.unit(self.double_pass))
-            param_dict['Par6'] = ""
+            param_dict['Par6'] = "0"
             param_dict['Par7'] = str(self.tool_number)
             param_dict['Par8'] = str(fd.unit(self.panel_penetration))
             param_dict['Par9'] = str(self.tongue_tool_number)
@@ -1216,6 +1217,17 @@ class Machine_Token(PropertyGroup):
             param_dict['Par7'] = str(fd.unit(self.distance_between_holes))
             param_dict['Par8'] = str(self.associative_dia)
             param_dict['Par9'] = str(fd.unit(self.associative_depth))
+            
+        if self.type_token == 'CORNERNOTCH':
+            param_dict['Par1'] = str(fd.unit(self.dim_in_x))
+            param_dict['Par2'] = str(fd.unit(self.dim_in_y))
+            param_dict['Par3'] = str(fd.unit(self.dim_in_z))
+            param_dict['Par4'] = str(fd.unit(self.lead_in))
+            param_dict['Par5'] = ""
+            param_dict['Par6'] = ""
+            param_dict['Par7'] = str(self.tool_number)
+            param_dict['Par8'] = ""
+            param_dict['Par9'] = ""
             
         return param_dict
     
@@ -1315,7 +1327,17 @@ class Machine_Token(PropertyGroup):
                 box.prop(self,'distance_between_holes')
                 box.prop(self,'associative_dia')
                 box.prop(self,'associative_depth')
-
+            if self.type_token == 'CORNERNOTCH':
+                box.prop(self,'dim_in_x')
+                box.prop(self,'dim_in_y')
+                box.prop(self,'dim_in_z')
+                box.prop(self,'face_bore_dia')
+                box.prop(self,'end_dim_in_x')
+                box.prop(self,'end_dim_in_y')
+                box.prop(self,'distance_between_holes')
+                box.prop(self,'associative_dia')
+                box.prop(self,'associative_depth')
+                
     def add_driver(self,obj,token_property,expression,driver_vars,index=None):
         data_path = 'cabinetlib.mp.machine_tokens.["' + self.name + '"].' + token_property
         
@@ -1339,11 +1361,12 @@ class Machine_Point(PropertyGroup):
     
     machine_token_index = IntProperty(name="Machine Token Index")
     
-    def add_machine_token(self,name,token_type,face):
+    def add_machine_token(self,name,token_type,face,edge="1"):
         token = self.machine_tokens.add()
         token.name = name
         token.type_token = token_type
         token.face = face
+        token.edge = edge
         return token
     
     def draw_machine_tokens(self,layout):

@@ -1883,7 +1883,7 @@ class OPS_create_single_dimension(Operator):
     def execute(self, context):
         bpy.ops.object.select_all(action='DESELECT')
         dim = fd.Dimension()
-        dim.end_x(value = fd.inches(100))
+        dim.end_x(value = fd.inches(0))
         dim.anchor.select = True
         context.scene.objects.active = dim.anchor
         bpy.ops.fd_general.toggle_dimension_handles(turn_on=True)

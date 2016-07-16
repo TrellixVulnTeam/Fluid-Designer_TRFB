@@ -1248,23 +1248,21 @@ class Part(Assembly):
                 if l2:
                     child.cabinetlib.edge_l2 = edgebanding_name
                  
-    def add_machine_token(self,machining_name,machining_type,machining_face):
+    def add_machine_token(self,machining_name,machining_type,machining_face,machining_edge="1"):
         """ Returns:tuple(bpy.types.Object,properties.Machining_Token) - adds a machine token
-                                                                         to every cutpart mesh
+                                                                         to the first cutpart mesh
                            
-            edgebanding_name:string - name of the edgepart_pointer to assign
+            machining_name:string - name of the machining token
                                       
-            w1:bool - edgeband width 1 of the part
+            machining_name:string - type of machining token to add
             
-            w2:bool - edgeband width 2 of the part
+            machining_face:string - face to add the machining token to
             
-            l1:bool - edgeband length 1 of the part
-            
-            l2:bool - edgeband length 2 of the part
+            machining_edge:string - edge to add the machining token to
         """
         for child in self.obj_bp.children:
             if child.cabinetlib.type_mesh == 'CUTPART':
-                token = child.cabinetlib.mp.add_machine_token(machining_name ,machining_type,machining_face)
+                token = child.cabinetlib.mp.add_machine_token(machining_name ,machining_type,machining_face,machining_edge)
                 return child, token
                  
     def get_cutparts(self):

@@ -1719,6 +1719,27 @@ class OPS_export_mvfd(Operator):
                     self.write_stl_node(elm_parts, child, spec_group)
             self.write_stl_files_for_product(elm_parts, child, spec_group)
 
+    def get_part_location(self,obj_bp):
+        pass
+    
+    def get_part_x_location(self,obj,value):
+        if obj.parent is None or obj.cabinetlib.type_group == 'PRODUCT':
+            return self.location(value)
+        value += obj.parent.location.x
+        return self.get_part_x_location(obj.parent,value)
+
+    def get_part_y_location(self,obj,value):
+        if obj.parent is None or obj.cabinetlib.type_group == 'PRODUCT':
+            return self.location(value)
+        value += obj.parent.location.y
+        return self.get_part_x_location(obj.parent,value)
+
+    def get_part_z_location(self,obj,value):
+        if obj.parent is None or obj.cabinetlib.type_group == 'PRODUCT':
+            return self.location(value)
+        value += obj.parent.location.z
+        return self.get_part_x_location(obj.parent,value)
+
     def write_stl_node(self,node,obj,spec_group):
         assembly = fd.Assembly(obj.parent)
         elm_part = self.xml.add_element(node,'Part',assembly.obj_bp.mv.name_object)
@@ -1732,9 +1753,9 @@ class OPS_export_mvfd(Operator):
         self.xml.add_element_with_text(elm_part,'PartLength',str(fd.unit(obj.dimensions.x)))
         self.xml.add_element_with_text(elm_part,'PartWidth',str(fd.unit(obj.dimensions.y)))
         self.xml.add_element_with_text(elm_part,'Comment',assembly.obj_bp.cabinetlib.comment)
-        self.xml.add_element_with_text(elm_part,'XOrigin',self.distance(assembly.obj_bp.location.x))
-        self.xml.add_element_with_text(elm_part,'YOrigin',self.distance(assembly.obj_bp.location.y))
-        self.xml.add_element_with_text(elm_part,'ZOrigin',self.distance(assembly.obj_bp.location.z))
+        self.xml.add_element_with_text(elm_part,'XOrigin',self.get_part_x_location(assembly.obj_bp,assembly.obj_bp.location.x))
+        self.xml.add_element_with_text(elm_part,'YOrigin',self.get_part_y_location(assembly.obj_bp,assembly.obj_bp.location.y))
+        self.xml.add_element_with_text(elm_part,'ZOrigin',self.get_part_z_location(assembly.obj_bp,assembly.obj_bp.location.z))
         self.xml.add_element_with_text(elm_part,'XRotation',self.angle(assembly.obj_bp.rotation_euler.x))
         self.xml.add_element_with_text(elm_part,'YRotation',self.angle(assembly.obj_bp.rotation_euler.y))
         self.xml.add_element_with_text(elm_part,'ZRotation',self.angle(assembly.obj_bp.rotation_euler.z))
@@ -1744,7 +1765,7 @@ class OPS_export_mvfd(Operator):
         self.xml.add_element_with_text(elm_part,'EdgeLength2',fd.get_edgebanding_name_from_pointer_name(obj.cabinetlib.edge_l2,spec_group))
         self.xml.add_element_with_text(elm_part,'DrawToken3D',"DRAW3DBOX CABINET")
         self.xml.add_element_with_text(elm_part,'ElvToken2D',"DRAW2DBOX CABINET")
-        self.xml.add_element_with_text(elm_part,'BasePoint',"1")
+        self.xml.add_element_with_text(elm_part,'BasePoint',self.get_part_base_point(assembly))
         self.xml.add_element_with_text(elm_part,'MachinePoint',"1")
         self.xml.add_element_with_text(elm_part,'Par1',"")
         self.xml.add_element_with_text(elm_part,'Par2',"")
@@ -1756,6 +1777,37 @@ class OPS_export_mvfd(Operator):
             faces = faces_from_mesh(obj, global_matrix, True)
             self.write_geometry(elm_part, faces)
 
+    def get_part_base_point(self,assembly):
+        mx = False
+        my = False
+        mz = False
+        
+        if assembly.obj_x.location.x < 0:
+            mx = True
+        if assembly.obj_y.location.y < 0:
+            my = True
+        if assembly.obj_z.location.z < 0:
+            mz = True
+            
+        if (mx == False) and (my == False) and (mz == False):
+            return "1"
+        if (mx == False) and (my == False) and (mz == True):
+            return "2"        
+        if (mx == False) and (my == True) and (mz == False):
+            return "3"
+        if (mx == False) and (my == True) and (mz == True):
+            return "4"
+        if (mx == True) and (my == True) and (mz == False):
+            return "5"
+        if (mx == True) and (my == True) and (mz == True):
+            return "6"        
+        if (mx == True) and (my == False) and (mz == False):
+            return "7"
+        if (mx == True) and (my == False) and (mz == True):
+            return "8"   
+             
+        return "1"
+        
     def write_geometry(self,elm_part,faces):
         elm_geo = self.xml.add_element(elm_part,"Geometry")
         for face in faces:
@@ -1777,7 +1829,11 @@ class OPS_export_mvfd(Operator):
         for token in obj_part.cabinetlib.mp.machine_tokens:
             elm_token = self.xml.add_element(elm_tokens,'MachineToken',token.name)
             param_dict = token.create_parameter_dictionary()
-            self.xml.add_element_with_text(elm_token,'Instruction',token.type_token + token.face)
+            if token.type_token == 'CORNERNOTCH':
+                instructions = token.type_token + token.face + " " + token.edge
+            else:
+                instructions = token.type_token + token.face
+            self.xml.add_element_with_text(elm_token,'Instruction',instructions)
             self.xml.add_element_with_text(elm_token,'Par1',param_dict['Par1'])
             self.xml.add_element_with_text(elm_token,'Par2',param_dict['Par2'])
             self.xml.add_element_with_text(elm_token,'Par3',param_dict['Par3'])
