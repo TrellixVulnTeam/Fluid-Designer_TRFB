@@ -1753,13 +1753,20 @@ class OPS_export_mvfd(Operator):
     def write_stl_node(self,node,obj,spec_group):
         assembly = fd.Assembly(obj.parent)
         elm_part = self.xml.add_element(node,'Part',assembly.obj_bp.mv.name_object)
-        self.xml.add_element_with_text(elm_part,'PartType',obj.cabinetlib.type_mesh)
-        if obj.cabinetlib.type_mesh == 'SOLIDSTOCK':
-            if fd.get_material_name(obj) not in self.solid_stock_materials:
-                self.solid_stock_materials[fd.get_material_name(obj)] = fd.get_part_thickness(obj)
+        
+        if obj.cabinetlib.type_mesh == 'CUTPART':
+            self.xml.add_element_with_text(elm_part,'PartType',"2")
+
         if obj.cabinetlib.type_mesh == 'BUYOUT':
+            self.xml.add_element_with_text(elm_part,'PartType',"4")
             if fd.get_material_name(obj) not in self.buyout_materials:
                 self.buyout_materials.append(fd.get_material_name(obj))
+                
+        if obj.cabinetlib.type_mesh == 'SOLIDSTOCK':
+            self.xml.add_element_with_text(elm_part,'PartType',"3")
+            if fd.get_material_name(obj) not in self.solid_stock_materials:
+                self.solid_stock_materials[fd.get_material_name(obj)] = fd.get_part_thickness(obj)
+                
         self.xml.add_element_with_text(elm_part,'LinkID',assembly.obj_bp.name)
         self.xml.add_element_with_text(elm_part,'Qty',"1")
         self.xml.add_element_with_text(elm_part,'MaterialName',fd.get_material_name(obj))
