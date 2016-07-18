@@ -1441,10 +1441,11 @@ class OBJECT_PROPERTIES(PropertyGroup):
                          description="Machining Point",
                          type=Machine_Point)
     
-    edge_w1 = StringProperty(name="Edge Width 1")
-    edge_l1 = StringProperty(name="Edge Length 1")
-    edge_w2 = StringProperty(name="Edge Width 2")
-    edge_l2 = StringProperty(name="Edge Length 2")
+    edge_w1 = StringProperty(name="Edge Width 1",description="Name of the edgebanding applied to Width 1")
+    edge_l1 = StringProperty(name="Edge Length 1",description="Name of the edgebanding applied to Length 1")
+    edge_w2 = StringProperty(name="Edge Width 2",description="Name of the edgebanding applied to Width 2")
+    edge_l2 = StringProperty(name="Edge Length 2",description="Name of the edgebanding applied to Length 2")
+    solid_stock = StringProperty(name="Solid Stock",description="Name of the solid stock material applied to the obj")
     
     product_category = StringProperty(name="Product Category")
     

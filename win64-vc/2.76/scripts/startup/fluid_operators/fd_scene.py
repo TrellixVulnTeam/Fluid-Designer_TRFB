@@ -1486,6 +1486,9 @@ class OPS_export_mvfd(Operator):
     walls = []
     products = []
     
+    buyout_materials = []
+    solid_stock_materials = {}
+    
     xml = None
     
     @classmethod
@@ -1599,8 +1602,8 @@ class OPS_export_mvfd(Operator):
             elm_hardware = self.xml.add_element(elm_product,"Hardware")
             self.write_hardware_for_product(elm_hardware,obj_product)
             
-            elm_buyout = self.xml.add_element(elm_product,"Buyout")
-            self.write_buyout_for_product(elm_buyout,obj_product)                
+#             elm_buyout = self.xml.add_element(elm_product,"Buyout")
+#             self.write_buyout_for_product(elm_buyout,obj_product)                
             
             elm_subassemblies = self.xml.add_element(elm_product,"Subassemblies")
             self.write_subassemblies_for_product(elm_subassemblies,obj_product,spec_group)                 
@@ -1631,9 +1634,19 @@ class OPS_export_mvfd(Operator):
         for edgeband in bpy.context.scene.cabinetlib.edgebanding:
             elm_edge = self.xml.add_element(elm_edgebanding,'Edgeband',edgeband.name)
             self.xml.add_element_with_text(elm_edge,'Type',"3")
-            print(str(fd.unit(edgeband.thickness)))
             self.xml.add_element_with_text(elm_edge,'Thickness',str(fd.unit(edgeband.thickness)))
 
+    def write_buyout_materials(self,project_node):
+        elm_buyouts = self.xml.add_element(project_node,"Buyouts")
+        for buyout in self.buyout_materials:
+            self.xml.add_element(elm_buyouts,'Buyout',buyout)
+    
+    def write_solid_stock_material(self,project_node):
+        elm_solid_stocks = self.xml.add_element(project_node,"SolidStocks")
+        for solid_stock in self.solid_stock_materials:
+            elm_solid_stock = self.xml.add_element(elm_solid_stocks,'SolidStock',solid_stock)
+            self.xml.add_element_with_text(elm_solid_stock,'Thickness',str(fd.unit(self.solid_stock_materials[solid_stock])))
+        
     def write_spec_groups(self,project_node):
         elm_spec_groups = self.xml.add_element(project_node,"SpecGroups")
         
@@ -1714,13 +1727,10 @@ class OPS_export_mvfd(Operator):
             
     def write_stl_files_for_product(self,elm_parts,obj_bp,spec_group):
         for child in obj_bp.children:
-            if child.cabinetlib.type_mesh == 'CUTPART':
+            if child.cabinetlib.type_mesh in {'CUTPART','SOLIDSTOCK','BUYOUT'}:
                 if not child.hide:
                     self.write_stl_node(elm_parts, child, spec_group)
             self.write_stl_files_for_product(elm_parts, child, spec_group)
-
-    def get_part_location(self,obj_bp):
-        pass
     
     def get_part_x_location(self,obj,value):
         if obj.parent is None or obj.cabinetlib.type_group == 'PRODUCT':
@@ -1732,17 +1742,24 @@ class OPS_export_mvfd(Operator):
         if obj.parent is None or obj.cabinetlib.type_group == 'PRODUCT':
             return self.location(value)
         value += obj.parent.location.y
-        return self.get_part_x_location(obj.parent,value)
+        return self.get_part_y_location(obj.parent,value)
 
     def get_part_z_location(self,obj,value):
         if obj.parent is None or obj.cabinetlib.type_group == 'PRODUCT':
             return self.location(value)
         value += obj.parent.location.z
-        return self.get_part_x_location(obj.parent,value)
+        return self.get_part_z_location(obj.parent,value)
 
     def write_stl_node(self,node,obj,spec_group):
         assembly = fd.Assembly(obj.parent)
         elm_part = self.xml.add_element(node,'Part',assembly.obj_bp.mv.name_object)
+        self.xml.add_element_with_text(elm_part,'PartType',obj.cabinetlib.type_mesh)
+        if obj.cabinetlib.type_mesh == 'SOLIDSTOCK':
+            if fd.get_material_name(obj) not in self.solid_stock_materials:
+                self.solid_stock_materials[fd.get_material_name(obj)] = fd.get_part_thickness(obj)
+        if obj.cabinetlib.type_mesh == 'BUYOUT':
+            if fd.get_material_name(obj) not in self.buyout_materials:
+                self.buyout_materials.append(fd.get_material_name(obj))
         self.xml.add_element_with_text(elm_part,'LinkID',assembly.obj_bp.name)
         self.xml.add_element_with_text(elm_part,'Qty',"1")
         self.xml.add_element_with_text(elm_part,'MaterialName',fd.get_material_name(obj))
@@ -1860,6 +1877,8 @@ class OPS_export_mvfd(Operator):
         self.write_products(elm_project)
         self.write_materials(elm_project)
         self.write_edgebanding(elm_project)
+        self.write_buyout_materials(elm_project)
+        self.write_solid_stock_material(elm_project)
 #         self.write_spec_groups(elm_project)
         
         # WRITE FILE

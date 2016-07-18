@@ -1219,6 +1219,16 @@ class Part(Assembly):
             if child.type == 'MESH' and child.cabinetlib.type_mesh == 'CUTPART':
                 child.cabinetlib.cutpart_name = cutpart_name
 
+    def solid_stock(self,solid_stock_name):
+        """ Returns:None - assigns the every mesh solid stock 
+                           to the solid_stock_name
+                           
+            solid_stock_name:string - solid stock name to assign to obj
+        """
+        for child in self.obj_bp.children:
+            if child.type == 'MESH' and child.cabinetlib.type_mesh == 'SOLIDSTOCK':
+                child.cabinetlib.solid_stock = solid_stock_name
+
     def edgebanding(self,edgebanding_name,w1=False,l1=False,w2=False,l2=False):
         """ Returns:None - assigns every mesh cut part 
                            to the edgebanding_name
@@ -2198,6 +2208,13 @@ def get_part_thickness(obj):
                 for child in obj.parent.children:
                     if child.mv.type == 'VPDIMZ':
                         return math.fabs(child.location.z)
+                    
+    if obj.cabinetlib.type_mesh in {'SOLIDSTOCK','BUYOUT'}:
+        if obj.parent:
+            for child in obj.parent.children:
+                if child.mv.type == 'VPDIMZ':
+                    return math.fabs(child.location.z)
+                
     if obj.cabinetlib.type_mesh == 'EDGEBANDING':
         for mod in obj.modifiers:
             if mod.type == 'SOLIDIFY':
@@ -2216,8 +2233,18 @@ def get_material_name(obj):
                 exterior = mv_slot.item_name
             if mv_slot.name in {'Bottom','Interior'}:
                 interior = mv_slot.item_name
-                
+    
         return format_material_name(thickness,core,exterior,interior)
+    
+    if obj.cabinetlib.type_mesh == 'BUYOUT':
+        if obj.parent:
+            return obj.parent.mv.name_object
+        else:
+            return  obj.mv.name_object
+    
+    if obj.cabinetlib.type_mesh == 'SOLIDSTOCK':
+        thickness = str(round(meter_to_unit(get_part_thickness(obj)),4))
+        return thickness + " " + obj.cabinetlib.solid_stock
     
 #-------LIBRARY DATA
 
@@ -4637,6 +4664,10 @@ def draw_object_materials(layout,obj):
         if obj.cabinetlib.type_mesh == 'EDGEBANDING':
             row = layout.row(align=True)
             row.prop_search(obj.cabinetlib,"edgepart_name",spec_group,"edgeparts",icon='EDGESEL',text="")
+            
+        if obj.cabinetlib.type_mesh == 'SOLIDSTOCK':
+            row = layout.row(align=True)
+            row.prop(obj.cabinetlib,"solid_stock")
 
         row = layout.row()
         row.label('Material Slots:')
