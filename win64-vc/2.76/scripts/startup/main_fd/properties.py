@@ -1521,16 +1521,6 @@ class SCENE_PROPERTIES(PropertyGroup):
                                 description="Product Tabs",
                                 default='INFO')
     
-    job_name = StringProperty(name="Job Name")
-    
-    designer_name = StringProperty(name="Designer Name")
-    
-    client_name = StringProperty(name="Client Name")
-
-    client_phone = StringProperty(name="Client Phone") 
-    
-    client_email = StringProperty(name="Client Email")
-    
     def sync_spec_groups_from_template(self):
         ''' This adds all of the missing material
             pointers to your exsisting spec groups
@@ -1930,7 +1920,15 @@ class fd_scene(PropertyGroup):
                                         default=fd.inches(6),
                                         unit='LENGTH')
 
+    job_name = StringProperty(name="Job Name")
+    
+    designer_name = StringProperty(name="Designer Name")
+    
+    client_name = StringProperty(name="Client Name")
 
+    client_phone = StringProperty(name="Client Phone")
+    
+    client_email = StringProperty(name="Client Email")
     
 bpy.utils.register_class(fd_scene)
 

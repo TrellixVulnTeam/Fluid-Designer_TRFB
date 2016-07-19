@@ -2364,7 +2364,7 @@ class OPS_project_info(Operator):
         return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(350))
         
     def draw(self, context):
-        props = context.scene.cabinetlib
+        props = context.scene.mv
         layout = self.layout
         layout.prop(props,"job_name")
         layout.prop(props,"designer_name")

@@ -2157,8 +2157,6 @@ def assign_materials_from_pointers(obj):
     else:
         obj.draw_type = 'TEXTURED'
 
-
-
 def format_material_name(thickness,core,exterior,interior):
     if core == exterior:
         exterior = "-"

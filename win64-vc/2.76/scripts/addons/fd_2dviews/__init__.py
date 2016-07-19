@@ -542,7 +542,7 @@ class OPERATOR_create_pdf(bpy.types.Operator):
 
     def execute(self, context):
         pdf_images = []
-        props = context.scene.cabinetlib
+        props = context.scene.mv
         width, height = landscape(legal)
         
         images = self.sort_images(context.window_manager.mv.image_views)
