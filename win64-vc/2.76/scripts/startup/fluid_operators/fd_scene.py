@@ -754,6 +754,9 @@ class OPS_clear_2d_views(Operator):
                 context.screen.scene = scene
                 bpy.ops.scene.delete()                         
                 
+        for view in context.window_manager.mv.image_views:
+            context.window_manager.mv.image_views.remove(0)
+                
         return {'FINISHED'}
     
 class OPS_genereate_views(Operator):

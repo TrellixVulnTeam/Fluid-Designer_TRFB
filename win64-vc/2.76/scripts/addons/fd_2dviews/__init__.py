@@ -453,7 +453,7 @@ class OPERATOR_delete_image(bpy.types.Operator):
                 bpy.data.images.remove(image)
                 break
 
-        return {'FINISHED'}    
+        return {'FINISHED'}
     
 class OPERATOR_create_new_view(bpy.types.Operator):
     bl_idname = "2dviews.create_new_view"
@@ -551,8 +551,17 @@ class OPERATOR_create_pdf(bpy.types.Operator):
             image.save_render(os.path.join(bpy.app.tempdir, image.name + ".jpg"))
             pdf_images.append(os.path.join(bpy.app.tempdir, image.name + ".jpg"))
 
-        file_path = bpy.app.tempdir if bpy.data.filepath == "" else os.path.dirname(bpy.data.filepath)
-        file_name = 'Fluid Views.pdf'
+        if bpy.data.filepath == "":
+            file_path = bpy.app.tempdir
+            room_name = "Unsaved"
+        else:
+            project_path = os.path.dirname(bpy.data.filepath)
+            room_name, ext = os.path.splitext(os.path.basename(bpy.data.filepath))
+            file_path = os.path.join(project_path,room_name)
+            if not os.path.exists(file_path):
+                os.makedirs(file_path)
+
+        file_name = '2D Views.pdf'
         
         c = canvas.Canvas(os.path.join(file_path,file_name), pagesize=landscape(legal))
         logo = os.path.join(os.path.dirname(__file__),"logo.jpg")
@@ -582,7 +591,7 @@ class OPERATOR_create_pdf(bpy.types.Operator):
             c.drawString(495, 67, "JOB NAME: " + props.job_name)
             c.rect(490,60,250,20)
             #JOBNAME
-            c.drawString(495, 47, "ROOM: " )
+            c.drawString(495, 47, "ROOM: " + room_name)
             c.rect(490,40,250,20)
             #DRAWN BY
             c.drawString(495, 27, "DRAWN BY: " + props.designer_name)
@@ -590,9 +599,15 @@ class OPERATOR_create_pdf(bpy.types.Operator):
             c.showPage()
             
         c.save()
-        
-        os.system('start "Title" /D "'+file_path+'" "' + file_name + '"')
-        
+
+        #FIX FILE PATH To remove all double backslashes 
+        fixed_file_path = os.path.normpath(file_path)
+
+        if os.path.exists(os.path.join(fixed_file_path,file_name)):
+            os.system('start "Title" /D "'+fixed_file_path+'" "' + file_name + '"')
+        else:
+            print('Cannot Find ' + os.path.join(fixed_file_path,file_name))
+            
         return {'FINISHED'}
         
 def register():
