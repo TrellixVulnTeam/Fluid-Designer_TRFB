@@ -1858,6 +1858,8 @@ class OPS_export_mvfd(Operator):
             param_dict = token.create_parameter_dictionary()
             if token.type_token == 'CORNERNOTCH':
                 instructions = token.type_token + token.face + " " + token.edge
+            elif token.type_token == 'SLIDE':
+                instructions = token.type_token
             else:
                 instructions = token.type_token + token.face
             self.xml.add_element_with_text(elm_token,'Instruction',instructions)

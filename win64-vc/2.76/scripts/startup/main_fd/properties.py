@@ -1143,6 +1143,15 @@ class Machine_Token(PropertyGroup):
     shelf_hole_spacing = FloatProperty(name="Shelf Hole Spacing",unit='LENGTH')
     shelf_clip_gap = FloatProperty(name="Shelf Clip Gap",unit='LENGTH')
     
+    #SLIDE
+    dim_from_drawer_bottom = FloatProperty(name="Dimension from Drawer Bottom",unit='LENGTH')
+    dim_to_first_hole = FloatProperty(name="Dimension to First Hole",unit='LENGTH')
+    dim_to_second_hole = FloatProperty(name="Dimension to Second Hole",unit='LENGTH')
+    dim_to_third_hole = FloatProperty(name="Dimension to Third Hole",unit='LENGTH')
+    dim_to_fourth_hole = FloatProperty(name="Dimension to Fourth Hole",unit='LENGTH')
+    dim_to_fifth_hole = FloatProperty(name="Dimension to Fifth Hole",unit='LENGTH')
+    drawer_slide_clearance = FloatProperty(name="Drawer Slide Clearance",unit='LENGTH')
+    
     def get_hole_locations(self):
         locations = ""
         for x in range(0,len(self.hole_locations) - 1):
@@ -1229,6 +1238,17 @@ class Machine_Token(PropertyGroup):
             param_dict['Par8'] = ""
             param_dict['Par9'] = ""
             
+        if self.type_token == 'SLIDE':
+            param_dict['Par1'] = str(fd.unit(self.dim_from_drawer_bottom))
+            param_dict['Par2'] = str(fd.unit(self.dim_to_first_hole))
+            param_dict['Par3'] = str(fd.unit(self.dim_to_second_hole))
+            param_dict['Par4'] = str(fd.unit(self.dim_to_third_hole))
+            param_dict['Par5'] = str(fd.unit(self.dim_to_fourth_hole))
+            param_dict['Par6'] = str(fd.unit(self.dim_to_fifth_hole))
+            param_dict['Par7'] = str(fd.unit(self.face_bore_depth)) + "|" + str(self.face_bore_dia)
+            param_dict['Par8'] = str(fd.unit(self.drawer_slide_clearance))
+            param_dict['Par9'] = ""
+            
         return param_dict
     
     def draw_properties(self,layout):
@@ -1303,7 +1323,15 @@ class Machine_Token(PropertyGroup):
                 box.prop(self,'tongue_tool_number')
                 box.prop(self,'reverse_direction')
             if self.type_token == 'SLIDE':
-                box.label('Not Available at this time')
+                row.prop(self,'dim_from_drawer_bottom')
+                row.prop(self,'dim_to_first_hole')
+                box.prop(self,'dim_to_second_hole')
+                box.prop(self,'dim_to_third_hole')
+                box.prop(self,'dim_to_fourth_hole')
+                box.prop(self,'dim_to_fifth_hole')
+                box.prop(self,'face_bore_depth')
+                box.prop(self,'face_bore_dia')
+                box.prop(self,'drawer_slide_clearance')
             if self.type_token == 'CAMLOCK':
                 box.prop(self,'hole_locations')
                 box.prop(self,'edge_bore_dia')
