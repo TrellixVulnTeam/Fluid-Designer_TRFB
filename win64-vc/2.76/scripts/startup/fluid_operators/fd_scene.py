@@ -1488,6 +1488,7 @@ class OPS_export_mvfd(Operator):
     
     walls = []
     products = []
+    buyout_products = []
     
     buyout_materials = []
     solid_stock_materials = {}
@@ -1513,10 +1514,10 @@ class OPS_export_mvfd(Operator):
     def clear_and_collection_data(self,context):
         for product in self.products:
             self.products.remove(product)
-         
+        
         for wall in self.walls:
             self.walls.remove(wall)
-             
+
         bpy.ops.fd_material.get_materials()
         for obj in context.visible_objects:
             if obj.mv.type == 'BPWALL':
@@ -1524,6 +1525,8 @@ class OPS_export_mvfd(Operator):
             if obj.mv.type == 'BPASSEMBLY':
                 if obj.cabinetlib.type_group == 'PRODUCT':
                     self.products.append(obj)
+            if obj.cabinetlib.type_mesh == 'BUYOUT' and obj.parent is None:
+                self.buyout_products.append(obj)
     
     def write_properties(self,project_node):
         elm_properties = self.xml.add_element(project_node,'Properties')
@@ -1569,7 +1572,8 @@ class OPS_export_mvfd(Operator):
                 self.xml.add_element_with_text(elm_product,'LinkIDWall',obj_product.parent.name)
             else:
                 self.xml.add_element_with_text(elm_product,'LinkIDWall','None')
-            
+                
+            self.xml.add_element_with_text(elm_product,'IsBuyout','False')
             self.xml.add_element_with_text(elm_product,'IsCorner','False')
             self.xml.add_element_with_text(elm_product,'LinkIDLocation',obj_product.users_scene[0].name)
             self.xml.add_element_with_text(elm_product,'LinkIDSpecificationGroup',spec_group.name)
@@ -1611,6 +1615,64 @@ class OPS_export_mvfd(Operator):
             elm_subassemblies = self.xml.add_element(elm_product,"Subassemblies")
             self.write_subassemblies_for_product(elm_subassemblies,obj_product,spec_group)                 
             
+            item_number += 1
+            
+        #This is needed so we can export buyout objects that aren't assigned to a product
+        for obj in self.buyout_products:
+            spec_group = specgroups[obj.cabinetlib.spec_group_index]
+            
+            elm_product = self.xml.add_element(elm_products,'Product',obj.mv.name_object)
+            self.xml.add_element_with_text(elm_product,'LinkID',obj.name)
+            self.xml.add_element_with_text(elm_product,'LinkIDWall','None')
+            self.xml.add_element_with_text(elm_product,'IsBuyout','True')
+            self.xml.add_element_with_text(elm_product,'IsCorner','False')
+            self.xml.add_element_with_text(elm_product,'LinkIDLocation',obj.users_scene[0].name)
+            self.xml.add_element_with_text(elm_product,'LinkIDSpecificationGroup',spec_group.name)
+            self.xml.add_element_with_text(elm_product,'ItemNumber',str(item_number))
+            self.xml.add_element_with_text(elm_product,'LinkIDLibrary',obj.cabinetlib.library_name)
+            self.xml.add_element_with_text(elm_product,'Width',self.distance(obj.dimensions.x))
+            self.xml.add_element_with_text(elm_product,'Height',self.distance(obj.dimensions.z))
+            self.xml.add_element_with_text(elm_product,'Depth',self.distance(obj.dimensions.y))
+            self.xml.add_element_with_text(elm_product,'XOrigin',self.location(obj.matrix_world[0][3]))
+            self.xml.add_element_with_text(elm_product,'YOrigin',self.location(obj.matrix_world[1][3]))
+            self.xml.add_element_with_text(elm_product,'ZOrigin',self.location(obj.location.z))
+            self.xml.add_element_with_text(elm_product,'Angle',self.angle(obj.rotation_euler.z))
+            
+            elm_parts = self.xml.add_element(elm_product,"Parts")
+            elm_part = self.xml.add_element(elm_parts,'Part',obj.mv.name_object)
+            self.xml.add_element_with_text(elm_part,'PartType',"4")
+
+            if obj.mv.name_object not in self.buyout_materials:
+                self.buyout_materials.append(obj.mv.name_object)
+
+            self.xml.add_element_with_text(elm_part,'LinkID',obj.name)
+            self.xml.add_element_with_text(elm_part,'Qty',"1")
+            self.xml.add_element_with_text(elm_part,'MaterialName',fd.get_material_name(obj))
+            self.xml.add_element_with_text(elm_part,'Thickness',str(fd.unit(obj.dimensions.z)))
+            self.xml.add_element_with_text(elm_part,'UseSMA','True' if obj.mv.use_sma else 'False')
+            self.xml.add_element_with_text(elm_part,'LinkIDProduct',obj.name)
+            self.xml.add_element_with_text(elm_part,'LinkIDParent',"None")
+            self.xml.add_element_with_text(elm_part,'PartLength',str(fd.unit(obj.dimensions.x)))
+            self.xml.add_element_with_text(elm_part,'PartWidth',str(fd.unit(obj.dimensions.y)))
+            self.xml.add_element_with_text(elm_part,'Comment',obj.cabinetlib.comment)
+            self.xml.add_element_with_text(elm_part,'XOrigin',self.get_part_x_location(obj,obj.location.x))
+            self.xml.add_element_with_text(elm_part,'YOrigin',self.get_part_y_location(obj,obj.location.y))
+            self.xml.add_element_with_text(elm_part,'ZOrigin',self.get_part_z_location(obj,obj.location.z))
+            self.xml.add_element_with_text(elm_part,'XRotation',self.angle(obj.rotation_euler.x))
+            self.xml.add_element_with_text(elm_part,'YRotation',self.angle(obj.rotation_euler.y))
+            self.xml.add_element_with_text(elm_part,'ZRotation',self.angle(obj.rotation_euler.z))
+            self.xml.add_element_with_text(elm_part,'EdgeWidth1',fd.get_edgebanding_name_from_pointer_name(obj.cabinetlib.edge_w1,spec_group))
+            self.xml.add_element_with_text(elm_part,'EdgeLength1',fd.get_edgebanding_name_from_pointer_name(obj.cabinetlib.edge_l1,spec_group))
+            self.xml.add_element_with_text(elm_part,'EdgeWidth2',fd.get_edgebanding_name_from_pointer_name(obj.cabinetlib.edge_w2,spec_group))
+            self.xml.add_element_with_text(elm_part,'EdgeLength2',fd.get_edgebanding_name_from_pointer_name(obj.cabinetlib.edge_l2,spec_group))
+            self.xml.add_element_with_text(elm_part,'DrawToken3D',"DRAW3DBOX CABINET")
+            self.xml.add_element_with_text(elm_part,'ElvToken2D',"DRAW2DBOX CABINET")
+            self.xml.add_element_with_text(elm_part,'BasePoint',"1")
+            self.xml.add_element_with_text(elm_part,'MachinePoint',"1")
+            self.xml.add_element_with_text(elm_part,'Par1',"")
+            self.xml.add_element_with_text(elm_part,'Par2',"")
+            self.xml.add_element_with_text(elm_part,'Par3',"")
+
             item_number += 1
             
     def write_materials(self,project_node):

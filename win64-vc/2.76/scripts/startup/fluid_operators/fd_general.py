@@ -720,6 +720,7 @@ class OPS_drop_object(Operator):
     dir_name = ""
     
     obj = None
+    file_name = ""
     
     cages = []
     
@@ -732,7 +733,7 @@ class OPS_drop_object(Operator):
         path, filename = os.path.split(self.filepath)
         file, ext = os.path.splitext(filename)
         path2, folder_dir = os.path.split(path)
-        
+        self.file_name = file
         if path2 == fd.get_library_dir("objects"):
             self.obj = fd.get_object((folder_dir,),file)
         else:
@@ -767,6 +768,7 @@ class OPS_drop_object(Operator):
             fd.assign_materials_from_pointers(self.obj)
             context.scene.objects.active = self.obj
             self.obj.select = True
+            self.obj.mv.name_object = self.file_name
             return {'FINISHED'}
         
         if event.type == 'RIGHTMOUSE' and event.value == 'PRESS':
