@@ -1175,7 +1175,7 @@ class OPERATOR_Collect_Walls(Operator):
         if props.floor_type == 'WOOD':    
             material = fd.get_material((FLOORING_LIBRARY_NAME,HARDWOOD_CATEGORY_NAME),props.wood_floor_material)
         if props.floor_type == 'TILE':    
-            material = fd.get_material((FLOORING_LIBRARY_NAME,TILE_CATEGORY_NAME),props.carpet_material)
+            material = fd.get_material((FLOORING_LIBRARY_NAME,TILE_CATEGORY_NAME),props.tile_material)
         if material:
             bpy.ops.fd_object.unwrap_mesh(object_name=obj.name)
             bpy.ops.fd_object.add_material_slot(object_name=obj.name)
