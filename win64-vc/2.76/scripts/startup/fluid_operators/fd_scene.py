@@ -301,7 +301,7 @@ class OPS_create_unity_build(Operator): #Not Used
 class OPS_prepare_For_sketchfab(Operator):
     """ This prepares the scene for uploading to Sketchfab.
     """
-    bl_idname = "cabinetlib.delete_hidden_objects"
+    bl_idname = "fd_scene.delete_hidden_objects"
     bl_label = "Delete Hidden Objects"
     bl_description = "This simplifies the scene."
     bl_options = {'UNDO'}
@@ -329,11 +329,12 @@ class OPS_prepare_For_sketchfab(Operator):
         
         self._timer = wm.event_timer_add(0.001, context.window)
         wm.modal_handler_add(self)
+        
         if context.area.type == 'VIEW_3D':
             args = (self, context)
             self._handle = bpy.types.SpaceView3D.draw_handler_add(fd.draw_callback_px, args, 'WINDOW', 'POST_PIXEL')
             self.mouse_loc = []
-            self.mouse_text = "Preparing Object "  + str(self.current_item + 1) + " of " + str(len(self.objects))
+            self.mouse_text = "Preparing Object " + str(self.current_item + 1) + " of " + str(len(self.objects))
             self.header_text = "Preparing Object " + str(self.current_item + 1) + " of " + str(len(self.objects))
         return {'RUNNING_MODAL'}    
     
@@ -344,12 +345,20 @@ class OPS_prepare_For_sketchfab(Operator):
             return self.cancel(context)
         
         if event.type == 'TIMER':
-            if self.current_item + 1 <= len(self.objects):                     
+            if self.current_item + 1 <= len(self.objects):                 
                 obj = self.objects[self.current_item]
                 bpy.context.scene.objects.active = obj
                 #clear shapekeys
                 if obj.data.shape_keys:
-                    bpy.ops.fd_object.apply_shape_keys(object_name=obj.name)           
+                    bpy.ops.fd_object.apply_shape_keys(object_name=obj.name)                         
+                
+                #clear drivers 
+                if obj.animation_data:
+                    for DR in obj.animation_data.drivers:
+                        try:
+                            obj.driver_remove(DR.data_path) 
+                        except:
+                            pass                
                 
                 #clear modifiers 
 #                 for mod in obj.modifiers:
@@ -359,13 +368,8 @@ class OPS_prepare_For_sketchfab(Operator):
                     #This needs to be done in the correct order (mods applied only if first in stack)
                 bpy.ops.fd_object.apply_hook_modifiers(object_name=obj.name)
                 bpy.ops.fd_object.apply_bool_modifiers(object_name=obj.name)
-                    #bpy.ops.fd_object.apply_array_modifiers(object_name=obj.name)
+                #bpy.ops.fd_object.apply_array_modifiers(object_name=obj.name)
 #                     #Apply Bevel Modifiers
-                
-                #clear drivers 
-                if obj.animation_data:
-                    for DR in obj.animation_data.drivers:
-                        obj.driver_remove(DR.data_path)                 
                 
                 #clear vertex groups         
                 if obj.vertex_groups:
@@ -391,29 +395,27 @@ class OPS_prepare_For_sketchfab(Operator):
     
     def delete_extra_objs(self):  
         for obj in bpy.context.scene.objects:
-            if obj.parent:
-                if obj.parent.mv.type != 'BPWALL': 
-                    if obj not in self.delete_objs:
+            if obj not in self.delete_objs:
+                if obj.parent:
+                    if obj.parent.mv.type != 'BPWALL': 
                         self.delete_objs.append(obj)
-                             
-                    if obj.type == 'EMPTY':
-                        if obj not in self.delete_objs:
+                                 
+                        if obj.type == 'EMPTY':
                             self.delete_objs.append(obj)
-                             
-                    if obj.mv.type == 'BPASSEMBLY':
-                        if obj not in self.delete_objs:
+                                 
+                        if obj.mv.type == 'BPASSEMBLY':
                             self.delete_objs.append(obj)
-                             
-            if obj.mv.use_as_bool_obj:
-                if obj not in self.delete_objs:
+                                 
+                if obj.mv.use_as_bool_obj:
                     self.delete_objs.append(obj)
-                 
-            if obj.mv.type in {'BPWALL','BPASSEMBLY','VPDIMX','VPDIMY','VPDIMZ'}:
-                if obj not in self.delete_objs:
+                     
+                if obj.mv.type in {'BPWALL','BPASSEMBLY','VPDIMX','VPDIMY','VPDIMZ'}:
                     self.delete_objs.append(obj)    
+                        
+                if obj.hide == True or obj.hide_select == True:
+                    self.delete_objs.append(obj) 
                     
-            if obj.hide == True or obj.hide_select == True:
-                if obj not in self.delete_objs:
+                if "MACHINING" in obj.name:
                     self.delete_objs.append(obj) 
                       
         fd.delete_obj_list(self.delete_objs)        
@@ -425,6 +427,26 @@ class OPS_prepare_For_sketchfab(Operator):
         wm.event_timer_remove(self._timer)
         bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
         return {'FINISHED'}    
+
+class OPS_bake_lighting(Operator):
+    """ Bakes lighting into textures.
+    """
+    bl_idname = "fd_scene.bake_lighting"
+    bl_label = "Bake Lighting"
+    bl_description = "This bakes lighting into textures."
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    def execute(self, context):
+        for obj in bpy.context.scene.objects:
+            if len(obj.material_slots) > 0:
+                for mat_slot in obj.material_slots:
+                    if mat_slot.material:
+                        #ADD EMISSION NODE
+                        #mat_slot.material.node_tree.nodes.new("ShaderNodeEmission")
+                        for node in mat_slot.material.node_tree.nodes:
+                            print(node.bl_idname)
+        
+        return{'FINISHED'}
 
 class OPS_join_meshes_by_material(Operator):
     bl_idname = "fd_scene.join_meshes_by_material"
@@ -1968,6 +1990,7 @@ classes = [
            OPS_add_thumbnail_camera_and_lighting,
            OPS_create_unity_build,
            OPS_prepare_For_sketchfab,
+           OPS_bake_lighting,
            OPS_join_meshes_by_material,
            OPS_Prepare_Plan_view,
            OPS_Prepare_2d_elevations,
