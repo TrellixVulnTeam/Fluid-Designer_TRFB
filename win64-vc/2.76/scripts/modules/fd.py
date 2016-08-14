@@ -92,7 +92,7 @@ class enums():
                          ('VPDIMZ',"Visible Prompt Z Dimension","Visible prompt control in the 3D viewport"),
                          ('EMPTY1',"Empty1","EMPTY1"),
                          ('EMPTY2',"Empty2","EMPTY2"),
-                         ('EMPTY3',"Empty3","EMPTY3"),
+                         ('OBSTACLE',"Obstacle","Obstacle"),
                          ('BPWALL',"Wall Base Point","Parent object of a wall"),
                          ('BPASSEMBLY',"Base Point","Parent object of an assembly"),
                          ('VISDIM_A', "Visual Dimension A", "Anchor Point for Visual Dimension"),

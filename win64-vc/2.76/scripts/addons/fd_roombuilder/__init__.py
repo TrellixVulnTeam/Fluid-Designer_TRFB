@@ -508,6 +508,7 @@ class OPERATOR_Add_Obstacle(Operator):
         cage = self.obstacle.get_cage()
         cage.select = True
         cage.show_x_ray = True
+        cage.mv.type = 'OBSTACLE'
         self.obstacle.obj_x.hide = True
         self.obstacle.obj_y.hide = True
         self.obstacle.obj_z.hide = True

@@ -141,6 +141,8 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
     
     ignore_obj_list = []
     
+    font = None
+    
     def get_world(self):
         if "2D Environment" in bpy.data.worlds:
             return bpy.data.worlds["2D Environment"]
@@ -198,7 +200,7 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
     
     def group_children(self,grp,obj):
         if obj.mv.type != 'CAGE' and obj not in self.ignore_obj_list:
-            grp.objects.link(obj)   
+            grp.objects.link(obj)
         for child in obj.children:
             if len(child.children) > 0:
                 self.group_children(grp,child)
@@ -240,8 +242,9 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
                 text.location = (wall.obj_x.location.x/2,fd.inches(1.5),wall.obj_z.location.z)
                 text.data.size = .1
                 text.data.body = wall.obj_bp.mv.name_object
-                text.data.align = 'CENTER'                 
-                 
+                text.data.align = 'CENTER'
+                text.data.font = self.font
+                
                 self.ignore_obj_list.append(dim.anchor)
                 self.ignore_obj_list.append(dim.end_point)
                  
@@ -258,7 +261,7 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
                     assembly_mesh.location = assembly.obj_bp.location
                     assembly_mesh.rotation_euler = assembly.obj_bp.rotation_euler
                     assembly_mesh.mv.type = 'CAGE'
-                    distance = fd.inches(14) if assembly.obj_bp.location.z > 1 else fd.inches(8)
+                    distance = fd.inches(18) if assembly.obj_bp.location.z > 1 else fd.inches(12)
                     distance += wall.obj_y.location.y
                     
                     dim = fd.Dimension()
@@ -313,6 +316,7 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
         text.data.size = .1
         text.data.body = wall.obj_bp.mv.name_object
         text.data.align = 'RIGHT'
+        text.data.font = self.font
         
         camera = self.create_camera(new_scene)
         camera.rotation_euler.x = math.radians(90.0)
@@ -324,6 +328,8 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
         
     def execute(self, context):
         context.window_manager.mv.use_opengl_dimensions = True
+        
+        self.font = bpy.data.fonts.load(os.path.join(os.path.dirname(bpy.app.binary_path),"Fonts","calibril.ttf"))
         
         bpy.ops.fd_scene.clear_2d_views()
         
