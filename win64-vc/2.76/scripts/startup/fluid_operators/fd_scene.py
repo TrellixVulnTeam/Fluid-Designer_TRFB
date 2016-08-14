@@ -1541,14 +1541,16 @@ class OPS_export_mvfd(Operator):
             self.walls.remove(wall)
 
         bpy.ops.fd_material.get_materials()
-        for obj in context.visible_objects:
-            if obj.mv.type == 'BPWALL':
-                self.walls.append(obj)
-            if obj.mv.type == 'BPASSEMBLY':
-                if obj.cabinetlib.type_group == 'PRODUCT':
-                    self.products.append(obj)
-            if obj.cabinetlib.type_mesh == 'BUYOUT' and obj.parent is None:
-                self.buyout_products.append(obj)
+        for scene in bpy.data.scenes:
+            if not scene.mv.plan_view_scene and not scene.mv.elevation_scene:
+                for obj in scene.objects:
+                    if obj.mv.type == 'BPWALL':
+                        self.walls.append(obj)
+                    if obj.mv.type == 'BPASSEMBLY':
+                        if obj.cabinetlib.type_group == 'PRODUCT':
+                            self.products.append(obj)
+                    if obj.cabinetlib.type_mesh == 'BUYOUT' and obj.parent is None:
+                        self.buyout_products.append(obj)
     
     def write_properties(self,project_node):
         elm_properties = self.xml.add_element(project_node,'Properties')
@@ -1563,7 +1565,8 @@ class OPS_export_mvfd(Operator):
     def write_locations(self,project_node):
         elm_locations = self.xml.add_element(project_node,'Locations')
         for scene in bpy.data.scenes:
-            self.xml.add_element(elm_locations,'Location',scene.name)
+            if not scene.mv.plan_view_scene and not scene.mv.elevation_scene:
+                self.xml.add_element(elm_locations,'Location',scene.name)
     
     def write_walls(self,project_node):
         elm_walls = self.xml.add_element(project_node,"Walls")
