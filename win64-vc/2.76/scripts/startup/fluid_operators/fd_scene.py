@@ -348,11 +348,10 @@ class OPS_prepare_For_sketchfab(Operator):
             if self.current_item + 1 <= len(self.objects):                 
                 obj = self.objects[self.current_item]
                 bpy.context.scene.objects.active = obj
-                #clear shapekeys
+
                 if obj.data.shape_keys:
                     bpy.ops.fd_object.apply_shape_keys(object_name=obj.name)                         
                 
-                #clear drivers 
                 if obj.animation_data:
                     for DR in obj.animation_data.drivers:
                         try:
@@ -360,23 +359,13 @@ class OPS_prepare_For_sketchfab(Operator):
                         except:
                             pass                
                 
-                #clear modifiers 
-#                 for mod in obj.modifiers:
-#                     bpy.ops.object.modifier_apply(mod.name)
-#                 if obj.modifiers != 'NONE':  
-                    #obj.to_mesh(context.scene,True,'PREVIEW')
-                    #This needs to be done in the correct order (mods applied only if first in stack)
                 bpy.ops.fd_object.apply_hook_modifiers(object_name=obj.name)
                 bpy.ops.fd_object.apply_bool_modifiers(object_name=obj.name)
-                #bpy.ops.fd_object.apply_array_modifiers(object_name=obj.name)
-#                     #Apply Bevel Modifiers
-                
-                #clear vertex groups         
+                      
                 if obj.vertex_groups:
                     bpy.context.scene.objects.active = obj
                     bpy.ops.object.vertex_group_remove(all=True) 
-                
-                #clear parent and keep transformation          
+                     
                 obj.matrix_local = obj.matrix_world
                 obj.parent = None
                     
