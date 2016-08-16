@@ -1064,6 +1064,10 @@ class Library_Assembly(Assembly):
                       This is the bl_id property  """
     property_id = ""
 
+    """ Type:string - The Plan View Operator ID
+                      This is the bl_id property  """
+    plan_id = ""
+
     """ Type:enum_string("PRODUCT",
                          "INSERT") 
                          - Determines if the library assembly is an insert or a product """
@@ -1172,6 +1176,7 @@ class Library_Assembly(Assembly):
         self.obj_bp.cabinetlib.product_shape = self.product_shape
         self.obj_bp.cabinetlib.mirror_z = self.mirror_z
         self.obj_bp.cabinetlib.mirror_y = self.mirror_y
+        self.obj_bp.mv.plan_id = self.plan_id
         self.set_name(self.assembly_name)
         self.set_property_id(self.obj_bp,self.property_id)
         
@@ -3581,6 +3586,14 @@ def get_2d_renderings(context):
             
     return images
 
+def get_custom_font():
+    if "Calibri-Light" in bpy.data.fonts:
+        return bpy.data.fonts["Calibri-Light"]
+    else:
+        return bpy.data.fonts.load(os.path.join(os.path.dirname(bpy.app.binary_path),"Fonts","calibril.ttf"))
+#     for font in bpy.data.fonts:
+#         if "Calibri-Light"
+#         print(font.name)
 
 #----------- COMMON INTERFACES
 

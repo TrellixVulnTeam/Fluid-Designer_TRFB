@@ -1279,6 +1279,50 @@ class OPS_properties(Operator):
             if obj.type == 'LAMP':
                 fd.draw_object_data(layout,obj)
 
+class OPS_Draw_Plan(bpy.types.Operator):
+    bl_idname = "fd_general.draw_plan"
+    bl_label = "Draw Plan View"
+    bl_description = "Creates the plan view for products without a custom drawing instructions"
+    
+    object_name = bpy.props.StringProperty(name="Object Name",default="")
+    
+    def execute(self, context):
+        obj_bp = bpy.data.objects[self.object_name]
+        assembly = fd.Assembly(obj_bp)
+
+        assembly_mesh = fd.create_cube_mesh(assembly.obj_bp.mv.name_object,
+                                            (assembly.obj_x.location.x,
+                                             assembly.obj_y.location.y,
+                                             assembly.obj_z.location.z))
+
+        assembly_mesh.matrix_world = assembly.obj_bp.matrix_world
+#         assembly_mesh.rotation_euler = assembly.obj_bp.rotation_euler
+        assembly_mesh.mv.type = 'CAGE'
+        
+        distance = fd.inches(18) if assembly.obj_bp.location.z > 1 else fd.inches(12)
+        distance += fd.inches(6)
+        
+        dim = fd.Dimension()
+        dim.parent(assembly_mesh)
+        dim.start_y(value = distance)
+        dim.start_z(value = 0)
+        dim.end_x(value = assembly.obj_x.location.x)        
+        
+        bpy.ops.object.text_add()
+        text = context.active_object
+        text.parent = assembly_mesh
+        text.location.x = assembly_mesh.dimensions.x/2
+        text.location.y = -assembly_mesh.dimensions.y + fd.inches(1)
+        text.location.z = math.fabs(assembly_mesh.dimensions.z)
+        text.data.size = .1
+        text.data.body = str(assembly.obj_bp.cabinetlib.item_number)
+        text.data.align = 'CENTER'
+        text.data.font = fd.get_custom_font()
+        
+        #TODO: Draw Fillers, Cabinet Shapes, Cabinet Text, Item Number
+        
+        return {'FINISHED'}
+
 class OPS_load_library_modules(Operator):
     """ This will load all of the products from the products module.
     """
@@ -2779,6 +2823,7 @@ classes = [
            OPS_drop_object,
            OPS_drop_world,
            OPS_properties,
+           OPS_Draw_Plan,
            OPS_change_mode,
            OPS_load_library_modules,
            OPS_brd_library_items,

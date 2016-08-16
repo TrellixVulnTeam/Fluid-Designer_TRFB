@@ -216,7 +216,9 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
         pv_scene.name = "Plan View"
         pv_scene.mv.name_scene = "Plan View"
         pv_scene.mv.plan_view_scene = True
-    
+        
+        item_number = 1
+        
         for obj in self.main_scene.objects:
             if obj.mv.type == 'BPWALL':
                 pv_scene.objects.link(obj)
@@ -231,11 +233,11 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
                 dim.parent(wall.obj_bp)
                 dim.start_y(value = fd.inches(4) + wall.obj_y.location.y)
                 dim.start_z(value = wall.obj_z.location.z + fd.inches(6))
-                dim.end_x(value = wall.obj_x.location.x)  
+                dim.end_x(value = wall.obj_x.location.x)
                 
                 self.ignore_obj_list.append(dim.anchor)
                 self.ignore_obj_list.append(dim.end_point)
-  
+                
                 bpy.ops.object.text_add()
                 text = context.active_object
                 text.parent = wall.obj_bp
@@ -247,33 +249,20 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
                 
                 self.ignore_obj_list.append(dim.anchor)
                 self.ignore_obj_list.append(dim.end_point)
-                 
+                
                 obj_bps = wall.get_wall_groups()
                 #Create Cubes for all products
                 for obj_bp in obj_bps:
-                    assembly = fd.Assembly(obj_bp)
-                    #TODO: Look for Custom Plan View Drawing
-                    assembly_mesh = fd.create_cube_mesh(assembly.obj_bp.mv.name_object,
-                                                        (assembly.obj_x.location.x,
-                                                         assembly.obj_y.location.y,
-                                                         assembly.obj_z.location.z))
-                    assembly_mesh.parent = wall.obj_bp
-                    assembly_mesh.location = assembly.obj_bp.location
-                    assembly_mesh.rotation_euler = assembly.obj_bp.rotation_euler
-                    assembly_mesh.mv.type = 'CAGE'
-                    distance = fd.inches(18) if assembly.obj_bp.location.z > 1 else fd.inches(12)
-                    distance += wall.obj_y.location.y
+                    obj_bp.cabinetlib.item_number = item_number
+                    item_number += 1
+                    if obj_bp.mv.plan_id != "":
+                        eval('bpy.ops.' + obj_bp.mv.plan_id + '("INVOKE_DEFAULT",object_name=obj_bp.name)')
+                    else:
+                        bpy.ops.fd_general.draw_plan(object_name=obj_bp.name)
                     
-                    dim = fd.Dimension()
-                    dim.parent(assembly_mesh)
-                    dim.start_y(value = distance)
-                    dim.start_z(value = 0)
-                    dim.end_x(value = assembly.obj_x.location.x)
-                    
-                    self.ignore_obj_list.append(dim.anchor)
-                    self.ignore_obj_list.append(dim.end_point)
-                    
-                wall.get_wall_mesh().select = True
+                wall_mesh = wall.get_wall_mesh()
+                if wall_mesh:
+                    wall_mesh.select = True
                 
         camera = self.create_camera(pv_scene)
         camera.rotation_euler.z = math.radians(-90.0)
@@ -329,8 +318,8 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
     def execute(self, context):
         context.window_manager.mv.use_opengl_dimensions = True
         
-        self.font = bpy.data.fonts.load(os.path.join(os.path.dirname(bpy.app.binary_path),"Fonts","calibril.ttf"))
-        
+        self.font = fd.get_custom_font()
+
         bpy.ops.fd_scene.clear_2d_views()
         
         self.main_scene = context.scene
@@ -608,7 +597,7 @@ class OPERATOR_create_pdf(bpy.types.Operator):
 
         #FIX FILE PATH To remove all double backslashes 
         fixed_file_path = os.path.normpath(file_path)
-
+        
         if os.path.exists(os.path.join(fixed_file_path,file_name)):
             os.system('start "Title" /D "'+fixed_file_path+'" "' + file_name + '"')
         else:

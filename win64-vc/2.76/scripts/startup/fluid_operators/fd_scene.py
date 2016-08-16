@@ -1591,7 +1591,11 @@ class OPS_export_mvfd(Operator):
             self.xml.add_element_with_text(elm_product,'IsCorner','False')
             self.xml.add_element_with_text(elm_product,'LinkIDLocation',obj_product.users_scene[0].name)
             self.xml.add_element_with_text(elm_product,'LinkIDSpecificationGroup',spec_group.name)
-            self.xml.add_element_with_text(elm_product,'ItemNumber',str(item_number))
+            if obj_product.cabinetlib.item_number == 0:
+                self.xml.add_element_with_text(elm_product,'ItemNumber',str(item_number))
+                item_number += 1
+            else:
+                self.xml.add_element_with_text(elm_product,'ItemNumber',str(obj_product.cabinetlib.item_number))
             self.xml.add_element_with_text(elm_product,'LinkIDLibrary',obj_product.cabinetlib.library_name)
             self.xml.add_element_with_text(elm_product,'Width',self.distance(product.obj_x.location.x))
             self.xml.add_element_with_text(elm_product,'Height',self.distance(product.obj_z.location.z))
@@ -1628,9 +1632,7 @@ class OPS_export_mvfd(Operator):
             
             elm_subassemblies = self.xml.add_element(elm_product,"Subassemblies")
             self.write_subassemblies_for_product(elm_subassemblies,obj_product,spec_group)                 
-            
-            item_number += 1
-            
+
         #This is needed so we can export buyout objects that aren't assigned to a product
         for obj in self.buyout_products:
             spec_group = specgroups[obj.cabinetlib.spec_group_index]
@@ -1642,7 +1644,11 @@ class OPS_export_mvfd(Operator):
             self.xml.add_element_with_text(elm_product,'IsCorner','False')
             self.xml.add_element_with_text(elm_product,'LinkIDLocation',obj.users_scene[0].name)
             self.xml.add_element_with_text(elm_product,'LinkIDSpecificationGroup',spec_group.name)
-            self.xml.add_element_with_text(elm_product,'ItemNumber',str(item_number))
+            if obj_product.cabinetlib.item_number == 0:
+                self.xml.add_element_with_text(elm_product,'ItemNumber',str(item_number))
+                item_number += 1
+            else:
+                self.xml.add_element_with_text(elm_product,'ItemNumber',str(obj.cabinetlib.item_number))
             self.xml.add_element_with_text(elm_product,'LinkIDLibrary',obj.cabinetlib.library_name)
             self.xml.add_element_with_text(elm_product,'Width',self.distance(obj.dimensions.x))
             self.xml.add_element_with_text(elm_product,'Height',self.distance(obj.dimensions.z))
