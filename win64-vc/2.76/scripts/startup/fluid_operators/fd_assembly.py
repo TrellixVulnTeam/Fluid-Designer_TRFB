@@ -443,6 +443,7 @@ class OPS_draw_walls(Operator):
                 self.wall.obj_bp.location.x = selected_point[0]
                 self.wall.obj_bp.location.y = selected_point[1]
                 self.wall.obj_bp.location.z = 0
+                self.wall.obj_x.location.x = 0
                 self.starting_point = (self.wall.obj_bp.location.x, self.wall.obj_bp.location.y, 0)
             else:
                 selected_obj.select = True
