@@ -62,6 +62,33 @@ class OPS_make_group_from_selection(Operator):
         layout = self.layout
         layout.prop(self,"group_name")
 
+class OPS_make_group_from_scene(Operator):
+    bl_idname = "fd_group.make_group_from_scene"
+    bl_label = "Make Group From Scene"
+    bl_description = "This will create a group from every object in the scene"
+    bl_options = {'UNDO'}
+
+    group_name = StringProperty(name="Group Name",default = "New Group")
+
+    def execute(self, context):
+        for obj in context.scene.objects:
+            obj.hide = False
+            obj.hide_select = False
+            obj.select = True
+        bpy.ops.group.create(name=self.group_name)
+        for obj in context.scene.objects:
+            if obj.type == 'EMPTY':
+                obj.hide = True
+        return {'FINISHED'}
+
+    def invoke(self,context,event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self,"group_name")
+
 class OPS_remove_group(Operator):
     bl_idname = "fd_group.remove_group"
     bl_label = "Remove Group"
@@ -124,6 +151,7 @@ class OPS_show_group_options(Operator):
 #------REGISTER
 classes = [
            OPS_make_group_from_selection,
+           OPS_make_group_from_scene,
            OPS_remove_group,
            OPS_clear_all_groups_from_file,
            OPS_show_group_options

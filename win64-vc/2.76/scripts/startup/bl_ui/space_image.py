@@ -44,9 +44,12 @@ class BrushButtonsPanel(UnifiedPaintPanel):
 
     @classmethod
     def poll(cls, context):
-        sima = context.space_data
-        toolsettings = context.tool_settings.image_paint
-        return sima.show_paint and toolsettings.brush
+        if context.scene.mv.ui.use_default_blender_interface:
+            sima = context.space_data
+            toolsettings = context.tool_settings.image_paint
+            return sima.show_paint and toolsettings.brush
+        else:
+            return False
 
 
 class UVToolsPanel:
@@ -56,9 +59,11 @@ class UVToolsPanel:
 
     @classmethod
     def poll(cls, context):
-        sima = context.space_data
-        return sima.show_uvedit and not context.tool_settings.use_uv_sculpt
-
+        if context.scene.mv.ui.use_default_blender_interface:
+            sima = context.space_data
+            return sima.show_uvedit and not context.tool_settings.use_uv_sculpt
+        else:
+            return False
 
 class IMAGE_MT_view(Menu):
     bl_label = "View"
@@ -565,8 +570,11 @@ class IMAGE_PT_image_properties(Panel):
 
     @classmethod
     def poll(cls, context):
-        sima = context.space_data
-        return (sima.image)
+        if context.scene.mv.ui.use_default_blender_interface:
+            sima = context.space_data
+            return (sima.image)
+        else:
+            return False
 
     def draw(self, context):
         layout = self.layout
@@ -584,9 +592,12 @@ class IMAGE_PT_game_properties(Panel):
 
     @classmethod
     def poll(cls, context):
-        sima = context.space_data
-        # display even when not in game mode because these settings effect the 3d view
-        return (sima and sima.image and not sima.show_maskedit)  # and (rd.engine == 'BLENDER_GAME')
+        if context.scene.mv.ui.use_default_blender_interface:
+            sima = context.space_data
+            # display even when not in game mode because these settings effect the 3d view
+            return (sima and sima.image and not sima.show_maskedit)  # and (rd.engine == 'BLENDER_GAME')
+        else:
+            return False
 
     def draw(self, context):
         layout = self.layout
@@ -625,8 +636,11 @@ class IMAGE_PT_view_properties(Panel):
 
     @classmethod
     def poll(cls, context):
-        sima = context.space_data
-        return (sima and (sima.image or sima.show_uvedit))
+        if context.scene.mv.ui.use_default_blender_interface:
+            sima = context.space_data
+            return (sima and (sima.image or sima.show_uvedit))
+        else:
+            return False
 
     def draw(self, context):
         layout = self.layout
@@ -1076,16 +1090,19 @@ class IMAGE_PT_tools_mask(MASK_PT_tools, Panel):
 class ImageScopesPanel:
     @classmethod
     def poll(cls, context):
-        sima = context.space_data
-        if not (sima and sima.image):
+        if context.scene.mv.ui.use_default_blender_interface:
+            sima = context.space_data
+            if not (sima and sima.image):
+                return False
+            # scopes are not updated in paint modes, hide
+            if sima.mode == 'PAINT':
+                return False
+            ob = context.active_object
+            if ob and ob.mode in {'TEXTURE_PAINT', 'EDIT'}:
+                return False
+            return True
+        else:
             return False
-        # scopes are not updated in paint modes, hide
-        if sima.mode == 'PAINT':
-            return False
-        ob = context.active_object
-        if ob and ob.mode in {'TEXTURE_PAINT', 'EDIT'}:
-            return False
-        return True
 
 
 class IMAGE_PT_view_histogram(ImageScopesPanel, Panel):

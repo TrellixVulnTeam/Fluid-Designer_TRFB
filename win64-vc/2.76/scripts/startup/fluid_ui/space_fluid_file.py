@@ -135,6 +135,10 @@ class FILEBROWSER_MT_active_product_libraries(Menu):
     bl_label = "Active Product Libraries"
 
     def draw(self, context):
+#         layout = self.layout
+#         for lib in context.window_manager.cabinetlib.lib_products:
+#             layout.operator('fd_general.change_library',text=lib.name,icon='LAYER_ACTIVE').library_name = lib.name
+            
         layout = self.layout
         path = fd.get_library_dir("products")
         dirs =  os.listdir(path)

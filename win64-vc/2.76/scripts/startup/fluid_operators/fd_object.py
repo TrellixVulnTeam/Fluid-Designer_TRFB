@@ -418,7 +418,8 @@ class OPS_camera_properties(Operator):
         obj = context.active_object
         fd.draw_object_info(self.layout,obj)
         fd.draw_object_data(self.layout, obj)
-        self.layout.prop(self,'lock_camera')
+        box = self.layout.box()
+        box.prop(self,'lock_camera')
 
 #         if context.active_object.type == 'CAMERA':
 #             obj = context.active_object

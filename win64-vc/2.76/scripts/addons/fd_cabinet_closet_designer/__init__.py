@@ -54,7 +54,10 @@ class PANEL_Cabinet_Closet_Designer(Panel):
     
     @classmethod
     def poll(cls, context):
-        return True
+        if hasattr(context.scene, "lm_cabinet_closet_designer"):
+            return True
+        else:
+            return False
 
     def draw_header(self, context):
         layout = self.layout

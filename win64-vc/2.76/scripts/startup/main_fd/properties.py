@@ -763,7 +763,7 @@ class opengl_dim(PropertyGroup):
                                        ('3', "TShape", "The point of the arrow is a T")),
                                  name="Arrow Type",
                                  description="Dimension Arrow Type",
-                                 default='2')
+                                 default='99')
      
     gl_arrow_size = IntProperty(name="Size",
                                 description="Arrow size",
@@ -843,6 +843,7 @@ bpy.utils.register_class(List_Library_Item)
 
 class List_Library(PropertyGroup):
     module_name = StringProperty(name="Module Name")
+    lib_path = StringProperty(name="Library Path")
     items = CollectionProperty(name="Items",type=List_Library_Item)
     index = IntProperty(name="Index")
 
@@ -1058,6 +1059,7 @@ class Machine_Token(PropertyGroup):
     show_expanded = BoolProperty(name="Show Expanded",default=False)
     type_token = EnumProperty(name="Mesh Type",
                               items=[('NONE',"None","None"),
+                                     ('CORNERNOTCH',"CORNERNOTCH","CORNERNOTCH"),
                                      ('CONST',"CONST","CONST"),
                                      ('HOLES',"HOLES","HOLES"),
                                      ('SHLF',"SHLF","SHLF"),
@@ -1141,6 +1143,15 @@ class Machine_Token(PropertyGroup):
     shelf_hole_spacing = FloatProperty(name="Shelf Hole Spacing",unit='LENGTH')
     shelf_clip_gap = FloatProperty(name="Shelf Clip Gap",unit='LENGTH')
     
+    #SLIDE
+    dim_from_drawer_bottom = FloatProperty(name="Dimension from Drawer Bottom",unit='LENGTH')
+    dim_to_first_hole = FloatProperty(name="Dimension to First Hole",unit='LENGTH')
+    dim_to_second_hole = FloatProperty(name="Dimension to Second Hole",unit='LENGTH')
+    dim_to_third_hole = FloatProperty(name="Dimension to Third Hole",unit='LENGTH')
+    dim_to_fourth_hole = FloatProperty(name="Dimension to Fourth Hole",unit='LENGTH')
+    dim_to_fifth_hole = FloatProperty(name="Dimension to Fifth Hole",unit='LENGTH')
+    drawer_slide_clearance = FloatProperty(name="Drawer Slide Clearance",unit='LENGTH')
+    
     def get_hole_locations(self):
         locations = ""
         for x in range(0,len(self.hole_locations) - 1):
@@ -1178,7 +1189,7 @@ class Machine_Token(PropertyGroup):
             param_dict['Par3'] = str(fd.unit(self.beginning_depth))
             param_dict['Par4'] = str(fd.unit(self.lead_out))
             param_dict['Par5'] = str(fd.unit(self.double_pass))
-            param_dict['Par6'] = ""
+            param_dict['Par6'] = "0"
             param_dict['Par7'] = str(self.tool_number)
             param_dict['Par8'] = str(fd.unit(self.panel_penetration))
             param_dict['Par9'] = str(self.tongue_tool_number)
@@ -1215,6 +1226,28 @@ class Machine_Token(PropertyGroup):
             param_dict['Par7'] = str(fd.unit(self.distance_between_holes))
             param_dict['Par8'] = str(self.associative_dia)
             param_dict['Par9'] = str(fd.unit(self.associative_depth))
+            
+        if self.type_token == 'CORNERNOTCH':
+            param_dict['Par1'] = str(fd.unit(self.dim_in_x))
+            param_dict['Par2'] = str(fd.unit(self.dim_in_y))
+            param_dict['Par3'] = str(fd.unit(self.dim_in_z))
+            param_dict['Par4'] = str(fd.unit(self.lead_in))
+            param_dict['Par5'] = ""
+            param_dict['Par6'] = ""
+            param_dict['Par7'] = str(self.tool_number)
+            param_dict['Par8'] = ""
+            param_dict['Par9'] = ""
+            
+        if self.type_token == 'SLIDE':
+            param_dict['Par1'] = str(fd.unit(self.dim_from_drawer_bottom))
+            param_dict['Par2'] = str(fd.unit(self.dim_to_first_hole))
+            param_dict['Par3'] = str(fd.unit(self.dim_to_second_hole))
+            param_dict['Par4'] = str(fd.unit(self.dim_to_third_hole))
+            param_dict['Par5'] = str(fd.unit(self.dim_to_fourth_hole))
+            param_dict['Par6'] = str(fd.unit(self.dim_to_fifth_hole))
+            param_dict['Par7'] = str(fd.unit(self.face_bore_depth)) + "|" + str(self.face_bore_dia)
+            param_dict['Par8'] = str(fd.unit(self.drawer_slide_clearance))
+            param_dict['Par9'] = ""
             
         return param_dict
     
@@ -1290,7 +1323,15 @@ class Machine_Token(PropertyGroup):
                 box.prop(self,'tongue_tool_number')
                 box.prop(self,'reverse_direction')
             if self.type_token == 'SLIDE':
-                box.label('Not Available at this time')
+                row.prop(self,'dim_from_drawer_bottom')
+                row.prop(self,'dim_to_first_hole')
+                box.prop(self,'dim_to_second_hole')
+                box.prop(self,'dim_to_third_hole')
+                box.prop(self,'dim_to_fourth_hole')
+                box.prop(self,'dim_to_fifth_hole')
+                box.prop(self,'face_bore_depth')
+                box.prop(self,'face_bore_dia')
+                box.prop(self,'drawer_slide_clearance')
             if self.type_token == 'CAMLOCK':
                 box.prop(self,'hole_locations')
                 box.prop(self,'edge_bore_dia')
@@ -1314,7 +1355,17 @@ class Machine_Token(PropertyGroup):
                 box.prop(self,'distance_between_holes')
                 box.prop(self,'associative_dia')
                 box.prop(self,'associative_depth')
-
+            if self.type_token == 'CORNERNOTCH':
+                box.prop(self,'dim_in_x')
+                box.prop(self,'dim_in_y')
+                box.prop(self,'dim_in_z')
+                box.prop(self,'face_bore_dia')
+                box.prop(self,'end_dim_in_x')
+                box.prop(self,'end_dim_in_y')
+                box.prop(self,'distance_between_holes')
+                box.prop(self,'associative_dia')
+                box.prop(self,'associative_depth')
+                
     def add_driver(self,obj,token_property,expression,driver_vars,index=None):
         data_path = 'cabinetlib.mp.machine_tokens.["' + self.name + '"].' + token_property
         
@@ -1338,11 +1389,12 @@ class Machine_Point(PropertyGroup):
     
     machine_token_index = IntProperty(name="Machine Token Index")
     
-    def add_machine_token(self,name,token_type,face):
+    def add_machine_token(self,name,token_type,face,edge="1"):
         token = self.machine_tokens.add()
         token.name = name
         token.type_token = token_type
         token.face = face
+        token.edge = edge
         return token
     
     def draw_machine_tokens(self,layout):
@@ -1417,10 +1469,11 @@ class OBJECT_PROPERTIES(PropertyGroup):
                          description="Machining Point",
                          type=Machine_Point)
     
-    edge_w1 = StringProperty(name="Edge Width 1")
-    edge_l1 = StringProperty(name="Edge Length 1")
-    edge_w2 = StringProperty(name="Edge Width 2")
-    edge_l2 = StringProperty(name="Edge Length 2")
+    edge_w1 = StringProperty(name="Edge Width 1",description="Name of the edgebanding applied to Width 1")
+    edge_l1 = StringProperty(name="Edge Length 1",description="Name of the edgebanding applied to Length 1")
+    edge_w2 = StringProperty(name="Edge Width 2",description="Name of the edgebanding applied to Width 2")
+    edge_l2 = StringProperty(name="Edge Length 2",description="Name of the edgebanding applied to Length 2")
+    solid_stock = StringProperty(name="Solid Stock",description="Name of the solid stock material applied to the obj")
     
     product_category = StringProperty(name="Product Category")
     
@@ -1496,33 +1549,62 @@ class SCENE_PROPERTIES(PropertyGroup):
                                 description="Product Tabs",
                                 default='INFO')
     
-    project_name = StringProperty(name="Project Name")
-    
-    job_number = StringProperty(name="Job Number")
-    
-    job_email = StringProperty(name="Job E-Mail")
-    
-    architect = StringProperty(name="Architect")
-    
-    estimator = StringProperty(name="Estimator")
-    
-    contractor = StringProperty(name="Contractor")
-    
-    designer_name = StringProperty(name="Designer Name")
-    
-    customer_name = StringProperty(name="Customer Name")
-    
-    customer_address = StringProperty(name="Customer Address")
-    
-    customer_phone = StringProperty(name="Customer Phone") 
-    
+    def sync_spec_groups_from_template(self):
+        ''' This adds all of the missing material
+            pointers to your exsisting spec groups
+        '''
+        modules = fd.get_library_modules()
+        
+        for module in modules:
+            mod = __import__(module)
+            if hasattr(mod, 'Material_Pointers'):
+                materials = mod.Material_Pointers
+                for name, obj in inspect.getmembers(materials):
+                    if "__" not in name:
+                        for spec_group in self.spec_groups:
+                            if name not in spec_group.materials:
+                                mat_pointer = spec_group.materials.add()
+                                mat_pointer.name = name
+                                mat_pointer.library_name = obj.library_name
+                                mat_pointer.category_name = obj.category_name
+                                mat_pointer.item_name = obj.item_name
+
+            if hasattr(mod, 'Cutpart_Pointers'):
+                materials = mod.Cutpart_Pointers
+                for name, obj in inspect.getmembers(materials):
+                    if "__" not in name:
+                        for spec_group in self.spec_groups:
+                            if name not in spec_group.cutparts:
+                                cut_pointer = spec_group.cutparts.add()
+                                cut_pointer.name = name
+                                cut_pointer.thickness = obj.thickness
+                                cut_pointer.core = obj.core
+                                cut_pointer.top = obj.top
+                                cut_pointer.bottom = obj.bottom
+                                cut_pointer.mv_pointer_name = obj.mv_pointer_name
+                                
+            if hasattr(mod, 'Edgepart_Pointers'):
+                materials = mod.Edgepart_Pointers
+                for name, obj in inspect.getmembers(materials):
+                    if "__" not in name:
+                        for spec_group in self.spec_groups:
+                            if name not in spec_group.edgeparts:
+                                edge_pointer = spec_group.edgeparts.add()
+                                edge_pointer.name = name
+                                edge_pointer.thickness = obj.thickness
+                                edge_pointer.material = obj.material
+                                edge_pointer.mv_pointer_name = obj.mv_pointer_name                           
+                                
     def reload_spec_groups_from_template(self):
+        ''' This clears all of the pointers and reloads the
+            specification groups from the library modules
+        '''
         for specgroup in self.spec_groups:
             self.spec_groups.remove(0)
             
         spec_group = self.spec_groups.add()
         spec_group.name = "Default Specification Group"
-
+        
         modules = fd.get_library_modules()
         
         for module in modules:
@@ -1638,18 +1720,18 @@ class WM_PROPERTIES(PropertyGroup):
         row.prop_enum(self, "library_types", 'INSERT', icon='STICKY_UVS_LOC', text="Inserts")
         if self.library_types == 'PRODUCT':
             if len(self.lib_products) < 1:
-                box.operator('cabinetlib.load_library_modules',text="Load Library Modules",icon='FILE_REFRESH')
+                box.operator('fd_general.load_library_modules',text="Load Library Modules",icon='FILE_REFRESH')
             else:
                 row = box.row(align=True)
                 row.scale_y = 1.3
-                row.operator("cabinetlib.load_library_modules",text="",icon='FILE_REFRESH')
-                props = row.operator('cabinetlib.brd_library_items',text="Build",icon='FILE_BLEND')
+                row.operator("fd_general.load_library_modules",text="",icon='FILE_REFRESH')
+                props = row.operator('fd_general.brd_library_items',text="Build",icon='FILE_BLEND')
                 props.operation_type = 'BUILD'
                 props.library_type = 'PRODUCT'
-                props = row.operator('cabinetlib.brd_library_items',text="Render",icon='RENDER_RESULT')
+                props = row.operator('fd_general.brd_library_items',text="Render",icon='RENDER_RESULT')
                 props.operation_type = 'RENDER'
                 props.library_type = 'PRODUCT'
-                props = row.operator('cabinetlib.brd_library_items',text="Draw",icon='GREASEPENCIL')
+                props = row.operator('fd_general.brd_library_items',text="Draw",icon='GREASEPENCIL')
                 props.operation_type = 'DRAW'
                 props.library_type = 'PRODUCT'
                 row.menu('MENU_Product_Library_Options',text="",icon='DOWNARROW_HLT')
@@ -1659,18 +1741,18 @@ class WM_PROPERTIES(PropertyGroup):
                 
         if self.library_types == 'INSERT':
             if len(self.lib_inserts) < 1:
-                box.operator('cabinetlib.load_library_modules',text="Load Library Modules",icon='FILE_REFRESH')
+                box.operator('fd_general.load_library_modules',text="Load Library Modules",icon='FILE_REFRESH')
             else:
                 row = box.row(align=True)
                 row.scale_y = 1.3
-                row.operator("cabinetlib.load_library_modules",text="",icon='FILE_REFRESH')
-                props = row.operator('cabinetlib.brd_library_items',text="Build",icon='FILE_BLEND')
+                row.operator("fd_general.load_library_modules",text="",icon='FILE_REFRESH')
+                props = row.operator('fd_general.brd_library_items',text="Build",icon='FILE_BLEND')
                 props.operation_type = 'BUILD'
                 props.library_type = 'INSERT'
-                props = row.operator('cabinetlib.brd_library_items',text="Render",icon='RENDER_RESULT')
+                props = row.operator('fd_general.brd_library_items',text="Render",icon='RENDER_RESULT')
                 props.operation_type = 'RENDER'
                 props.library_type = 'INSERT'
-                props = row.operator('cabinetlib.brd_library_items',text="Draw",icon='GREASEPENCIL')
+                props = row.operator('fd_general.brd_library_items',text="Draw",icon='GREASEPENCIL')
                 props.operation_type = 'DRAW'
                 props.library_type = 'INSERT'
                 row.menu('MENU_Insert_Library_Options',text="",icon='DOWNARROW_HLT')
@@ -1690,6 +1772,9 @@ class fd_object(PropertyGroup):
     property_id = StringProperty(name="Property ID",
                                  description="This property allows objects to display a custom property page. This is the operator bl_id.")
 
+    plan_id = StringProperty(name="Plan ID",
+                             description="This property allows a product to define custom plan view drawing. This is the operator bl_id.")
+
     name_object = StringProperty(name="Object Name",
                                  description="This is the readable name of the object")
     
@@ -1701,9 +1786,29 @@ class fd_object(PropertyGroup):
                                    description="Use this object cut a hole in the selected mesh",
                                    default=False)
 
+    use_sma = BoolProperty(name="Use Solid Model Analyzer",
+                           description="Use Solid Model Analyzer to read geometry",
+                           default=False)
+
     PromptPage = bpy.props.PointerProperty(name="Prompt Page",
                                            description="Custom properties assigned to the object. Only access from base point object.",
                                            type=mvPromptPage)
+    
+    is_wall_mesh = BoolProperty(name="Is Wall Mesh",
+                                description="Determines if the object is a wall mesh.",
+                                default=False)
+    
+    is_cabinet_door = BoolProperty(name="Is Cabinet Door",
+                                   description="Determines if the object is a cabinet door.",
+                                   default=False)
+    
+    is_cabinet_drawer_box = BoolProperty(name="Is Cabinet Drawer Box",
+                                         description="Determines if the object is a drawer box.",
+                                         default=False)    
+    
+    is_cabinet_pull = BoolProperty(name="Is Cabinet Pull",
+                                   description="Determines if the object is a cabinet pull.",
+                                   default=False)
     
     opengl_dim = PointerProperty(type=opengl_dim)
 
@@ -1746,6 +1851,24 @@ class fd_interface(PropertyGroup):
                                 update=update_library)
     
 bpy.utils.register_class(fd_interface)
+
+class fd_image(PropertyGroup):
+    image_name = StringProperty(name="Image Name",
+                                description="The Image name that is assign to the image view")
+    
+    is_plan_view = BoolProperty(name="Is Plan View",
+                                default = False,
+                                description="This determines if the image is a 2D Plan View")
+    
+    use_as_cover_image = BoolProperty(name="Use as Cover Image",
+                                      default = False,
+                                      description="This determines if the image should be printed on the first page")
+    
+    is_elv_view = BoolProperty(name="Is Elv View",
+                               default = False,
+                               description="This determines if the image is a 2D Elevation View")
+    
+bpy.utils.register_class(fd_image)
 
 class fd_item(PropertyGroup):
     pass
@@ -1828,6 +1951,16 @@ class fd_scene(PropertyGroup):
                                         default=fd.inches(6),
                                         unit='LENGTH')
 
+    job_name = StringProperty(name="Job Name")
+    
+    designer_name = StringProperty(name="Designer Name")
+    
+    client_name = StringProperty(name="Client Name")
+
+    client_phone = StringProperty(name="Client Phone")
+    
+    client_email = StringProperty(name="Client Email")
+    
 bpy.utils.register_class(fd_scene)
 
 class fd_window_manager(PropertyGroup):
@@ -1860,8 +1993,15 @@ class fd_window_manager(PropertyGroup):
     material_library_path = StringProperty(name="Material Library Path",default="",subtype='DIR_PATH',update=update_library_paths)
     world_library_path = StringProperty(name="World Library Path",default="",subtype='DIR_PATH',update=update_library_paths)
     
-bpy.utils.register_class(fd_window_manager)
+    image_views = CollectionProperty(name="Image Views",
+                                     type=fd_image,
+                                     description="Collection of all of the views to be printed.")
 
+    image_view_index = IntProperty(name="Image View Index",
+                                   default=0)    
+    
+bpy.utils.register_class(fd_window_manager)
+    
 class extend_blender_data():
     bpy.types.Object.mv = PointerProperty(type = fd_object)
     bpy.types.Scene.mv = PointerProperty(type = fd_scene)
@@ -1869,7 +2009,8 @@ class extend_blender_data():
     bpy.types.Object.cabinetlib = PointerProperty(type = OBJECT_PROPERTIES)
     bpy.types.Scene.cabinetlib = PointerProperty(type = SCENE_PROPERTIES)
     bpy.types.WindowManager.cabinetlib = PointerProperty(type = WM_PROPERTIES)
-
+    bpy.types.Image.mv = PointerProperty(type = fd_image)
+    
 def register():
     extend_blender_data()
     

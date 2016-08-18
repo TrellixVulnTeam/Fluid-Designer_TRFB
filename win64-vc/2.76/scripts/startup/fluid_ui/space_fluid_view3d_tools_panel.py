@@ -53,27 +53,27 @@ class MENU_Product_Library_Options(Menu):
 
     def draw(self, context):
         layout = self.layout
-        layout.operator("cabinetlib.select_all_products",text="Select All",icon='CHECKBOX_HLT').select_all = True
-        layout.operator("cabinetlib.select_all_products",text="Deselect All",icon='CHECKBOX_DEHLT').select_all = False
+        layout.operator("fd_general.select_all_products",text="Select All",icon='CHECKBOX_HLT').select_all = True
+        layout.operator("fd_general.select_all_products",text="Deselect All",icon='CHECKBOX_DEHLT').select_all = False
 
 class MENU_Insert_Library_Options(Menu):
     bl_label = "Insert Library Options"
 
     def draw(self, context):
         layout = self.layout
-        layout.operator("cabinetlib.select_all_inserts",text="Select All",icon='CHECKBOX_HLT').select_all = True
-        layout.operator("cabinetlib.select_all_inserts",text="Deselect All",icon='CHECKBOX_DEHLT').select_all = False
+        layout.operator("fd_general.select_all_inserts",text="Select All",icon='CHECKBOX_HLT').select_all = True
+        layout.operator("fd_general.select_all_inserts",text="Deselect All",icon='CHECKBOX_DEHLT').select_all = False
 
 class MENU_Spec_Group_Options(Menu):
     bl_label = "Specification Groups"
 
     def draw(self, context):
         layout = self.layout
-        layout.operator("cabinetlib.copy_selected_spec_group",text="Copy Selected Spec Group",icon='ZOOMIN')
-        layout.operator("cabinetlib.rename_spec_group",text="Rename Active Spec Group",icon='GREASEPENCIL')
+        layout.operator("fd_material.copy_selected_spec_group",text="Copy Selected Spec Group",icon='ZOOMIN')
+        layout.operator("fd_material.rename_spec_group",text="Rename Active Spec Group",icon='GREASEPENCIL')
         layout.operator("cabinetlib.update_scene_from_pointers",text="Update Scene from Pointers",icon='SCENE_DATA')
-        layout.operator("cabinetlib.reload_spec_group_from_library_modules",text="Reload from Library Modules",icon='FILE_REFRESH')
-        layout.operator("cabinetlib.clear_spec_group",text="Clear Spec Groups",icon='X')
+        layout.operator("fd_material.reload_spec_group_from_library_modules",text="Reload from Library Modules",icon='FILE_REFRESH')
+        layout.operator("fd_material.clear_spec_group",text="Clear Spec Groups",icon='X')
 
 class MENU_Current_Cabinet_Menu(Menu):
     bl_label = "Cabinet Options"
@@ -101,11 +101,11 @@ class MENU_Change_Cabinet_Spec_Group(Menu):
         product_bp = fd.get_bp(context.object,'PRODUCT')
         for spec_group in spec_groups:
             if product_bp.cabinetlib.spec_group_name == spec_group.name:
-                props = layout.operator('cabinetlib.change_product_spec_group',text=spec_group.name,icon='FILE_TICK')
+                props = layout.operator('fd_material.change_product_spec_group',text=spec_group.name,icon='FILE_TICK')
                 props.spec_group_name = spec_group.name
                 props.object_name = product_bp.name
             else:
-                props = layout.operator('cabinetlib.change_product_spec_group',text=spec_group.name,icon='LINK')
+                props = layout.operator('fd_material.change_product_spec_group',text=spec_group.name,icon='LINK')
                 props.spec_group_name = spec_group.name
                 props.object_name = product_bp.name
                 
@@ -118,10 +118,10 @@ class MENU_Available_Spec_Groups(Menu):
         layout = self.layout
         for index, spec_group in enumerate(spec_groups):
             if index == spec_group_index:
-                props = layout.operator('cabinetlib.change_active_spec_group',text=spec_group.name,icon='FILE_TICK')
+                props = layout.operator('fd_material.change_active_spec_group',text=spec_group.name,icon='FILE_TICK')
                 props.spec_group_name = spec_group.name
             else:
-                props = layout.operator('cabinetlib.change_active_spec_group',text=spec_group.name,icon='LINK')
+                props = layout.operator('fd_material.change_active_spec_group',text=spec_group.name,icon='LINK')
                 props.spec_group_name = spec_group.name
 
 #------REGISTER

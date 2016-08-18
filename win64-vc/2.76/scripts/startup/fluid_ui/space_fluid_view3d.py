@@ -257,6 +257,10 @@ class VIEW3D_MT_fluidview(Menu):
 
         layout.separator()
 
+        layout.operator("view3d.navigate",icon='RESTRICT_VIEW_OFF',text="First Person View")
+        
+        layout.separator()
+
         layout.operator("view3d.viewnumpad", text="Camera",icon='CAMERA_DATA').type = 'CAMERA'
         layout.operator("view3d.viewnumpad", text="Top",icon='TRIA_DOWN').type = 'TOP'
         layout.operator("view3d.viewnumpad", text="Front",icon='TRIA_UP').type = 'FRONT'
@@ -266,9 +270,9 @@ class VIEW3D_MT_fluidview(Menu):
         layout.separator()
 
         layout.operator("view3d.view_persportho",icon='SCENE')
-
+        
         layout.operator_context = 'INVOKE_REGION_WIN'
-
+        
         layout.separator()
 
         layout.operator("screen.area_dupli",icon='GHOST')
@@ -410,6 +414,7 @@ class VIEW3D_MT_grouptools(Menu):
     def draw(self, context):
         layout = self.layout
         layout.operator("fd_group.make_group_from_selection",icon='GROUP')
+        layout.operator("fd_group.make_group_from_scene",icon='SCENE_DATA')
         
 class VIEW3D_MT_producttools(Menu):
     bl_context = "objectmode"
@@ -461,9 +466,13 @@ class VIEW3D_MT_dimensiontools(Menu):
         layout = self.layout
         
         layout.prop(context.window_manager.mv, "use_opengl_dimensions", text="Enable Dimensions")
-        layout.operator("fd_general.dimension_interface", text="Dimension Options")
-        layout.operator("fd_general.add_dimension", text="Add Dimension to Selected Assembly", icon='PLUS')
-
+        layout.operator("fd_general.toggle_dimension_handles",text="Show Dimension Handels",icon='OUTLINER_OB_EMPTY').turn_on = True
+        layout.operator("fd_general.toggle_dimension_handles",text="Hide Dimension Handels",icon='OUTLINER_OB_EMPTY').turn_on = False
+        layout.operator("fd_general.add_dimension", text="Add Dimension to Selected Assembly", icon='CURVE_NCURVE')
+        layout.operator("fd_general.create_single_dimension", text="Add Single Dimension", icon='ZOOMIN')
+        layout.separator()
+        layout.operator("fd_general.dimension_interface", text="Dimension Options",icon='INFO')
+        
 class MENU_mode(Menu):
     bl_label = "Menu"
 

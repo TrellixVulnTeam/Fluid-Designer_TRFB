@@ -32,6 +32,7 @@ import sys
 import bpy_extras.image_utils as img_utils
 
 import xml.etree.ElementTree as ET
+import time
 
 from bpy.types import PropertyGroup
 
@@ -91,7 +92,7 @@ class enums():
                          ('VPDIMZ',"Visible Prompt Z Dimension","Visible prompt control in the 3D viewport"),
                          ('EMPTY1',"Empty1","EMPTY1"),
                          ('EMPTY2',"Empty2","EMPTY2"),
-                         ('EMPTY3',"Empty3","EMPTY3"),
+                         ('OBSTACLE',"Obstacle","Obstacle"),
                          ('BPWALL',"Wall Base Point","Parent object of a wall"),
                          ('BPASSEMBLY',"Base Point","Parent object of an assembly"),
                          ('VISDIM_A', "Visual Dimension A", "Anchor Point for Visual Dimension"),
@@ -1063,6 +1064,10 @@ class Library_Assembly(Assembly):
                       This is the bl_id property  """
     property_id = ""
 
+    """ Type:string - The Plan View Operator ID
+                      This is the bl_id property  """
+    plan_id = ""
+
     """ Type:enum_string("PRODUCT",
                          "INSERT") 
                          - Determines if the library assembly is an insert or a product """
@@ -1093,7 +1098,7 @@ class Library_Assembly(Assembly):
                           value = prompt value  """
     prompts = {}
     
-    def add_assembly(self,path):
+    def add_assembly(self,path=[],filepath=""):
         """ Returns:Part - adds an assembly to this assembly
                            and returns it as a fd.Part
                               
@@ -1101,7 +1106,10 @@ class Library_Assembly(Assembly):
                                     split into strings.
                                     i.e ("Library Name","Category Name","Assembly Name")
         """
-        assembly = get_assembly(path[:-1], path[-1])
+        if filepath != "":
+            assembly = get_assembly_from_path(filepath)
+        else:
+            assembly = get_assembly(path[:-1], path[-1])
         assembly.obj_bp.parent = self.obj_bp
         part = Part(assembly.obj_bp)
         return part
@@ -1161,13 +1169,14 @@ class Library_Assembly(Assembly):
                 self.obj_z = child
                 
         default_spec_group = bpy.context.scene.cabinetlib.spec_groups[bpy.context.scene.cabinetlib.spec_group_index]
-        bpy.ops.cabinetlib.change_product_spec_group(object_name=self.obj_bp.name,spec_group_name=default_spec_group.name)
+        bpy.ops.fd_material.change_product_spec_group(object_name=self.obj_bp.name,spec_group_name=default_spec_group.name)
         
         self.obj_bp.cabinetlib.type_group = self.type_assembly
         self.obj_bp.cabinetlib.placement_type = self.placement_type
         self.obj_bp.cabinetlib.product_shape = self.product_shape
         self.obj_bp.cabinetlib.mirror_z = self.mirror_z
         self.obj_bp.cabinetlib.mirror_y = self.mirror_y
+        self.obj_bp.mv.plan_id = self.plan_id
         self.set_name(self.assembly_name)
         self.set_property_id(self.obj_bp,self.property_id)
         
@@ -1215,6 +1224,16 @@ class Part(Assembly):
             if child.type == 'MESH' and child.cabinetlib.type_mesh == 'CUTPART':
                 child.cabinetlib.cutpart_name = cutpart_name
 
+    def solid_stock(self,solid_stock_name):
+        """ Returns:None - assigns the every mesh solid stock 
+                           to the solid_stock_name
+                           
+            solid_stock_name:string - solid stock name to assign to obj
+        """
+        for child in self.obj_bp.children:
+            if child.type == 'MESH' and child.cabinetlib.type_mesh == 'SOLIDSTOCK':
+                child.cabinetlib.solid_stock = solid_stock_name
+
     def edgebanding(self,edgebanding_name,w1=False,l1=False,w2=False,l2=False):
         """ Returns:None - assigns every mesh cut part 
                            to the edgebanding_name
@@ -1244,23 +1263,21 @@ class Part(Assembly):
                 if l2:
                     child.cabinetlib.edge_l2 = edgebanding_name
                  
-    def add_machine_token(self,machining_name,machining_type,machining_face):
+    def add_machine_token(self,machining_name,machining_type,machining_face,machining_edge="1"):
         """ Returns:tuple(bpy.types.Object,properties.Machining_Token) - adds a machine token
-                                                                         to every cutpart mesh
+                                                                         to the first cutpart mesh
                            
-            edgebanding_name:string - name of the edgepart_pointer to assign
+            machining_name:string - name of the machining token
                                       
-            w1:bool - edgeband width 1 of the part
+            machining_name:string - type of machining token to add
             
-            w2:bool - edgeband width 2 of the part
+            machining_face:string - face to add the machining token to
             
-            l1:bool - edgeband length 1 of the part
-            
-            l2:bool - edgeband length 2 of the part
+            machining_edge:string - edge to add the machining token to
         """
         for child in self.obj_bp.children:
             if child.cabinetlib.type_mesh == 'CUTPART':
-                token = child.cabinetlib.mp.add_machine_token(machining_name ,machining_type,machining_face)
+                token = child.cabinetlib.mp.add_machine_token(machining_name ,machining_type,machining_face,machining_edge)
                 return child, token
                  
     def get_cutparts(self):
@@ -1593,6 +1610,7 @@ class Wall(Assembly):
     def build_wall_mesh(self):
         self.obj_bp.mv.name = "BPWALL.Wall"
         obj_mesh = self.build_cage()
+        obj_mesh.mv.is_wall_mesh = True
         obj_mesh.mv.name = 'Wall Mesh'
         obj_mesh.name = "Wall Mesh"
         obj_mesh.mv.type = 'NONE'
@@ -1607,27 +1625,24 @@ class Wall(Assembly):
         
     def get_wall_mesh(self):
         for child in self.obj_bp.children:
-            if child.type == 'MESH' and child.mv.type == 'NONE':
+            if child.type == 'MESH' and child.mv.type == 'NONE' and len(child.data.vertices) != 1:
                 return child
     
+    #NOT BEING USED DELETE
     def create_wall_group(self):
         wall_group = bpy.data.groups.new(self.obj_bp.name)
         return self.group_children(wall_group,self.obj_bp)
     
+    #NOT BEING USED DELETE
     def group_children(self,grp,obj):
-        objs = []
-
-        objs.append(obj)
-    
+        grp.objects.link(obj)   
         for child in obj.children:
             if len(child.children) > 0:
                 self.group_children(grp,child)
             else:
-                objs.append(child)              
-
-        for obj in objs:
-            grp.objects.link(obj)        
-            
+                
+                if not child.mv.is_wall_mesh:
+                    grp.objects.link(child)   
         return grp
         
     def get_wall_groups(self, loc_sort='X'):
@@ -1740,7 +1755,6 @@ class MV_XML():
             
         self.format_xml_file(path)
 
-    
 #-------OBJECT CREATION
 
 def create_cube_mesh(name,size):
@@ -2000,6 +2014,37 @@ def copy_prompt_drivers(obj,obj_target):
                                     newtarget.transform_type = target.transform_type
                                     newtarget.data_path = target.data_path
 
+def replace_assembly(old_assembly,new_assembly):
+    ''' replace the old_assembly with the new_assembly
+    '''
+    new_assembly.obj_bp.mv.name_object = old_assembly.obj_bp.mv.name_object
+    new_assembly.obj_bp.parent = old_assembly.obj_bp.parent
+    new_assembly.obj_bp.location = old_assembly.obj_bp.location
+    new_assembly.obj_bp.rotation_euler = old_assembly.obj_bp.rotation_euler    
+    
+    copy_drivers(old_assembly.obj_bp,new_assembly.obj_bp)
+    copy_prompt_drivers(old_assembly.obj_bp,new_assembly.obj_bp)
+    copy_drivers(old_assembly.obj_x,new_assembly.obj_x)
+    copy_drivers(old_assembly.obj_y,new_assembly.obj_y)
+    copy_drivers(old_assembly.obj_z,new_assembly.obj_z)
+    # Go though all siblings and check if the assembly 
+    # is being referenced in any other drivers. 
+    search_obj = old_assembly.obj_bp.parent if old_assembly.obj_bp.parent else None
+    if search_obj:
+        for obj in search_obj.children:
+            if obj.animation_data:
+                for driver in obj.animation_data.drivers:
+                    for var in driver.driver.variables:
+                        for target in var.targets:
+                            if target.id.name == old_assembly.obj_bp.name:
+                                target.id = new_assembly.obj_bp
+                            if target.id.name == old_assembly.obj_x.name:
+                                target.id = new_assembly.obj_x
+                            if target.id.name == old_assembly.obj_y.name:
+                                target.id = new_assembly.obj_y
+                            if target.id.name == old_assembly.obj_z.name:
+                                target.id = new_assembly.obj_z
+
 def add_variables_to_driver(driver,driver_vars):
     """ This function adds the driver_vars to the driver
     """
@@ -2093,7 +2138,7 @@ def assign_materials_from_pointers(obj):
         # MAKE A SIMPLE BLACK MATERIAL FOR MACHINING
         for slot in obj.cabinetlib.material_slots:
             slot.library_name = "Plastics"
-            slot.category_name = ""
+            slot.category_name = "Melamine"
             slot.item_name = "Gloss Black Plastic"
             
     else:
@@ -2117,8 +2162,6 @@ def assign_materials_from_pointers(obj):
     else:
         obj.draw_type = 'TEXTURED'
 
-
-
 def format_material_name(thickness,core,exterior,interior):
     if core == exterior:
         exterior = "-"
@@ -2126,7 +2169,7 @@ def format_material_name(thickness,core,exterior,interior):
     if core == interior:
         interior = "-"
         
-    return thickness + " " + core + " _ " + exterior + " _ " + interior
+    return thickness + " " + core + " [" + exterior + "] [" + interior + "]"
 
 def get_material_name_from_pointer(pointer,spec_group):
     
@@ -2150,6 +2193,10 @@ def get_edgebanding_name_from_pointer_name(pointer_name,spec_group):
         pointer = spec_group.edgeparts[pointer_name]
         thickness = str(round(meter_to_unit(pointer.thickness),4))
         material = spec_group.materials[pointer.material].item_name
+        if thickness + " " + material not in bpy.context.scene.cabinetlib.edgebanding:
+            mat = bpy.context.scene.cabinetlib.edgebanding.add()
+            mat.thickness = pointer.thickness
+            mat.name = thickness + " " + material
         return thickness + " " + material
     else:
         return ""
@@ -2164,6 +2211,13 @@ def get_part_thickness(obj):
                 for child in obj.parent.children:
                     if child.mv.type == 'VPDIMZ':
                         return math.fabs(child.location.z)
+                    
+    if obj.cabinetlib.type_mesh in {'SOLIDSTOCK','BUYOUT'}:
+        if obj.parent:
+            for child in obj.parent.children:
+                if child.mv.type == 'VPDIMZ':
+                    return math.fabs(child.location.z)
+                
     if obj.cabinetlib.type_mesh == 'EDGEBANDING':
         for mod in obj.modifiers:
             if mod.type == 'SOLIDIFY':
@@ -2182,8 +2236,18 @@ def get_material_name(obj):
                 exterior = mv_slot.item_name
             if mv_slot.name in {'Bottom','Interior'}:
                 interior = mv_slot.item_name
-                
+    
         return format_material_name(thickness,core,exterior,interior)
+    
+    if obj.cabinetlib.type_mesh == 'BUYOUT':
+        if obj.parent:
+            return obj.parent.mv.name_object
+        else:
+            return  obj.mv.name_object
+    
+    if obj.cabinetlib.type_mesh == 'SOLIDSTOCK':
+        thickness = str(round(meter_to_unit(get_part_thickness(obj)),4))
+        return thickness + " " + obj.cabinetlib.solid_stock
     
 #-------LIBRARY DATA
 
@@ -2256,7 +2320,51 @@ def get_library_dir(lib_type = ""):
     else:
         return os.path.join(root_path,lib_type)
 
+def get_product_group(library_name,category_name,product_name):
+    library_path = os.path.join(get_library_dir("products"),library_name,category_name,product_name + ".blend")
+    
+    if os.path.exists(library_path):
+        with bpy.data.libraries.load(library_path, False, False) as (data_from, data_to):
+            for group in data_from.groups:
+                if group == product_name:
+                    data_to.groups = [group]
+                    break
+
+        for grp in data_to.groups:
+            obj_bp = get_assembly_bp(grp.objects[0])
+            link_objects_to_scene(obj_bp,bpy.context.scene)
+            bpy.data.groups.remove(grp)
+            return obj_bp
+
+def get_insert_group(library_name,category_name,product_name):
+    library_path = os.path.join(get_library_dir("inserts"),library_name,category_name,product_name + ".blend")
+    
+    if os.path.exists(library_path):
+        with bpy.data.libraries.load(library_path, False, False) as (data_from, data_to):
+            for group in data_from.groups:
+                if group == product_name:
+                    data_to.groups = [group]
+                    break
+
+        for grp in data_to.groups:
+            obj_bp = get_assembly_bp(grp.objects[0])
+            link_objects_to_scene(obj_bp,bpy.context.scene)
+            bpy.data.groups.remove(grp)
+            return obj_bp
+        
 def get_product_class(library_name,category_name,product_name):
+
+#     lib = bpy.context.window_manager.cabinetlib.lib_products[bpy.context.scene.mv.product_library_name]
+#     
+#     mod = __import__(lib.module_name)
+#     
+#     for modname, modobj in inspect.getmembers(mod):
+#         for name, obj in inspect.getmembers(modobj):
+#             if "PRODUCT_" in name:
+#                 product = obj()
+#                 if product.library_name == library_name and product.category_name == category_name and product.assembly_name == product_name:
+#                     return product
+    
     modules = get_library_modules()
     for module in modules:
         mod = __import__(module)
@@ -2291,7 +2399,7 @@ def get_assembly(folders,assembly_name):
         blendname, ext = os.path.splitext(file)
         if ext == ".blend":
             possible_files.append(os.path.join(search_directory,file))
-              
+            
     for file in possible_files:
         with bpy.data.libraries.load(file, False, False) as (data_from, data_to):
             for group in data_from.groups:
@@ -2304,6 +2412,19 @@ def get_assembly(folders,assembly_name):
             link_objects_to_scene(assembly.obj_bp,bpy.context.scene)
             bpy.data.groups.remove(grp)
             return assembly
+
+def get_assembly_from_path(file_path):
+    
+    with bpy.data.libraries.load(file_path, False, False) as (data_from, data_to):
+        for group in data_from.groups:
+            data_to.groups = [group]
+            break
+    
+    for grp in data_to.groups:
+        assembly = Assembly(get_assembly_bp(grp.objects[0]))
+        link_objects_to_scene(assembly.obj_bp,bpy.context.scene)
+        bpy.data.groups.remove(grp)
+        return assembly
 
 def get_material(folders,material_name):
     if material_name in bpy.data.materials:
@@ -2396,6 +2517,35 @@ def render_thumbnail(assembly):
     render.filepath = thumbnail_path
     bpy.ops.render.render(write_still=True)
 
+def save_assembly(assembly):
+    if assembly.obj_bp.cabinetlib.type_group == 'PRODUCT':
+        library_path = os.path.join(get_library_dir("products"),assembly.library_name,assembly.category_name)
+    if assembly.obj_bp.cabinetlib.type_group == 'INSERT':
+        library_path = os.path.join(get_library_dir("inserts"),assembly.library_name,assembly.category_name)
+        
+    thumbnail_path = os.path.join(library_path,assembly.assembly_name + ".blend")
+    
+    for obj in bpy.data.objects:
+        obj.hide = False
+#         obj.hide_select = False
+        obj.select = True
+        for slot in obj.material_slots:
+            slot.material = None
+    
+    bpy.ops.group.create(name = assembly.assembly_name)
+    
+    for mat in bpy.data.materials:
+        mat.user_clear()
+        bpy.data.materials.remove(mat)
+        
+    for image in bpy.data.images:
+        image.user_clear()
+        bpy.data.images.remove(image)    
+        
+    bpy.ops.fd_material.clear_spec_group()
+
+    bpy.ops.wm.save_as_mainfile(filepath=thumbnail_path)
+    
 def set_object_name(obj):
     """ This function sets the name of an object to make the outliner easier to navigate
     """
@@ -2442,9 +2592,9 @@ def init_objects(obj_bp):
 
         if child.mv.type == 'BPASSEMBLY':
             init_objects(child)
+            child.hide = True
          
         if child.mv.use_as_bool_obj:
-            print('WIRE',child)
             child.draw_type = 'WIRE'
          
     if len(obj_cages) > 0:
@@ -2553,8 +2703,8 @@ def get_collision_location(obj_product_bp,direction='LEFT',get_product_bp=None):
 #         if math.radians(wall.obj_bp.rotation_euler.z) < 0:
         left_wall =  wall.get_connected_wall('LEFT')
         if left_wall:
-            rotation_difference = wall.obj_bp.rotation_euler.z - left_wall.obj_bp.rotation_euler.z
-            if rotation_difference < 0:
+            rotation_difference = math.degrees(wall.obj_bp.rotation_euler.z) - math.degrees(left_wall.obj_bp.rotation_euler.z)
+            if rotation_difference < 0 or rotation_difference > 180:
                 list_obj_bp = left_wall.get_wall_groups()
                 for obj in list_obj_bp:
                     prev_group = Assembly(obj)
@@ -2576,8 +2726,8 @@ def get_collision_location(obj_product_bp,direction='LEFT',get_product_bp=None):
         # CHECK NEXT WALL
         right_wall =  wall.get_connected_wall('RIGHT')
         if right_wall:
-            rotation_difference = wall.obj_bp.rotation_euler.z - right_wall.obj_bp.rotation_euler.z
-            if rotation_difference > 0:
+            rotation_difference = math.degrees(wall.obj_bp.rotation_euler.z) - math.degrees(right_wall.obj_bp.rotation_euler.z)
+            if rotation_difference > 0 or rotation_difference < -180:
                 list_obj_bp = right_wall.get_wall_groups()
                 for obj in list_obj_bp:
                     next_group = Assembly(obj)
@@ -2843,7 +2993,7 @@ def meter_to_unit(number):
     """ converts meter to current unit
     """
     if bpy.context.scene.unit_settings.system == 'METRIC':
-        return number * 100
+        return number * 1000
     else:
         return round(number * 39.3700787,4)
 
@@ -2901,7 +3051,7 @@ def draw_dimensions(context, obj, opengl_dim, region, rv3d):
     for child in obj.children:
         if child.mv.type == 'VISDIM_B':
             b_p1 = get_location(child)
-
+    
     dist = calc_distance(a_p1, b_p1)  
 
     loc = get_location(obj)
@@ -2917,7 +3067,7 @@ def draw_dimensions(context, obj, opengl_dim, region, rv3d):
     
     screen_point_ap1 = get_2d_point(region, rv3d, a_p1)
     screen_point_bp1 = get_2d_point(region, rv3d, b_p1)
-    
+
     if None in (screen_point_ap1,screen_point_bp1):
         return
     
@@ -2925,7 +3075,7 @@ def draw_dimensions(context, obj, opengl_dim, region, rv3d):
     bgl.glColor4f(rgb[0], rgb[1], rgb[2], rgb[3])
         
     midpoint3d = interpolate3d(v1, v2, math.fabs(dist / 2))
-    gap3d = (midpoint3d[0], midpoint3d[1], midpoint3d[2] + 0.014)
+    gap3d = (midpoint3d[0], midpoint3d[1], midpoint3d[2])
     txtpoint2d = get_2d_point(region, rv3d, gap3d)
     
     if opengl_dim.gl_label == "":
@@ -2933,8 +3083,8 @@ def draw_dimensions(context, obj, opengl_dim, region, rv3d):
     else:
         txt_dist = opengl_dim.gl_label
 
-    draw_text(txtpoint2d[0] + opengl_dim.gl_text_x, 
-              txtpoint2d[1] + opengl_dim.gl_text_y,
+    draw_text(txtpoint2d[0], 
+              txtpoint2d[1],
               txt_dist, 
               rgb, 
               fsize)
@@ -2943,6 +3093,12 @@ def draw_dimensions(context, obj, opengl_dim, region, rv3d):
     bgl.glColor4f(rgb[0], rgb[1], rgb[2], rgb[3])      
 
     draw_arrow(screen_point_ap1, screen_point_bp1, a_size, a_type, b_type)  
+
+    draw_line(screen_point_ap1, screen_point_bp1)
+    
+    #TODO: FIGURE OUT HOW TO DRAW TWO LINES
+#     draw_line(screen_point_ap1, end_line_point1)
+#     draw_line(start_line_point1, screen_point_bp1)
     
     draw_extension_lines(screen_point_ap1, screen_point_bp1, a_size)
 
@@ -2961,11 +3117,14 @@ def draw_text(x_pos, y_pos, display_text, rgb, fsize):
     #---------- Draw all lines-+
     for line in mylines:
         text_width, text_height = blf.dimensions(font_id, line)
-            
         # calculate new Y position
         new_y = y_pos + (mheight * idx)
         # Draw
-        blf.position(font_id, x_pos - (text_width/2), new_y, 0)
+        # Figure out how to draw the text right in the middle of the dimesion line
+        # and break the line where the text is.
+#         blf.position(font_id, x_pos - (text_width/2), new_y - (text_height/2), 0)
+
+        blf.position(font_id, x_pos - (text_width/2), new_y + 3, 0)
         bgl.glColor4f(rgb[0], rgb[1], rgb[2], rgb[3])
         blf.draw(font_id, " " + line)
         
@@ -3138,7 +3297,7 @@ def draw_arrow(v1, v2, size=20, a_typ="1", b_typ="1"):
     if b_typ == "2":
         draw_triangle(v2, v2a, v2b)
 
-    draw_line(v1, v2)
+#     draw_line(v1, v2)
 
 def draw_line(v1, v2):
     # noinspection PyBroadException
@@ -3217,9 +3376,10 @@ def render_opengl(self, context):
     width = int(scene.render.resolution_x * render_scale)
     height = int(scene.render.resolution_y * render_scale)
     
-    file_format = context.scene.render.image_settings.file_format.lower()
-    
-    ren_path = bpy.path.abspath(bpy.context.scene.render.filepath) + "." + file_format
+    # I cant use file_format becuase the pdf writer needs jpg format
+    # the file_format returns 'JPEG' not 'JPG'
+#     file_format = context.scene.render.image_settings.file_format.lower()
+    ren_path = bpy.path.abspath(bpy.context.scene.render.filepath) + ".jpg"
     
 #     if len(ren_path) > 0:
 #         if ren_path.endswith(os.path.sep):
@@ -3366,6 +3526,74 @@ def get_render_image(outpath):
     except:
         print("Unexpected render image error")
         return None
+
+def get_2d_renderings(context):
+    file_name = bpy.path.basename(context.blend_data.filepath).replace(".blend","")
+    write_dir = os.path.join(bpy.app.tempdir, file_name)
+    if not os.path.exists(write_dir): os.mkdir(write_dir)
+    
+    bpy.ops.fd_scene.prepare_2d_elevations()
+    
+    images = []
+    
+    #Render Each Scene
+    for scene in bpy.data.scenes:
+        if scene.mv.elevation_scene:
+            context.screen.scene = scene
+
+            # Set Render 2D Properties
+            rd = context.scene.render
+            rl = rd.layers.active
+            freestyle_settings = rl.freestyle_settings
+            rd.filepath = os.path.join(write_dir,scene.name)
+            rd.image_settings.file_format = 'JPEG'
+            rd.engine = 'BLENDER_RENDER'
+            rd.use_freestyle = True
+            rd.line_thickness = 0.75
+            rd.resolution_percentage = 100
+            rl.use_pass_combined = False
+            rl.use_pass_z = False
+            freestyle_settings.crease_angle = 2.617994
+            
+            # If File already exists then first remove it or this will cause Blender to crash
+            if os.path.exists(bpy.path.abspath(context.scene.render.filepath) + context.scene.render.file_extension):
+                os.remove(bpy.path.abspath(context.scene.render.filepath) + context.scene.render.file_extension)            
+            
+            bpy.ops.render.render('INVOKE_DEFAULT', write_still=True)
+            
+            render_image = bpy.path.abspath(context.scene.render.filepath) + context.scene.render.file_extension
+            
+            # Wait for Image to render before drawing opengl 
+            while not os.path.exists(render_image):
+                time.sleep(0.1)
+            
+            img_result = render_opengl(None,context)
+            img_result.save_render(render_image)
+             
+            if os.path.exists(render_image):
+                images.append(render_image)
+
+    bpy.ops.fd_scene.clear_2d_views()
+    imgs_to_remove = []
+        
+    for img in bpy.data.images:
+        if img.users == 0:
+            imgs_to_remove.append(img)
+        
+    for im in imgs_to_remove:
+        print(im.name)
+        bpy.data.images.remove(im)
+            
+    return images
+
+def get_custom_font():
+    if "Calibri-Light" in bpy.data.fonts:
+        return bpy.data.fonts["Calibri-Light"]
+    else:
+        return bpy.data.fonts.load(os.path.join(os.path.dirname(bpy.app.binary_path),"Fonts","calibril.ttf"))
+#     for font in bpy.data.fonts:
+#         if "Calibri-Light"
+#         print(font.name)
 
 #----------- COMMON INTERFACES
 
@@ -4259,6 +4487,7 @@ def draw_object_properties(layout,obj):
         draw_object_drivers(col,obj)
     if ui.interface_object_tabs == 'TOKENS':
         if obj.type == 'MESH':
+            col.prop(obj.mv,"use_sma")
             col.operator_menu_enum("cabinetlib.add_machine_token", "token_type", icon='SCULPTMODE_HLT')
             obj.cabinetlib.mp.draw_machine_tokens(col)
         
@@ -4446,12 +4675,16 @@ def draw_object_materials(layout,obj):
         if obj.cabinetlib.type_mesh == 'EDGEBANDING':
             row = layout.row(align=True)
             row.prop_search(obj.cabinetlib,"edgepart_name",spec_group,"edgeparts",icon='EDGESEL',text="")
+            
+        if obj.cabinetlib.type_mesh == 'SOLIDSTOCK':
+            row = layout.row(align=True)
+            row.prop(obj.cabinetlib,"solid_stock")
 
         row = layout.row()
         row.label('Material Slots:')
         row.operator("object.material_slot_add", icon='ZOOMIN', text="")
         row.operator("object.material_slot_remove", icon='ZOOMOUT', text="")
-        row.operator("cabinetlib.assign_materials_from_pointers", icon='FILE_REFRESH', text="").object_name = obj.name
+        row.operator("fd_material.assign_materials_from_pointers", icon='FILE_REFRESH', text="").object_name = obj.name
         row.operator('fd_general.open_new_window',text="",icon='NODETREE').space_type = 'NODE_EDITOR'
         layout.template_list("FD_UL_materials", "", obj, "material_slots", obj, "active_material_index", rows=1)
         layout.template_ID(obj, "active_material", new="material.new")

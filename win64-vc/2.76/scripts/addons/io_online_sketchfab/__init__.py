@@ -327,7 +327,8 @@ class VIEW3D_PT_sketchfab(bpy.types.Panel):
             row.prop(props, "token")
             row.operator("wm.sketchfab_email_token", text="",icon='QUESTION')
             
-        box.operator('cabinetlib.delete_hidden_objects',text="Optimize Scene for Sketchfab",icon='PACKAGE')
+        box.operator('fd_scene.delete_hidden_objects',text="Optimize Scene for Sketchfab",icon='PACKAGE')
+        #box.operator('fd_scene.bake_lighting',text="Bake Lighting",icon='SCENE')
 
         row = box.row()
         row.scale_y = 1.5

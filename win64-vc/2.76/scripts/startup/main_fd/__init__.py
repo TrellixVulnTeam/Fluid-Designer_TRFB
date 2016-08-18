@@ -103,10 +103,17 @@ def load_driver_functions(scene):
         if name not in bpy.app.driver_namespace:
             bpy.app.driver_namespace[name] = obj
 
+@persistent
+def sync_spec_groups(scene):
+    """ Syncs Spec Groups with the current library modules
+    """
+    bpy.context.scene.cabinetlib.sync_spec_groups_from_template()
+
 # Register Startup Events
 bpy.app.handlers.load_post.append(set_default_user_prefs)
 bpy.app.handlers.load_post.append(load_driver_functions)
 bpy.app.handlers.load_post.append(update_library_paths)
+bpy.app.handlers.load_post.append(sync_spec_groups)
 
 # Register the OpenGL Call back for dims
 bpy.types.SpaceView3D.draw_handler_add(fd.draw_opengl, (None,None), 'WINDOW', 'POST_PIXEL')
@@ -115,9 +122,33 @@ bpy.types.SpaceView3D.draw_handler_add(fd.draw_opengl, (None,None), 'WINDOW', 'P
 path = os.path.join(os.path.dirname(bpy.app.binary_path),str(bpy.app.version[0]) + "." + str(bpy.app.version[1]),"python","lib","tkinter")
 sys.path.append(path)
 
+# @persistent
+# def load_library_modules(scene):
+#     """ Register Every Library Module on Startup
+#     """
+#     if bpy.context.window_manager.mv.library_module_path == "":
+#         path = fd.get_library_scripts_dir()
+#     else:
+#         path = bpy.context.window_manager.mv.library_module_path
+#     dirs = os.listdir(path)
+#     for folder in dirs:
+#         if os.path.isdir(os.path.join(path,folder)):
+#             files = os.listdir(os.path.join(path,folder))
+#             for file in files:
+#                 if file == '__init__.py':
+#                     sys.path.append(path)
+#                     mod = __import__(folder)
+#                     if hasattr(mod, "register"):
+#                         mod.register()
+# 
+#     scene = bpy.context.scene
+# 
+#     if scene.mv.product_library_name not in bpy.context.window_manager.cabinetlib.lib_products:
+#         scene.mv.product_library_name = bpy.context.window_manager.cabinetlib.lib_products[0].name
+# 
+# bpy.app.handlers.load_post.append(load_library_modules)
+
 def load_library_modules():
-    """ Register Every Library Module on Startup
-    """
     modules = fd.get_library_modules()
     for module in modules:
         mod = __import__(module)
@@ -128,7 +159,7 @@ def register():
     import sys
     import re
     from . import properties
-    
+
     #Register All Fluid Properties with Blender
     properties.register()
 
