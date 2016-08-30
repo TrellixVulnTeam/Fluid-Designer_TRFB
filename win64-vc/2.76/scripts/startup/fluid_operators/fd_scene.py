@@ -1795,11 +1795,20 @@ class OPS_export_mvfd(Operator):
         for child in obj_bp.children:
             if child.cabinetlib.type_mesh == 'HARDWARE':
                 if not child.hide:
+                    product_bp = fd.get_bp(child,'PRODUCT')
+                    
+                    diff = product_bp.matrix_world - child.matrix_world
+                    print('DIFF',diff)
+                    
                     elm_item = self.xml.add_element(elm_hardware,'Hardware',child.mv.name_object)
                     self.xml.add_element_with_text(elm_item,'XDimension',self.distance(child.dimensions.x))
                     self.xml.add_element_with_text(elm_item,'YDimension',self.distance(child.dimensions.y))
                     self.xml.add_element_with_text(elm_item,'ZDimension',self.distance(child.dimensions.z))
+                    self.xml.add_element_with_text(elm_item,'XOrigin',self.get_part_x_location(child,child.location.x))
+                    self.xml.add_element_with_text(elm_item,'YOrigin',self.get_part_y_location(child,child.location.y))
+                    self.xml.add_element_with_text(elm_item,'ZOrigin',self.get_part_z_location(child,child.location.z))                    
                     self.xml.add_element_with_text(elm_item,'Comment',child.cabinetlib.comment)
+                    self.write_machine_tokens(elm_item,child)
             self.write_hardware_for_product(elm_hardware, child)
 
     def write_buyout_for_product(self,elm_buyout,obj_bp):
