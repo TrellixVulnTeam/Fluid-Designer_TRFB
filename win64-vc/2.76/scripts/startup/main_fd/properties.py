@@ -1775,6 +1775,9 @@ class fd_object(PropertyGroup):
     plan_id = StringProperty(name="Plan ID",
                              description="This property allows a product to define custom plan view drawing. This is the operator bl_id.")
 
+    update_id = StringProperty(name="Update ID",
+                             description="This property allows a product to be updated after drawing. This is the operator bl_id.")
+
     name_object = StringProperty(name="Object Name",
                                  description="This is the readable name of the object")
     

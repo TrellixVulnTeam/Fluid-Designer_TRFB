@@ -1068,6 +1068,10 @@ class Library_Assembly(Assembly):
                       This is the bl_id property  """
     plan_id = ""
 
+    """ Type:string - The Plan View Operator ID
+                      This is the bl_id property  """
+    update_id = ""
+
     """ Type:enum_string("PRODUCT",
                          "INSERT") 
                          - Determines if the library assembly is an insert or a product """
@@ -1170,13 +1174,14 @@ class Library_Assembly(Assembly):
                 
         default_spec_group = bpy.context.scene.cabinetlib.spec_groups[bpy.context.scene.cabinetlib.spec_group_index]
         bpy.ops.fd_material.change_product_spec_group(object_name=self.obj_bp.name,spec_group_name=default_spec_group.name)
-        
+
         self.obj_bp.cabinetlib.type_group = self.type_assembly
         self.obj_bp.cabinetlib.placement_type = self.placement_type
         self.obj_bp.cabinetlib.product_shape = self.product_shape
         self.obj_bp.cabinetlib.mirror_z = self.mirror_z
         self.obj_bp.cabinetlib.mirror_y = self.mirror_y
         self.obj_bp.mv.plan_id = self.plan_id
+        self.obj_bp.mv.update_id = self.update_id
         self.set_name(self.assembly_name)
         self.set_property_id(self.obj_bp,self.property_id)
         

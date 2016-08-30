@@ -174,12 +174,10 @@ class OPS_drop_product(Operator):
             self.product = fd.Assembly(obj_bp)
         else:
             self.product = fd.get_product_class(self.library_name,self.category_name,self.product_name)
+            self.product.draw()
         if self.product:
-            if obj_bp:
-                pass
-#                 self.product.update(obj_bp)
-            else:
-                self.product.draw()
+            if self.product.obj_bp.mv.update_id != "":
+                eval('bpy.ops.' + self.product.obj_bp.mv.update_id + '("INVOKE_DEFAULT",object_name=self.product.obj_bp.name)')
             fd.init_objects(self.product.obj_bp)
             self.default_z_loc = self.product.obj_bp.location.z
             self.default_height = self.product.obj_z.location.z
