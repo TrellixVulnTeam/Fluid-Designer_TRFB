@@ -5,25 +5,21 @@ Stores the logic and product defs for entry doors.
 """
 
 import bpy
-import fd
 import math
+import os
+from mv import fd_types, utils, unit
 
-HIDDEN_FOLDER_NAME = "_HIDDEN"
-WINDOW_LIBRARY_NAME = "Window Assemblies"
-WINDOW_CATEGORY_NAME = "Window Components"
+WINDOW_FRAMES = os.path.join(os.path.dirname(__file__),"Window Frames")
+WINDOW_GLASS = os.path.join(os.path.dirname(__file__),"Window Glass")
 
-WINDOW_FRAME_MATERIAL = ("Plastics","White Melamine")
+MATERIAL_FILE = os.path.join(os.path.dirname(__file__),"materials","materials.blend")
 
-DEFAULT_WIDTH = fd.inches(36.0)
-DEFAULT_HEIGHT = fd.inches(36.0)
-DEFAULT_DEPTH = fd.inches(8.0)
-HEIGHT_ABOVE_FLOOR = fd.inches(50.0)
+DEFAULT_WIDTH = unit.inch(36.0)
+DEFAULT_HEIGHT = unit.inch(36.0)
+DEFAULT_DEPTH = unit.inch(8.0)
+HEIGHT_ABOVE_FLOOR = unit.inch(50.0)
 
-class Material_Pointers():
-    
-    Window_Frame_Material = fd.Material_Pointer(WINDOW_FRAME_MATERIAL)
-
-class Window(fd.Library_Assembly):
+class Window(fd_types.Assembly):
     library_name = "Windows"
     category_name = ""
     assembly_name = ""
@@ -45,11 +41,7 @@ class Window(fd.Library_Assembly):
         
         self.add_tab(name='Main Options',tab_type='VISIBLE')
         self.add_prompt(name="Array X",prompt_type='QUANTITY',value=1,tab_index=0)
-        self.add_prompt(name="Array X Offset",prompt_type='DISTANCE',value=fd.inches(6),tab_index=0)
-        
-        if self.window_blinds != "":
-            pass
-            #self.add_prompt(name="Blinds",prompt_type='CHECKBOX',value=False,tab_index=0)
+        self.add_prompt(name="Array X Offset",prompt_type='DISTANCE',value=unit.inch(6),tab_index=0)
         
         Width = self.get_var('dim_x','Width')
         Height = self.get_var('dim_z','Height')
@@ -57,84 +49,87 @@ class Window(fd.Library_Assembly):
         Array_X = self.get_var("Array X")
         Array_X_Offset = self.get_var("Array X Offset")
         
-        frame = self.add_assembly((HIDDEN_FOLDER_NAME,WINDOW_LIBRARY_NAME,WINDOW_CATEGORY_NAME,self.window_frame))
+        frame = self.add_assembly(os.path.join(WINDOW_FRAMES,self.window_frame))
         frame.set_name(self.window_frame)
         frame.x_dim('Width',[Width])
         frame.y_dim('Depth',[Depth])
         frame.z_dim('Height',[Height])
         frame.prompt("Array X","Array_X",[Array_X])
         frame.prompt("Array X Offset","Array_X_Offset",[Array_X_Offset])
-
+        frame.assign_material("Glass",MATERIAL_FILE,"Glass")
+        frame.assign_material("Frame",MATERIAL_FILE,"White")
+        
         if self.window_divider != "":
-            if self.window_frame == "Window_Frame_Fixed":
-                divider = self.add_assembly((HIDDEN_FOLDER_NAME,WINDOW_LIBRARY_NAME,WINDOW_CATEGORY_NAME,self.window_divider))
+            if self.window_frame == "Window_Frame_Fixed.blend":
+                divider = self.add_assembly(os.path.join(WINDOW_GLASS,self.window_divider))
                 divider.set_name(self.window_divider)
-                divider.x_loc(value = fd.inches(4.0))
-                divider.y_loc(value = fd.inches(3.86))
-                divider.z_loc(value = fd.inches(2.75))
+                divider.x_loc(value = unit.inch(4.0))
+                divider.y_loc(value = unit.inch(3.86))
+                divider.z_loc(value = unit.inch(2.75))
                 divider.x_dim('Width-INCH(8.0)',[Width])
                 divider.z_dim('Height-INCH(6.75)',[Height])
                 divider.prompt("Array X","Array_X",[Array_X])
                 divider.prompt("Array X Offset","Width+Array_X_Offset",[Array_X_Offset,Width])
+                divider.assign_material("Frame",MATERIAL_FILE,"White")
                 
-            if self.window_frame == "Window_Frame_Hung":
-                divider_1 = self.add_assembly((HIDDEN_FOLDER_NAME,WINDOW_LIBRARY_NAME,WINDOW_CATEGORY_NAME,self.window_divider))
+            if self.window_frame == "Window_Frame_Hung.blend":
+                divider_1 = self.add_assembly(os.path.join(WINDOW_GLASS,self.window_divider))
                 divider_1.set_name(self.window_divider + " 1")
-                divider_1.x_loc(value = fd.inches(4.0))
-                divider_1.y_loc(value = fd.inches(3.86))
-                divider_1.z_loc(value = fd.inches(2.75))
+                divider_1.x_loc(value = unit.inch(4.0))
+                divider_1.y_loc(value = unit.inch(3.86))
+                divider_1.z_loc(value = unit.inch(2.75))
                 divider_1.x_dim('Width-INCH(8)',[Width])
                 divider_1.z_dim('(Height*0.5)-INCH(5)',[Height])
                 divider_1.prompt("Array X","Array_X",[Array_X])
                 divider_1.prompt("Array X Offset","Width+Array_X_Offset",[Array_X_Offset,Width])                
+                divider_1.assign_material("Frame",MATERIAL_FILE,"White")
                 
-                divider_2 = self.add_assembly((HIDDEN_FOLDER_NAME,WINDOW_LIBRARY_NAME,WINDOW_CATEGORY_NAME,self.window_divider))
+                divider_2 = self.add_assembly(os.path.join(WINDOW_GLASS,self.window_divider))
                 divider_2.set_name(self.window_divider + " 2")
-                divider_2.x_loc(value = fd.inches(3))
-                divider_2.y_loc(value = fd.inches(3))
+                divider_2.x_loc(value = unit.inch(3))
+                divider_2.y_loc(value = unit.inch(3))
                 divider_2.z_loc('Height*0.5',[Height])
                 divider_2.x_dim('Width-INCH(6)',[Width])
                 divider_2.z_dim('(Height*0.5)-INCH(3)',[Height])         
                 divider_2.prompt("Array X","Array_X",[Array_X])
-                divider_2.prompt("Array X Offset","Width+Array_X_Offset",[Array_X_Offset,Width])                        
+                divider_2.prompt("Array X Offset","Width+Array_X_Offset",[Array_X_Offset,Width])   
+                divider_2.assign_material("Frame",MATERIAL_FILE,"White")                     
             
-            if self.window_frame == "Window_Frame_Sliding":
-                divider_1 = self.add_assembly((HIDDEN_FOLDER_NAME,WINDOW_LIBRARY_NAME,WINDOW_CATEGORY_NAME,self.window_divider))
+            if self.window_frame == "Window_Frame_Sliding.blend":
+                divider_1 = self.add_assembly(os.path.join(WINDOW_GLASS,self.window_divider))
                 divider_1.set_name(self.window_divider + " 1")
-                divider_1.x_loc(value = fd.inches(3.5))
-                divider_1.y_loc(value = fd.inches(3.86))
-                divider_1.z_loc(value = fd.inches(2))
+                divider_1.x_loc(value = unit.inch(3.5))
+                divider_1.y_loc(value = unit.inch(3.86))
+                divider_1.z_loc(value = unit.inch(2))
                 divider_1.x_dim('(Width*0.5)-INCH(4)',[Width])
                 divider_1.z_dim('Height-INCH(5.5)',[Height])
                 divider_1.prompt("Array X","Array_X",[Array_X])
-                divider_1.prompt("Array X Offset","Width+Array_X_Offset",[Array_X_Offset,Width])                 
+                divider_1.prompt("Array X Offset","Width+Array_X_Offset",[Array_X_Offset,Width])    
+                divider_1.assign_material("Frame",MATERIAL_FILE,"White")             
                 
-                divider_2 = self.add_assembly((HIDDEN_FOLDER_NAME,WINDOW_LIBRARY_NAME,WINDOW_CATEGORY_NAME,self.window_divider))
+                divider_2 = self.add_assembly(os.path.join(WINDOW_GLASS,self.window_divider))
                 divider_2.set_name(self.window_divider + " 2")
                 divider_2.x_loc('(Width*0.5)+INCH(0.75)',[Width])
-                divider_2.y_loc(value = fd.inches(3))
-                divider_2.z_loc(value = fd.inches(1.5))
+                divider_2.y_loc(value = unit.inch(3))
+                divider_2.z_loc(value = unit.inch(1.5))
                 divider_2.x_dim('(Width*0.5)-INCH(3.25)',[Width])
                 divider_2.z_dim('Height-INCH(4)',[Height]) 
                 divider_2.prompt("Array X","Array_X",[Array_X])
                 divider_2.prompt("Array X Offset","Width+Array_X_Offset",[Array_X_Offset,Width]) 
-            
-            if self.window_frame == "Window_Frame_Triple":
-                divider = self.add_assembly((HIDDEN_FOLDER_NAME,WINDOW_LIBRARY_NAME,WINDOW_CATEGORY_NAME,self.window_divider))
+                divider_2.assign_material("Frame",MATERIAL_FILE,"White")  
+                
+            if self.window_frame == "Window_Frame_Triple.blend":
+                divider = self.add_assembly(os.path.join(WINDOW_GLASS,self.window_divider))
                 divider.set_name(self.window_divider + " 1")
-                divider.x_loc(value = fd.inches(15))
-                divider.y_loc(value = fd.inches(3))
-                divider.z_loc(value = fd.inches(1.5))
+                divider.x_loc(value = unit.inch(15))
+                divider.y_loc(value = unit.inch(3))
+                divider.z_loc(value = unit.inch(1.5))
                 divider.x_dim('Width-INCH(30)',[Width])
                 divider.z_dim('Height-INCH(13.5)',[Height])   
                 divider.prompt("Array X","Array_X",[Array_X])
                 divider.prompt("Array X Offset","Width+Array_X_Offset",[Array_X_Offset,Width])                                    
-            
-        if self.window_blinds != "":
-            pass
-            #blinds = self.add_object(category_name="Window Components",object_name=self.window_blinds)
+                divider_1.assign_material("Frame",MATERIAL_FILE,"White")
 
-        self.update()
         
 class PRODUCT_Window_Fixed(Window):
     
@@ -146,7 +141,7 @@ class PRODUCT_Window_Fixed(Window):
         self.depth = DEFAULT_DEPTH
         self.height_above_floor = HEIGHT_ABOVE_FLOOR
         
-        self.window_frame = "Window_Frame_Fixed"
+        self.window_frame = "Window_Frame_Fixed.blend"
         self.window_divider = ""
         self.window_blinds = ""
         
@@ -160,8 +155,8 @@ class PRODUCT_Window_Fixed_4_Lites(Window):
         self.depth = DEFAULT_DEPTH
         self.height_above_floor = HEIGHT_ABOVE_FLOOR
         
-        self.window_frame = "Window_Frame_Fixed"
-        self.window_divider = "Window_Divider_4_Lites"
+        self.window_frame = "Window_Frame_Fixed.blend"
+        self.window_divider = "Window_Divider_4_Lites.blend"
         self.window_blinds = ""        
         
 class PRODUCT_Window_Fixed_Marginal_Border(Window):
@@ -174,8 +169,8 @@ class PRODUCT_Window_Fixed_Marginal_Border(Window):
         self.depth = DEFAULT_DEPTH
         self.height_above_floor = HEIGHT_ABOVE_FLOOR
         
-        self.window_frame = "Window_Frame_Fixed"
-        self.window_divider = "Window_Divider_Border"
+        self.window_frame = "Window_Frame_Fixed.blend"
+        self.window_divider = "Window_Divider_Border.blend"
         self.window_blinds = ""          
         
 class PRODUCT_Window_Fixed_Georgian(Window):
@@ -188,8 +183,8 @@ class PRODUCT_Window_Fixed_Georgian(Window):
         self.depth = DEFAULT_DEPTH
         self.height_above_floor = HEIGHT_ABOVE_FLOOR
         
-        self.window_frame = "Window_Frame_Fixed"
-        self.window_divider = "Window_Divider_Georgian"
+        self.window_frame = "Window_Frame_Fixed.blend"
+        self.window_divider = "Window_Divider_Georgian.blend"
         self.window_blinds = ""             
         
 class PRODUCT_Window_Hung(Window):
@@ -198,11 +193,11 @@ class PRODUCT_Window_Hung(Window):
         self.category_name = "Windows"
         self.assembly_name = "Hung Window"
         self.width = DEFAULT_WIDTH
-        self.height = fd.inches(48)
+        self.height = unit.inch(48)
         self.depth = DEFAULT_DEPTH
         self.height_above_floor = HEIGHT_ABOVE_FLOOR
         
-        self.window_frame = "Window_Frame_Hung"
+        self.window_frame = "Window_Frame_Hung.blend"
         self.window_divider = ""
         self.window_blinds = ""        
         
@@ -212,12 +207,12 @@ class PRODUCT_Window_Hung_4_Lites(Window):
         self.category_name = "Windows"
         self.assembly_name = "Hung Window 4 Lites"
         self.width = DEFAULT_WIDTH
-        self.height = fd.inches(48)
+        self.height = unit.inch(48)
         self.depth = DEFAULT_DEPTH
         self.height_above_floor = HEIGHT_ABOVE_FLOOR
         
-        self.window_frame = "Window_Frame_Hung"
-        self.window_divider = "Window_Divider_4_Lites"
+        self.window_frame = "Window_Frame_Hung.blend"
+        self.window_divider = "Window_Divider_4_Lites.blend"
         self.window_blinds = ""   
         
 class PRODUCT_Window_Hung_Marginal_Border(Window):
@@ -226,12 +221,12 @@ class PRODUCT_Window_Hung_Marginal_Border(Window):
         self.category_name = "Windows"
         self.assembly_name = "Hung Window Marginal Borders"
         self.width = DEFAULT_WIDTH
-        self.height = fd.inches(48)
+        self.height = unit.inch(48)
         self.depth = DEFAULT_DEPTH
         self.height_above_floor = HEIGHT_ABOVE_FLOOR
         
-        self.window_frame = "Window_Frame_Hung"
-        self.window_divider = "Window_Divider_Border"
+        self.window_frame = "Window_Frame_Hung.blend"
+        self.window_divider = "Window_Divider_Border.blend"
         self.window_blinds = ""              
         
 class PRODUCT_Window_Hung_Georgian(Window):
@@ -240,12 +235,12 @@ class PRODUCT_Window_Hung_Georgian(Window):
         self.category_name = "Windows"
         self.assembly_name = "Hung Window Georgian"
         self.width = DEFAULT_WIDTH
-        self.height = fd.inches(48)
+        self.height = unit.inch(48)
         self.depth = DEFAULT_DEPTH
         self.height_above_floor = HEIGHT_ABOVE_FLOOR
         
-        self.window_frame = "Window_Frame_Hung"
-        self.window_divider = "Window_Divider_Georgian"
+        self.window_frame = "Window_Frame_Hung.blend"
+        self.window_divider = "Window_Divider_Georgian.blend"
         self.window_blinds = ""        
 
 class PRODUCT_Window_Sliding(Window):
@@ -253,12 +248,12 @@ class PRODUCT_Window_Sliding(Window):
     def __init__(self):
         self.category_name = "Windows"
         self.assembly_name = "Sliding Window"
-        self.width = fd.inches(64)
+        self.width = unit.inch(64)
         self.height = DEFAULT_HEIGHT
         self.depth = DEFAULT_DEPTH
         self.height_above_floor = HEIGHT_ABOVE_FLOOR
         
-        self.window_frame = "Window_Frame_Sliding"
+        self.window_frame = "Window_Frame_Sliding.blend"
         self.window_divider = ""
         self.window_blinds = ""  
         
@@ -267,13 +262,13 @@ class PRODUCT_Window_Sliding_4_Lites(Window):
     def __init__(self):
         self.category_name = "Windows"
         self.assembly_name = "Sliding Window 4 Lites"
-        self.width = fd.inches(64)
+        self.width = unit.inch(64)
         self.height = DEFAULT_HEIGHT
         self.depth = DEFAULT_DEPTH
         self.height_above_floor = HEIGHT_ABOVE_FLOOR
         
-        self.window_frame = "Window_Frame_Sliding"
-        self.window_divider = "Window_Divider_4_Lites"
+        self.window_frame = "Window_Frame_Sliding.blend"
+        self.window_divider = "Window_Divider_4_Lites.blend"
         self.window_blinds = ""          
         
 class PRODUCT_Window_Sliding_Marginal_Border(Window):
@@ -281,13 +276,13 @@ class PRODUCT_Window_Sliding_Marginal_Border(Window):
     def __init__(self):
         self.category_name = "Windows"
         self.assembly_name = "Sliding Window Marginal Borders"
-        self.width = fd.inches(64)
+        self.width = unit.inch(64)
         self.height = DEFAULT_HEIGHT
         self.depth = DEFAULT_DEPTH
         self.height_above_floor = HEIGHT_ABOVE_FLOOR
         
-        self.window_frame = "Window_Frame_Sliding"
-        self.window_divider = "Window_Divider_Border"
+        self.window_frame = "Window_Frame_Sliding.blend"
+        self.window_divider = "Window_Divider_Border.blend"
         self.window_blinds = ""            
         
 class PRODUCT_Window_Sliding_Georgian(Window):
@@ -295,13 +290,13 @@ class PRODUCT_Window_Sliding_Georgian(Window):
     def __init__(self):
         self.category_name = "Windows"
         self.assembly_name = "Sliding Window Georgian"
-        self.width = fd.inches(64)
+        self.width = unit.inch(64)
         self.height = DEFAULT_HEIGHT
         self.depth = DEFAULT_DEPTH
         self.height_above_floor = HEIGHT_ABOVE_FLOOR
         
-        self.window_frame = "Window_Frame_Sliding"
-        self.window_divider = "Window_Divider_Georgian"
+        self.window_frame = "Window_Frame_Sliding.blend"
+        self.window_divider = "Window_Divider_Georgian.blend"
         self.window_blinds = ""          
 
 class PRODUCT_Window_Triple(Window):
@@ -309,12 +304,12 @@ class PRODUCT_Window_Triple(Window):
     def __init__(self):
         self.category_name = "Windows"
         self.assembly_name = "Triple Window"
-        self.width = fd.inches(64)
-        self.height = fd.inches(48)
+        self.width = unit.inch(64)
+        self.height = unit.inch(48)
         self.depth = DEFAULT_DEPTH
         self.height_above_floor = HEIGHT_ABOVE_FLOOR
         
-        self.window_frame = "Window_Frame_Triple"
+        self.window_frame = "Window_Frame_Triple.blend"
         self.window_divider = ""
         self.window_blinds = "" 
         
@@ -323,13 +318,13 @@ class PRODUCT_Window_Triple_4_Lites(Window):
     def __init__(self):
         self.category_name = "Windows"
         self.assembly_name = "Triple Window 4 Lites"
-        self.width = fd.inches(64)
-        self.height = fd.inches(48)
+        self.width = unit.inch(64)
+        self.height = unit.inch(48)
         self.depth = DEFAULT_DEPTH
         self.height_above_floor = HEIGHT_ABOVE_FLOOR
         
-        self.window_frame = "Window_Frame_Triple"
-        self.window_divider = "Window_Divider_4_Lites"
+        self.window_frame = "Window_Frame_Triple.blend"
+        self.window_divider = "Window_Divider_4_Lites.blend"
         self.window_blinds = ""     
         
 class PRODUCT_Window_Triple_Marginal_Border(Window):
@@ -337,13 +332,13 @@ class PRODUCT_Window_Triple_Marginal_Border(Window):
     def __init__(self):
         self.category_name = "Windows"
         self.assembly_name = "Triple Window Marginal Borders"
-        self.width = fd.inches(64)
-        self.height = fd.inches(48)
+        self.width = unit.inch(64)
+        self.height = unit.inch(48)
         self.depth = DEFAULT_DEPTH
         self.height_above_floor = HEIGHT_ABOVE_FLOOR
         
-        self.window_frame = "Window_Frame_Triple"
-        self.window_divider = "Window_Divider_Border"
+        self.window_frame = "Window_Frame_Triple.blend"
+        self.window_divider = "Window_Divider_Border.blend"
         self.window_blinds = ""    
         
 class PRODUCT_Window_Triple_Georgian(Window):
@@ -351,13 +346,13 @@ class PRODUCT_Window_Triple_Georgian(Window):
     def __init__(self):
         self.category_name = "Windows"
         self.assembly_name = "Triple Window Georgian"
-        self.width = fd.inches(64)
-        self.height = fd.inches(48)
+        self.width = unit.inch(64)
+        self.height = unit.inch(48)
         self.depth = DEFAULT_DEPTH
         self.height_above_floor = HEIGHT_ABOVE_FLOOR
         
-        self.window_frame = "Window_Frame_Triple"
-        self.window_divider = "Window_Divider_Georgian"
+        self.window_frame = "Window_Frame_Triple.blend"
+        self.window_divider = "Window_Divider_Georgian.blend"
         self.window_blinds = ""                
         
 class PROMPTS_Window_Prompts(bpy.types.Operator):
@@ -432,8 +427,8 @@ class PROMPTS_Window_Prompts(bpy.types.Operator):
 
     def invoke(self,context,event):
         obj = bpy.data.objects[self.object_name]
-        obj_product_bp = fd.get_bp(obj,'PRODUCT')
-        self.product = fd.Assembly(obj_product_bp)
+        obj_product_bp = utils.get_bp(obj,'PRODUCT')
+        self.product = fd_types.Assembly(obj_product_bp)
         if self.product.obj_bp:
             self.depth = math.fabs(self.product.obj_y.location.y)
             self.height = math.fabs(self.product.obj_z.location.z)
@@ -450,7 +445,7 @@ class PROMPTS_Window_Prompts(bpy.types.Operator):
             self.array_x_offset = self.array_x_offset_prompt.value()          
                 
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(480))
+        return wm.invoke_props_dialog(self, width=480)
 
     def draw_product_size(self,layout):
         row = layout.row()
@@ -459,7 +454,7 @@ class PROMPTS_Window_Prompts(bpy.types.Operator):
 
         row1 = col.row(align=True)
         if self.object_has_driver(self.product.obj_x):
-            row1.label('Width: ' + str(fd.unit(math.fabs(self.product.obj_x.location.x))))
+            row1.label('Width: ' + str(unit.meter_to_active_unit(math.fabs(self.product.obj_x.location.x))))
         else:
             row1.label('Width:')
             row1.prop(self,'width',text="")
@@ -467,7 +462,7 @@ class PROMPTS_Window_Prompts(bpy.types.Operator):
         
         row1 = col.row(align=True)
         if self.object_has_driver(self.product.obj_z):
-            row1.label('Height: ' + str(fd.unit(math.fabs(self.product.obj_z.location.z))))
+            row1.label('Height: ' + str(unit.meter_to_active_unit(math.fabs(self.product.obj_z.location.z))))
         else:
             row1.label('Height:')
             row1.prop(self,'height',text="")
@@ -475,7 +470,7 @@ class PROMPTS_Window_Prompts(bpy.types.Operator):
         
         row1 = col.row(align=True)
         if self.object_has_driver(self.product.obj_y):
-            row1.label('Depth: ' + str(fd.unit(math.fabs(self.product.obj_y.location.y))))
+            row1.label('Depth: ' + str(unit.meter_to_active_unit(math.fabs(self.product.obj_y.location.y))))
         else:
             row1.label('Depth:')
             row1.prop(self,'depth',text="")
@@ -530,6 +525,3 @@ class PROMPTS_Window_Prompts(bpy.types.Operator):
         
 def register():
     bpy.utils.register_class(PROMPTS_Window_Prompts)
-    
-def unregister():
-    bpy.utils.unregister_class(PROMPTS_Window_Prompts)         

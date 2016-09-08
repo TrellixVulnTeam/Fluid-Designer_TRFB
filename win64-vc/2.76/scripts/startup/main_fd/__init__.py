@@ -22,52 +22,26 @@ from bpy.app.handlers import persistent
 import os
 from . import driver_functions
 import inspect
-import fd
 import sys
 import xml.etree.ElementTree as ET
+from mv import utils
 
 @persistent
 def update_library_paths(scene=None):
     """ Sets the library paths from the Library XML File
     """
     wm = bpy.context.window_manager.mv
-    if os.path.exists(fd.get_library_path_file()):
-        tree = ET.parse(fd.get_library_path_file())
+    if os.path.exists(utils.get_library_path_file()):
+        tree = ET.parse(utils.get_library_path_file())
         root = tree.getroot()
         for elm in root.findall("LibraryPaths"):
             items = elm.getchildren()
             for item in items:
                 if item.tag == "Modules":
                     if os.path.exists(str(item.text)):
-                        print('PATH FOUND',item.text)
                         wm.library_module_path = item.text
                     else:
                         wm.library_module_path = ""
-                if item.tag == "Scenes":
-                    if os.path.exists(str(item.text)):
-                        wm.scene_library_path = item.text
-                    else:
-                        wm.scene_library_path = ""
-                if item.tag == 'Projects':
-                    if os.path.exists(str(item.text)):
-                        wm.project_path = item.text
-                    else:
-                        wm.project_path = ""
-                if item.tag == 'ProjectTemplates':
-                    if os.path.exists(str(item.text)):
-                        wm.project_template_path = item.text
-                    else:
-                        wm.project_template_path = ""
-                if item.tag == 'Products':
-                    if os.path.exists(str(item.text)):
-                        wm.product_library_path = item.text
-                    else:
-                        wm.product_library_path = ""
-                if item.tag == 'Inserts':
-                    if os.path.exists(str(item.text)):
-                        wm.insert_library_path = item.text
-                    else:
-                        wm.insert_library_path = ""
                 if item.tag == 'Assemblies':
                     if os.path.exists(str(item.text)):
                         wm.assembly_library_path = item.text
@@ -107,54 +81,27 @@ def load_driver_functions(scene):
 def sync_spec_groups(scene):
     """ Syncs Spec Groups with the current library modules
     """
-    bpy.context.scene.cabinetlib.sync_spec_groups_from_template()
+    bpy.ops.fd_material.reload_spec_group_from_library_modules()
+
+@persistent
+def load_library_modules(scene):
+    """ Register Every Library Module on Startup
+    """
+    bpy.ops.fd_general.load_library_modules()
+
+    if bpy.context.scene.mv.product_library_name not in bpy.context.window_manager.cabinetlib.lib_products:
+        bpy.context.scene.mv.product_library_name = bpy.context.window_manager.cabinetlib.lib_products[0].name
 
 # Register Startup Events
 bpy.app.handlers.load_post.append(set_default_user_prefs)
 bpy.app.handlers.load_post.append(load_driver_functions)
 bpy.app.handlers.load_post.append(update_library_paths)
 bpy.app.handlers.load_post.append(sync_spec_groups)
+bpy.app.handlers.load_post.append(load_library_modules)
 
 # Register the OpenGL Call back for dims
-bpy.types.SpaceView3D.draw_handler_add(fd.draw_opengl, (None,None), 'WINDOW', 'POST_PIXEL')
+bpy.types.SpaceView3D.draw_handler_add(utils.draw_opengl, (None,None), 'WINDOW', 'POST_PIXEL')
 
-# Add the tkinter directory as a valid system path
-path = os.path.join(os.path.dirname(bpy.app.binary_path),str(bpy.app.version[0]) + "." + str(bpy.app.version[1]),"python","lib","tkinter")
-sys.path.append(path)
-
-# @persistent
-# def load_library_modules(scene):
-#     """ Register Every Library Module on Startup
-#     """
-#     if bpy.context.window_manager.mv.library_module_path == "":
-#         path = fd.get_library_scripts_dir()
-#     else:
-#         path = bpy.context.window_manager.mv.library_module_path
-#     dirs = os.listdir(path)
-#     for folder in dirs:
-#         if os.path.isdir(os.path.join(path,folder)):
-#             files = os.listdir(os.path.join(path,folder))
-#             for file in files:
-#                 if file == '__init__.py':
-#                     sys.path.append(path)
-#                     mod = __import__(folder)
-#                     if hasattr(mod, "register"):
-#                         mod.register()
-# 
-#     scene = bpy.context.scene
-# 
-#     if scene.mv.product_library_name not in bpy.context.window_manager.cabinetlib.lib_products:
-#         scene.mv.product_library_name = bpy.context.window_manager.cabinetlib.lib_products[0].name
-# 
-# bpy.app.handlers.load_post.append(load_library_modules)
-
-def load_library_modules():
-    modules = fd.get_library_modules()
-    for module in modules:
-        mod = __import__(module)
-        if hasattr(mod, "register"):
-            mod.register()
-    
 def register():
     import sys
     import re
@@ -163,15 +110,6 @@ def register():
     #Register All Fluid Properties with Blender
     properties.register()
 
-    #Set Paths from Library XML to WM
-    update_library_paths()
-    
-    #Add Library Module Scripts to PYTHON PATH
-    sys.path.append(fd.get_library_scripts_dir())
-    
-    #Register All Library Modules
-    load_library_modules()
-    
     #Add/Overwrite Default Hot Key Commands
     wm = bpy.context.window_manager
     if wm.keyconfigs.addon:
@@ -206,13 +144,11 @@ def register():
         if sys.path.count(PYDEV_SOURCE_DIR) < 1:
             sys.path.append(PYDEV_SOURCE_DIR) 
     #pydev 4.3, this could be changed to look for any version of pydev        
-    if os.path.exists(r'C:\Program Files\eclipse\plugins\org.python.pydev_4.3.0.201508182223\pysrc'):
+    elif os.path.exists(r'C:\Program Files\eclipse\plugins\org.python.pydev_4.3.0.201508182223\pysrc'):
         PYDEV_SOURCE_DIR = r'C:\Program Files\eclipse\plugins\org.python.pydev_4.3.0.201508182223\pysrc'
         if sys.path.count(PYDEV_SOURCE_DIR) < 1:
             sys.path.append(PYDEV_SOURCE_DIR)             
-               
-    else:
-        print("NO DEBUG ATTACHED")
+
     
 def unregister():
     pass

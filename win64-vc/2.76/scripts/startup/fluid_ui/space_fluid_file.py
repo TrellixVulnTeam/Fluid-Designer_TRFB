@@ -19,7 +19,7 @@
 import bpy
 from bpy.types import Header, Menu, Panel
 import os
-import fd
+from mv import utils
 
 def is_hidden_library(library_name):
     """ Determines if a library should be displayed
@@ -98,114 +98,60 @@ class FILEBROWSER_HT_fluidheader(Header):
         else:
             icon = 'X'
 
-class FILEBROWSER_MT_active_scene_libraries(Menu):
-    bl_label = "Active Scene Libraries"
-
-    def draw(self, context):
-        layout = self.layout
-        path = fd.get_library_dir("scenes")
-        dirs =  os.listdir(path)
-        for lib in dirs:
-            if not is_hidden_library(lib):
-                lib_path = os.path.join(path,lib)
-                if os.path.isdir(lib_path):
-                    if lib == context.scene.mv.scene_library_name:
-                        layout.operator('fd_general.change_library',text=lib,icon='LAYER_ACTIVE').library_name = lib
-                    else:
-                        layout.operator('fd_general.change_library',text=lib,icon='LAYER_USED').library_name = lib
-        
-class FILEBROWSER_MT_active_scene_categories(Menu):
-    bl_label = "Active Scene Libraries"
-     
-    def draw(self, context):
-        layout = self.layout
-         
-        path = fd.get_library_dir("scenes")
-        lib_path = os.path.join(path,context.scene.mv.scene_library_name)
-        categories =  os.listdir(lib_path)
-        for category in categories:
-            cat_path = os.path.join(lib_path,category)
-            if os.path.isdir(cat_path):
-                if category == context.scene.mv.scene_category_name:
-                    layout.operator('fd_general.change_category',text=category,icon='LAYER_ACTIVE').category_name = category
-                else:
-                    layout.operator('fd_general.change_category',text=category,icon='LAYER_USED').category_name = category
-
 class FILEBROWSER_MT_active_product_libraries(Menu):
     bl_label = "Active Product Libraries"
 
     def draw(self, context):
-#         layout = self.layout
-#         for lib in context.window_manager.cabinetlib.lib_products:
-#             layout.operator('fd_general.change_library',text=lib.name,icon='LAYER_ACTIVE').library_name = lib.name
-            
         layout = self.layout
-        path = fd.get_library_dir("products")
-        dirs =  os.listdir(path)
-        for lib in dirs:
-            if not is_hidden_library(lib):
-                lib_path = os.path.join(path,lib)
-                if os.path.isdir(lib_path):
-                    if lib == context.scene.mv.product_library_name:
-                        layout.operator('fd_general.change_library',text=lib,icon='LAYER_ACTIVE').library_name = lib
-                    else:
-                        layout.operator('fd_general.change_library',text=lib,icon='LAYER_USED').library_name = lib
-        
+        for lib in context.window_manager.cabinetlib.lib_products:
+            if os.path.exists(lib.lib_path):
+                layout.operator('fd_general.change_library',text=lib.name,icon='LAYER_ACTIVE').library_name = lib.name
+
 class FILEBROWSER_MT_active_product_categories(Menu):
     bl_label = "Active Product Libraries"
      
     def draw(self, context):
         layout = self.layout
-         
-        path = fd.get_library_dir("products")
-        lib_path = os.path.join(path,context.scene.mv.product_library_name)
-        categories =  os.listdir(lib_path)
+        lib = context.window_manager.cabinetlib.lib_products[context.scene.mv.product_library_name]
+        categories =  os.listdir(lib.lib_path)
         for category in categories:
-            cat_path = os.path.join(lib_path,category)
+            cat_path = os.path.join(lib.lib_path,category)
             if os.path.isdir(cat_path):
                 if category == context.scene.mv.product_category_name:
                     layout.operator('fd_general.change_category',text=category,icon='LAYER_ACTIVE').category_name = category
                 else:
                     layout.operator('fd_general.change_category',text=category,icon='LAYER_USED').category_name = category
-            
+
 class FILEBROWSER_MT_active_insert_libraries(Menu):
     bl_label = "Active Insert Libraries"
 
     def draw(self, context):
         layout = self.layout
-        path = fd.get_library_dir("inserts")
-        dirs =  os.listdir(path)
-        for lib in dirs:
-            if not is_hidden_library(lib):
-                lib_path = os.path.join(path,lib)
-                if os.path.isdir(lib_path):
-                    if lib == context.scene.mv.insert_library_name:
-                        layout.operator('fd_general.change_library',text=lib,icon='LAYER_ACTIVE').library_name = lib
-                    else:
-                        layout.operator('fd_general.change_library',text=lib,icon='LAYER_USED').library_name = lib
-        
+        for lib in context.window_manager.cabinetlib.lib_inserts:
+            if os.path.exists(lib.lib_path):
+                layout.operator('fd_general.change_library',text=lib.name,icon='LAYER_ACTIVE').library_name = lib.name
+            
 class FILEBROWSER_MT_active_insert_categories(Menu):
     bl_label = "Active Insert Libraries"
 
     def draw(self, context):
         layout = self.layout
-        path = fd.get_library_dir("inserts")
-        lib_path = os.path.join(path,context.scene.mv.insert_library_name)
-        categories =  os.listdir(lib_path)
+        lib = context.window_manager.cabinetlib.lib_inserts[context.scene.mv.insert_library_name]
+        categories =  os.listdir(lib.lib_path)
         for category in categories:
-            cat_path = os.path.join(lib_path,category)
+            cat_path = os.path.join(lib.lib_path,category)
             if os.path.isdir(cat_path):
                 if category == context.scene.mv.insert_category_name:
                     layout.operator('fd_general.change_category',text=category,icon='LAYER_ACTIVE').category_name = category
                 else:
                     layout.operator('fd_general.change_category',text=category,icon='LAYER_USED').category_name = category
-            
+        
 class FILEBROWSER_MT_active_assembly_libraries(Menu):
     bl_label = "Active Assembly Libraries"
 
     def draw(self, context):
         layout = self.layout
-        path = fd.get_library_dir("assemblies")
+        path = utils.get_library_dir("assemblies")
         dirs =  os.listdir(path)
         for lib in dirs:
             if not is_hidden_library(lib):
@@ -221,7 +167,7 @@ class FILEBROWSER_MT_active_assembly_categories(Menu):
 
     def draw(self, context):
         layout = self.layout
-        path = fd.get_library_dir("assemblies")
+        path = utils.get_library_dir("assemblies")
         lib_path = os.path.join(path,context.scene.mv.assembly_library_name)
         categories =  os.listdir(lib_path)
         for category in categories:
@@ -237,7 +183,7 @@ class FILEBROWSER_MT_active_object_libraries(Menu):
 
     def draw(self, context):
         layout = self.layout
-        path = fd.get_library_dir("objects")
+        path = utils.get_library_dir("objects")
         dirs =  os.listdir(path)
         for lib in dirs:
             if not is_hidden_library(lib):
@@ -253,7 +199,7 @@ class FILEBROWSER_MT_active_object_categories(Menu):
 
     def draw(self, context):
         layout = self.layout
-        path = fd.get_library_dir("objects")
+        path = utils.get_library_dir("objects")
         lib_path = os.path.join(path,context.scene.mv.object_library_name)
         categories =  os.listdir(lib_path)
         for category in categories:
@@ -269,7 +215,7 @@ class FILEBROWSER_MT_active_material_libraries(Menu):
 
     def draw(self, context):
         layout = self.layout
-        path = fd.get_library_dir("materials")
+        path = utils.get_library_dir("materials")
         dirs =  os.listdir(path)
         for lib in dirs:
             if not is_hidden_library(lib):
@@ -285,7 +231,7 @@ class FILEBROWSER_MT_active_material_categories(Menu):
 
     def draw(self, context):
         layout = self.layout
-        path = fd.get_library_dir("materials")
+        path = utils.get_library_dir("materials")
         lib_path = os.path.join(path,context.scene.mv.material_library_name)
         categories =  os.listdir(lib_path)
         for category in categories:
@@ -301,7 +247,7 @@ class FILEBROWSER_MT_active_world_libraries(Menu):
 
     def draw(self, context):
         layout = self.layout
-        path = fd.get_library_dir("worlds")
+        path = utils.get_library_dir("worlds")
         dirs =  os.listdir(path)
         for lib in dirs:
             if not is_hidden_library(lib):
@@ -317,7 +263,7 @@ class FILEBROWSER_MT_active_world_categories(Menu):
 
     def draw(self, context):
         layout = self.layout
-        path = fd.get_library_dir("worlds")
+        path = utils.get_library_dir("worlds")
         lib_path = os.path.join(path,context.scene.mv.world_library_name)
         categories =  os.listdir(lib_path)
         for category in categories:
@@ -435,8 +381,7 @@ class MENU_File_Browser_Options(Menu):
         layout = self.layout
         st = context.space_data
         #TODO file browser options
-        #layout.operator("fd_general.open_browser_window",text="File Browser Options",icon='INFO').path = fd.get_file_browser_path(context) #TODO
-        layout.operator("fd_general.open_browser_window",text="Open Location in Browser",icon='FILE_FOLDER').path = fd.get_file_browser_path(context)
+        layout.operator("fd_general.open_browser_window",text="Open Location in Browser",icon='FILE_FOLDER').path = utils.get_file_browser_path(context)
         layout.separator()
         layout.operator("fd_general.create_thumbnails",text="Create Thumbnails",icon='EXTERNAL_DATA')
         layout.operator("fd_general.append_items",text="Append Items",icon='EXTERNAL_DATA')
@@ -466,8 +411,6 @@ class INFO_MT_addons(Menu):
 classes = [
            FILEBROWSER_HT_fluidheader,
            FILE_MT_fd_menus,
-           FILEBROWSER_MT_active_scene_libraries,
-           FILEBROWSER_MT_active_scene_categories,
            FILEBROWSER_MT_active_product_libraries,
            FILEBROWSER_MT_active_product_categories,
            FILEBROWSER_MT_active_insert_libraries,

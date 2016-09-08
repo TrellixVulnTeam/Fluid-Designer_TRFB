@@ -273,19 +273,6 @@ class INFO_MT_thumbnail(Menu):
         layout.operator("fd_object.add_thumbnail_camera",text="Add Thumbnail Camera and Lighting",icon='RENDER_STILL')
         layout.operator("fd_scene.render_scene",text="Render Product Thumbnail",icon='RENDER_RESULT')
 
-class INFO_MT_projecttemplates(Menu):
-    bl_label = "Create Project"
-
-    def draw(self, context):
-        #TODO: REMOVE FIXED PATHS ALSO FIX OPERATOR
-        layout = self.layout
-        template_dir = "C:\\FD Project Templates"
-        files = os.listdir(template_dir)
-        for file in files:
-            filename, ext = os.path.splitext(file)
-            if ext == '.blend':
-                layout.operator("fd_general.create_project",text=filename).template_name = file
-
 class INFO_MT_addons(Menu):
     bl_label = "Fluid Add-Ons"
     
@@ -324,7 +311,6 @@ classes = [
            INFO_MT_create_rendering,
            INFO_MT_edit,
            INFO_MT_thumbnail,
-           INFO_MT_projecttemplates,
            INFO_MT_scenes,
            INFO_MT_addons
            ]

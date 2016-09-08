@@ -1,7 +1,7 @@
 # This is an example template for Library Assemblies
 
 import bpy
-import fd
+from mv import utils, fd_types
 
 class PROMPTS_Prompts_Page(bpy.types.Operator):
     bl_idname = "promptui.prompts_page"
@@ -23,10 +23,10 @@ class PROMPTS_Prompts_Page(bpy.types.Operator):
     def invoke(self,context,event):
         # This gets called first and is used as an init call
         obj = context.scene.objects[self.object_name]
-        obj_product_bp = fd.get_bp(obj,'PRODUCT')
-        self.product = fd.Assembly(obj_product_bp)
+        obj_product_bp = utils.get_bp(obj,'PRODUCT')
+        self.product = fd_types.Assembly(obj_product_bp)
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(480))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(480))
         
     def draw(self, context):
         # This draw the interface

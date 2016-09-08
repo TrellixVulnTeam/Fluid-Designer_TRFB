@@ -33,7 +33,7 @@ import os
 import tempfile
 import threading
 import subprocess
-import fd
+from mv import utils
 
 from bpy.app.handlers import persistent
 from bpy.props import (
@@ -327,8 +327,7 @@ class VIEW3D_PT_sketchfab(bpy.types.Panel):
             row.prop(props, "token")
             row.operator("wm.sketchfab_email_token", text="",icon='QUESTION')
             
-        box.operator('fd_scene.delete_hidden_objects',text="Optimize Scene for Sketchfab",icon='PACKAGE')
-        #box.operator('fd_scene.bake_lighting',text="Bake Lighting",icon='SCENE')
+        box.operator('cabinetlib.delete_hidden_objects',text="Optimize Scene for Sketchfab",icon='PACKAGE')
 
         row = box.row()
         row.scale_y = 1.5
@@ -437,7 +436,7 @@ class SketchfabEmailToken(bpy.types.Operator):
 
     def invoke(self, context, event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(550))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(550))
 
     def draw(self,context):
         layout = self.layout

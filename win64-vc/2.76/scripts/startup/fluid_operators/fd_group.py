@@ -29,7 +29,7 @@ from bpy.props import (StringProperty,
                        EnumProperty,
                        CollectionProperty)
 
-import fd
+from mv import utils
 
 class OPS_make_group_from_selection(Operator):
     bl_idname = "fd_group.make_group_from_selection"
@@ -56,7 +56,7 @@ class OPS_make_group_from_selection(Operator):
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
 
     def draw(self, context):
         layout = self.layout
@@ -83,7 +83,7 @@ class OPS_make_group_from_scene(Operator):
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
 
     def draw(self, context):
         layout = self.layout
@@ -103,7 +103,7 @@ class OPS_remove_group(Operator):
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(300))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(300))
 
     def draw(self, context):
         grp = bpy.data.groups[self.group_name]
@@ -122,7 +122,7 @@ class OPS_clear_all_groups_from_file(Operator):
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(300))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(300))
 
     def draw(self, context):
         layout = self.layout
@@ -140,7 +140,7 @@ class OPS_show_group_options(Operator):
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(300))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(300))
 
     def draw(self, context):
         layout = self.layout

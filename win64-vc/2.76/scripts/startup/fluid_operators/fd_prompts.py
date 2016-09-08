@@ -28,7 +28,21 @@ from bpy.props import (StringProperty,
                        PointerProperty,
                        EnumProperty)
 
-import fd
+from mv import utils
+
+enum_prompt_types = [('NUMBER',"Number","Number"),
+                     ('QUANTITY',"Quantity","Quantity"),
+                     ('COMBOBOX',"Combo Box","Combo Box"),
+                     ('CHECKBOX',"Check Box","Check Box"),
+                     ('TEXT',"Text","Text"),
+                     ('DISTANCE',"Distance","Distance"),
+                     ('ANGLE',"Angle","Angle"),
+                     ('PERCENTAGE',"Percentage","Percentage"),
+                     ('PRICE',"Price","Enter Price Prompt")]
+
+enum_prompt_tab_types = [('VISIBLE',"Visible","Visible tabs are always displayed"),
+                         ('HIDDEN',"Hidden","Hidden tabs are not shown in the right click menu"),
+                         ('CALCULATOR',"Calculator","Use to calculate sizes of opening")]
 
 class OPS_add_prompt(Operator):
     bl_idname = "fd_prompts.add_prompt"
@@ -36,7 +50,7 @@ class OPS_add_prompt(Operator):
     bl_options = {'UNDO'}
     
     prompt_name = StringProperty(name="Prompt Name",default = "New Prompt")
-    prompt_type = EnumProperty(name="Prompt Type",items=fd.enums.enum_prompt_types)
+    prompt_type = EnumProperty(name="Prompt Type",items=enum_prompt_types)
     data_name = StringProperty(name="Data Name")
     data_type = StringProperty(name="Data Type",default = 'OBJECT')
     
@@ -83,7 +97,7 @@ class OPS_add_prompt(Operator):
             Counter += 1
         self.prompt_name = self.prompt_name + " " + str(Counter)
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(380))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(380))
     
     def draw(self, context):
         layout = self.layout
@@ -96,7 +110,7 @@ class OPS_add_calculation_prompt(Operator):
     bl_options = {'UNDO'}
     
     prompt_name = StringProperty(name="Prompt Name",default = "New Prompt")
-    prompt_type = EnumProperty(name="Prompt Type",items=fd.enums.enum_prompt_types)
+    prompt_type = EnumProperty(name="Prompt Type",items=enum_prompt_types)
     data_name = StringProperty(name="Data Name")
     data_type = StringProperty(name="Data Type",default = 'OBJECT')
     
@@ -143,7 +157,7 @@ class OPS_add_calculation_prompt(Operator):
             Counter += 1
         self.prompt_name = self.prompt_name + " " + str(Counter)
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(380))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(380))
     
     def draw(self, context):
         layout = self.layout
@@ -227,7 +241,7 @@ class OPS_delete_prompt(Operator):
 
     def invoke(self,context,event):    
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(380))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(380))
 
     def draw(self, context):
         layout = self.layout
@@ -262,7 +276,7 @@ class OPS_delete_main_tab(Operator):
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(380))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(380))
 
     def draw(self, context):
         layout = self.layout
@@ -299,7 +313,7 @@ class OPS_rename_prompt(Operator):
 
     def invoke(self,context,event):    
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(380))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(380))
 
     def draw(self, context):
         layout = self.layout
@@ -334,7 +348,7 @@ class OPS_rename_main_tab(Operator):
 
     def invoke(self,context,event):    
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(380))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(380))
 
     def draw(self, context):
         layout = self.layout
@@ -345,7 +359,7 @@ class OPS_show_prompt_properties(Operator):
     bl_label = "Show Prompt Properties"
     
     prompt_name = StringProperty(name="Prompt Name",default = "New Prompt")
-    prompt_type = EnumProperty(name="Prompt Type",items=fd.enums.enum_prompt_types)
+    prompt_type = EnumProperty(name="Prompt Type",items=enum_prompt_types)
     data_name = StringProperty(name="Data Name")
     data_type = StringProperty(name="Data Type",default = 'OBJECT')
     
@@ -358,7 +372,7 @@ class OPS_show_prompt_properties(Operator):
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(380))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(380))
 
     def draw(self, context):
         layout = self.layout
@@ -381,7 +395,7 @@ class OPS_add_main_tab(Operator):
     bl_options = {'UNDO'}
     
     tab_name = StringProperty(name="Tab Name",default="New Tab")
-    tab_type = EnumProperty(name="Tab Type",items=fd.enums.enum_prompt_tab_types,default='VISIBLE')
+    tab_type = EnumProperty(name="Tab Type",items=enum_prompt_tab_types,default='VISIBLE')
     data_name = StringProperty(name="Data Name")
     data_type = StringProperty(name="Data Type",default = 'OBJECT')
 
@@ -435,7 +449,7 @@ class OPS_add_main_tab(Operator):
             self.tab_name = self.tab_name + " " + str(Counter)
             
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(380))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(380))
 
     def draw(self, context):
         layout = self.layout
@@ -502,7 +516,7 @@ class OPS_add_combo_box_option(Operator):
             self.combo_box_value = self.combo_box_value + " " + str(Counter)   
             
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(380))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(380))
 
     def draw(self, context):
         layout = self.layout
@@ -550,7 +564,7 @@ class OPS_show_object_prompts(Operator):
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(500))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(500))
 
     def draw(self, context):
         layout = self.layout

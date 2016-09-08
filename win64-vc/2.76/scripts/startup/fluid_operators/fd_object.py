@@ -21,7 +21,7 @@ from bpy.types import Header, Menu, Operator
 import math
 import mathutils
 import bmesh
-import fd
+from mv import utils, fd_types, unit
 
 from bpy.props import (StringProperty,
                        BoolProperty,
@@ -32,35 +32,45 @@ from bpy.props import (StringProperty,
                        PointerProperty,
                        EnumProperty)
 
-class OPS_grab_object(Operator):
-    bl_idname = "fd_object.grab_object"
-    bl_label = "Grab Object"
-#     bl_options = {'UNDO'}
-    
-    @classmethod
-    def poll(cls, context):
-        if context.object:
-            return True
-        else:
-            return False
-        return True
+enum_modifiers = [('ARRAY', "Array Modifier", "Array Modifier", 'MOD_ARRAY', 0),
+                  ('BEVEL', "Bevel Modifier", "Bevel Modifier", 'MOD_BEVEL', 1),
+                  ('BOOLEAN', "Boolean Modifier", "Boolean Modifier", 'MOD_BOOLEAN', 2),
+                  ('CURVE', "Curve Modifier", "Curve Modifier", 'MOD_CURVE', 3),
+                  ('DECIMATE', "Decimate Modifier", "Decimate Modifier", 'MOD_DECIM', 4),
+                  ('EDGE_SPLIT', "Edge Split Modifier", "Edge Split Modifier", 'MOD_EDGESPLIT', 5),
+                  ('HOOK', "Hook Modifier", "Hook Modifier", 'HOOK', 6),
+                  ('MASK', "Mask Modifier", "Mask Modifier", 'MOD_MASK', 7),
+                  ('MIRROR', "Mirror Modifier", "Mirror Modifier", 'MOD_MIRROR', 8),
+                  ('SOLIDIFY', "Solidify Modifier", "Solidify Modifier", 'MOD_SOLIDIFY', 9),
+                  ('SUBSURF', "Subsurf Modifier", "Subsurf Modifier", 'MOD_SUBSURF', 10),
+                  ('SKIN', "Skin Modifier", "Skin Modifier", 'MOD_SKIN', 11),
+                  ('SIMPLE_DEFORM', "Simple Deform Modifier", "Simple Deform Modifier", 'MOD_SIMPLEDEFORM', 12),
+                  ('TRIANGULATE', "Triangulate Modifier", "Triangulate Modifier", 'MOD_TRIANGULATE', 13),
+                  ('WIREFRAME', "Wireframe Modifier", "Wireframe Modifier", 'MOD_WIREFRAME', 14)]
 
-    def get_moveable_object(self,obj):
-        if (obj.lock_location[0] or fd.get_driver(obj,'location',0)) and (obj.lock_location[1] or fd.get_driver(obj,'location',1)) and (obj.lock_location[2] or fd.get_driver(obj,'location',2)) and obj.parent:
-            return self.get_moveable_object(obj.parent)
-        else:
-            return obj
+enum_constraints = [('COPY_LOCATION', "Copy Location", "Copy Location", 'CONSTRAINT_DATA', 0),
+                    ('COPY_ROTATION', "Copy Rotation", "Copy Rotation", 'CONSTRAINT_DATA', 1),
+                    ('COPY_SCALE', "Copy Scale", "Copy Scale", 'CONSTRAINT_DATA', 2),
+                    ('COPY_TRANSFORMS', "Copy Transforms", "Copy Transforms", 'CONSTRAINT_DATA', 3),
+                    ('LIMIT_DISTANCE', "Limit Distance", "Limit Distance", 'CONSTRAINT_DATA', 4),
+                    ('LIMIT_LOCATION', "Limit Location", "Limit Location", 'CONSTRAINT_DATA', 5),
+                    ('LIMIT_ROTATION', "Limit Rotation", "Limit Rotation", 'CONSTRAINT_DATA', 6),
+                    ('LIMIT_SCALE', "Limit Scale", "Limit Scale", 'CONSTRAINT_DATA', 7)]  
 
-    def execute(self, context):
-        obj = context.object
-        if obj.mode == 'OBJECT' and len(context.selected_objects) == 1:
-            moveable_obj = self.get_moveable_object(obj)
-            bpy.ops.object.select_all(action='DESELECT')
-            moveable_obj.select = True
-            context.scene.objects.active = moveable_obj
-        bpy.ops.transform.transform('INVOKE_DEFAULT',mode='TRANSLATION')
-        return {'FINISHED'}
-    
+enum_machine_tokens = [('NONE',"None","None",'SCULPTMODE_HLT', 0),
+                       ('CONST',"CONST","CONST", 'SCULPTMODE_HLT', 1),
+                       ('HOLES',"HOLES","HOLES", 'SCULPTMODE_HLT', 2),
+                       ('SHLF',"SHLF","SHLF", 'SCULPTMODE_HLT', 3),
+                       ('SHELF',"SHELF","SHELF", 'SCULPTMODE_HLT', 4),
+                       ('SHELFSTD',"SHELFSTD","SHELFSTD", 'SCULPTMODE_HLT', 5),
+                       ('DADO',"DADO","DADO", 'SCULPTMODE_HLT', 6),
+                       ('SAW',"SAW","SAW", 'SCULPTMODE_HLT', 7),
+                       ('SLIDE',"SLIDE","SLIDE", 'SCULPTMODE_HLT', 8),
+                       ('CAMLOCK',"CAMLOCK","CAMLOCK", 'SCULPTMODE_HLT', 9),
+                       ('MITER',"MITER","MITER", 'SCULPTMODE_HLT', 10),
+                       ('BORE',"BORE","BORE", 'SCULPTMODE_HLT', 11)]   
+
+
 class OPS_select_object_by_name(Operator):
     bl_idname = "fd_object.select_object_by_name"
     bl_label = "Select Object"
@@ -334,7 +344,7 @@ class OPS_add_modifier(Operator):
     bl_label = "Add Modifier"
     bl_options = {'UNDO'}
     
-    type = EnumProperty(items=fd.enums.enum_modifiers, name="Modifier Type")
+    type = EnumProperty(items=enum_modifiers, name="Modifier Type")
     
     @classmethod
     def poll(cls, context):
@@ -349,7 +359,7 @@ class OPS_add_constraint(Operator):
     bl_label = "Add Constraint"
     bl_options = {'UNDO'}
     
-    type = EnumProperty(items=fd.enums.enum_constraints, name="Constraint Type")
+    type = EnumProperty(items=enum_constraints, name="Constraint Type")
     
     @classmethod
     def poll(cls, context):
@@ -412,103 +422,14 @@ class OPS_camera_properties(Operator):
     def invoke(self,context,event):
         self.lock_camera = context.space_data.lock_camera
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
 
     def draw(self, context):
         obj = context.active_object
-        fd.draw_object_info(self.layout,obj)
-        fd.draw_object_data(self.layout, obj)
+        utils.draw_object_info(self.layout,obj)
+        utils.draw_object_data(self.layout, obj)
         box = self.layout.box()
         box.prop(self,'lock_camera')
-
-#         if context.active_object.type == 'CAMERA':
-#             obj = context.active_object
-#             cam = obj.data
-#             ccam = cam.cycles
-#             layout = self.layout
-#             box = layout.box()
-#             name_box = box.box()
-#             row = name_box.row()
-#             split = row.split(percentage=0.2)
-#             split.label("Name:",icon='SCENE')
-#             split.prop(obj,"name",text="")
-#             
-#             box.label("Transform:")
-#             box1 = box.box()
-#             row = box1.row()
-#             split = box1.split()
-#             col = split.column()
-#             row = col.row(align=True)          
-#             row.prop(obj,"lock_location",index=0,text="")  
-#             row.prop(obj,"location",index=0,text="X")
-#             row = col.row(align=True)
-#             row.prop(obj,"lock_location",index=1,text="")
-#             row.prop(obj,"location",index=1,text="Y")
-#             row = col.row(align=True)
-#             row.prop(obj,"lock_location",index=2,text="")
-#             row.prop(obj,"location",index=2,text="Z")
-#             col = split.column()
-#             row = col.row(align=True)
-#             row.prop(obj,"lock_rotation",index=0,text="")
-#             row.prop(obj,"rotation_euler",index=0,text="X")
-#             row = col.row(align=True)
-#             row.prop(obj,"lock_rotation",index=1,text="")
-#             row.prop(obj,"rotation_euler",index=1,text="Y")
-#             row = col.row(align=True)
-#             row.prop(obj,"lock_rotation",index=2,text="")
-#             row.prop(obj,"rotation_euler",index=2,text="Z")
-#             
-#             box.label("Camera Type:")           
-#             cam_opt_box_1 = box.box()
-#             row = cam_opt_box_1.row()
-#             row.prop(cam, "type", expand=True, text="Camera Type")
-#             split = cam_opt_box_1.split()
-#             col = split.column()
-#             if cam.type == 'PERSP':
-#                 row = col.row()
-#                 if cam.lens_unit == 'MILLIMETERS':
-#                     row.prop(cam, "lens")
-#                 elif cam.lens_unit == 'FOV':
-#                     row.prop(cam, "angle")
-#                 row.prop(cam, "lens_unit", text="")
-#     
-#             if cam.type == 'ORTHO':
-#                 col.prop(cam, "ortho_scale")
-#         
-#             if cam.type == 'PANO':
-#                 engine = bpy.context.scene.render.engine
-#                 if engine == 'CYCLES':
-#                     ccam = cam.cycles
-#                     col.prop(ccam, "panorama_type", text="Panorama Type")
-#                     if ccam.panorama_type == 'FISHEYE_EQUIDISTANT':
-#                         col.prop(ccam, "fisheye_fov")
-#                     elif ccam.panorama_type == 'FISHEYE_EQUISOLID':
-#                         row = col.row()
-#                         row.prop(ccam, "fisheye_lens", text="Lens")
-#                         row.prop(ccam, "fisheye_fov")
-#                 elif engine == 'BLENDER_RENDER':
-#                     row = col.row()
-#                     if cam.lens_unit == 'MILLIMETERS':
-#                         row.prop(cam, "lens")
-#                     elif cam.lens_unit == 'FOV':
-#                         row.prop(cam, "angle")
-#                     row.prop(cam, "lens_unit", text="")            
-#                 
-#             box.label("Camera Options:")
-#             cam_opt_box_2 = box.box()
-#             row = cam_opt_box_2.row()
-# #             row.menu("CAMERA_MT_presets", text=bpy.types.CAMERA_MT_presets.bl_label) # THIS ERRORS OUT DUE TO CONTEXT  
-#             row.prop_menu_enum(cam, "show_guide")            
-#             row = cam_opt_box_2.row()
-#             split = row.split()
-#             col = split.column()
-#             col.prop(cam, "clip_start", text="Clipping Start")
-#             col.prop(cam, "clip_end", text="Clipping End")      
-#             col = row.column()         
-#             col.prop(bpy.context.scene.cycles,"film_transparent",text="Transparent Film")   
-#             col.prop(self,"lock_camera",text="Lock Camera to View")
-    
-import inspect
     
 class OPS_draw_floor_plane(Operator):
     bl_idname = "fd_object.draw_floor_plane"
@@ -523,7 +444,7 @@ class OPS_draw_floor_plane(Operator):
         wall_groups = []
         for obj in context.visible_objects:
             if obj.mv.type == 'BPWALL':
-                wall_groups.append(fd.Wall(obj))
+                wall_groups.append(fd_types.Wall(obj))
             
         for group in wall_groups:
             start_point = (group.obj_bp.matrix_world[0][3],group.obj_bp.matrix_world[1][3],0)
@@ -550,10 +471,10 @@ class OPS_draw_floor_plane(Operator):
         width = math.fabs(smallest_y) + math.fabs(largest_y)
         length = math.fabs(largest_x) + math.fabs(smallest_x)
         if width == 0:
-            width = fd.inches(-48)
+            width = unit.inch(-48)
         if length == 0:
-            length = fd.inches(-48)
-        obj_plane = fd.create_floor_mesh('Floor',(length,width,0.0))
+            length = unit.inch(-48)
+        obj_plane = utils.create_floor_mesh('Floor',(length,width,0.0))
         obj_plane.location = loc
         
         #SET CONTEXT
@@ -574,7 +495,7 @@ class OPS_add_room_lamp(Operator):
         wall_groups = []
         for obj in context.visible_objects:
             if obj.mv.type == 'BPWALL':
-                wall_groups.append(fd.Wall(obj))
+                wall_groups.append(fd_types.Wall(obj))
             
         for group in wall_groups:
             start_point = (group.obj_bp.matrix_world[0][3],group.obj_bp.matrix_world[1][3],0)
@@ -600,14 +521,14 @@ class OPS_add_room_lamp(Operator):
 
         x = (math.fabs(largest_x) - math.fabs(smallest_x))/2
         y = (math.fabs(largest_y) - math.fabs(smallest_y))/2
-        z = height - fd.inches(.01)
+        z = height - unit.inch(.01)
         
         width = math.fabs(smallest_y) + math.fabs(largest_y)
         length = math.fabs(largest_x) + math.fabs(smallest_x)
         if width == 0:
-            width = fd.inches(-48)
+            width = unit.inch(-48)
         if length == 0:
-            length = fd.inches(-48)
+            length = unit.inch(-48)
 
         bpy.ops.object.lamp_add(type = 'AREA')
         obj_lamp = context.active_object
@@ -615,8 +536,8 @@ class OPS_add_room_lamp(Operator):
         obj_lamp.location.y = y
         obj_lamp.location.z = z
         obj_lamp.data.shape = 'RECTANGLE'
-        obj_lamp.data.size = length + fd.inches(20)
-        obj_lamp.data.size_y = width + fd.inches(20)
+        obj_lamp.data.size = length + unit.inch(20)
+        obj_lamp.data.size_y = width + unit.inch(20)
         return {'FINISHED'}
     
 class OPS_add_machine_token(Operator):
@@ -624,7 +545,7 @@ class OPS_add_machine_token(Operator):
     bl_label = "Add Machine Token"
     
     token_name = StringProperty(name="Token Name",default="New Machine Token")
-    token_type = EnumProperty(items=fd.enums.enum_machine_tokens, name="Machine Token Type")
+    token_type = EnumProperty(items=enum_machine_tokens, name="Machine Token Type")
     
     @classmethod
     def poll(cls, context):
@@ -635,7 +556,7 @@ class OPS_add_machine_token(Operator):
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
 
     def execute(self, context):
         token = context.object.cabinetlib.mp.machine_tokens.add()      
@@ -672,7 +593,6 @@ class OPS_delete_machine_token(Operator):
     
 #------REGISTER
 classes = [
-           OPS_grab_object,
            OPS_select_object_by_name,
            OPS_toggle_edit_mode,
            OPS_unwrap_mesh,

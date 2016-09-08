@@ -50,7 +50,7 @@ class PANEL_Library_Management(bpy.types.Panel):
         layout = self.layout
         wm = context.window_manager
         wm.cabinetlib.draw_library_items(layout,'PRODUCT')
-                
+
 def register():
     bpy.utils.register_class(PANEL_Library_Management)
 

@@ -18,12 +18,11 @@
 
 # <pep8 compliant>
 import bpy
-import fd
 import os
 from bpy.types import Header, Menu, Panel
 from bpy.app.translations import pgettext_iface as iface_
 from bpy.app.translations import contexts as i18n_contexts
-
+from mv import utils
 
 def opengl_lamp_buttons(column, lamp):
     split = column.split(percentage=0.1)
@@ -897,10 +896,11 @@ class USERPREF_PT_file(Panel):
         row.label(text="Library Paths:")
         row.operator("fd_general.open_browser_window",
                      text="Open Configurations Location",
-                     icon='FILE_FOLDER').path = os.path.dirname(fd.get_library_path_file())
+                     icon='FILE_FOLDER').path = os.path.dirname(utils.get_library_path_file())
         col.prop(wm.mv, "library_module_path", text="Library Modules Path",icon='FILE_TEXT')
-        col.prop(wm.mv, "product_library_path", text="Product Library Path",icon='OUTLINER_OB_LATTICE')
-        col.prop(wm.mv, "insert_library_path", text="Insert Library Path",icon='STICKY_UVS_LOC')
+        col.separator()
+#         col.prop(wm.mv, "product_library_path", text="Product Library Path",icon='OUTLINER_OB_LATTICE')
+#         col.prop(wm.mv, "insert_library_path", text="Insert Library Path",icon='STICKY_UVS_LOC')
         col.prop(wm.mv, "assembly_library_path", text="Assembly Library Path",icon='OUTLINER_DATA_LATTICE')
         col.prop(wm.mv, "object_library_path", text="Object Library Path",icon='OBJECT_DATA')
         col.prop(wm.mv, "material_library_path", text="Material Library Path",icon='MATERIAL')
@@ -1247,7 +1247,6 @@ class USERPREF_PT_addons(Panel):
             box.label(l)
 
     def draw(self, context):
-        import os
         import addon_utils
 
         layout = self.layout

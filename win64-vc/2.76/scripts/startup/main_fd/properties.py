@@ -33,52 +33,85 @@ from bpy.props import (StringProperty,
 from bpy.app.handlers import persistent
 import os
 import inspect
-import fd
 import bpy_extras.image_utils as img_utils
+from mv import utils, fd_types, unit
+
+enum_library_types = [('SCENE',"Scenes","Scenes"),
+                      ('PRODUCT',"Products","Products"),
+                      ('INSERT',"Inserts","Inserts"),
+                      ('ASSEMBLY',"Assemblies","Assemblies"),
+                      ('OBJECT',"Objects","Objects"),
+                      ('MATERIAL',"Materials","Materials"),
+                      ('WORLD',"Worlds","Worlds")]
+
+enum_object_tabs = [('INFO',"","Show the Main Information"),
+                    ('DISPLAY',"","Show Options for how the Object is Displayed"),
+                    ('MATERIAL',"","Show the materials assign to the object"),
+                    ('CONSTRAINTS',"","Show the constraints assigned to the object"),
+                    ('MODIFIERS',"","Show the modifiers assigned to the object"),
+                    ('MESHDATA',"","Show the Mesh Data Information"),
+                    ('CURVEDATA',"","Show the Curve Data Information"),
+                    ('TEXTDATA',"","Show the Text Data Information"),
+                    ('EMPTYDATA',"","Show the Empty Data Information"),
+                    ('LIGHTDATA',"","Show the Light Data Information"),
+                    ('CAMERADATA',"","Show the Camera Data Information"),
+                    ('DRIVERS',"","Show the Drivers assigned to the Object"),
+                    ('TOKENS',"","Show the Tokens that are assigned to the Object")]
+
+enum_group_tabs = [('INFO',"Main","Show the Main Info Page"),
+                   ('SETTINGS',"","Show the Settings Page"),
+                   ('PROMPTS',"Prompts","Show the Prompts Page"),
+                   ('OBJECTS',"Objects","Show Objects"),
+                   ('DRIVERS',"Drivers","Show the Driver Formulas")]
+
+enum_calculator_type = [('XDIM',"X Dimension","Calculate the X Dimension"),
+                        ('YDIM',"Y Dimension","Calculate the Y Dimension"),
+                        ('ZDIM',"Z Dimension","Calculate the Z Dimension")]
+
+enum_prompt_tab_types = [('VISIBLE',"Visible","Visible tabs are always displayed"),
+                         ('HIDDEN',"Hidden","Hidden tabs are not shown in the right click menu"),
+                         ('CALCULATOR',"Calculator","Use to calculate sizes of opening")]
+
+enum_prompt_types = [('NUMBER',"Number","Number"),
+                     ('QUANTITY',"Quantity","Quantity"),
+                     ('COMBOBOX',"Combo Box","Combo Box"),
+                     ('CHECKBOX',"Check Box","Check Box"),
+                     ('TEXT',"Text","Text"),
+                     ('DISTANCE',"Distance","Distance"),
+                     ('ANGLE',"Angle","Angle"),
+                     ('PERCENTAGE',"Percentage","Percentage"),
+                     ('PRICE',"Price","Enter Price Prompt")]
+
+enum_object_types = [('NONE',"None","None"),
+                     ('CAGE',"CAGE","Cage used to represent the bounding area of an assembly"),
+                     ('VPDIMX',"Visible Prompt X Dimension","Visible prompt control in the 3D viewport"),
+                     ('VPDIMY',"Visible Prompt Y Dimension","Visible prompt control in the 3D viewport"),
+                     ('VPDIMZ',"Visible Prompt Z Dimension","Visible prompt control in the 3D viewport"),
+                     ('EMPTY1',"Empty1","EMPTY1"),
+                     ('EMPTY2',"Empty2","EMPTY2"),
+                     ('OBSTACLE',"Obstacle","Obstacle"),
+                     ('BPWALL',"Wall Base Point","Parent object of a wall"),
+                     ('BPASSEMBLY',"Base Point","Parent object of an assembly"),
+                     ('VISDIM_A', "Visual Dimension A", "Anchor Point for Visual Dimension"),
+                     ('VISDIM_B', "Visual Dimension B", "End Point for Visual Dimension")]
+
+enum_group_drivers_tabs = [('LOC_X',"Location X","Location X"),
+                           ('LOC_Y',"Location Y","Location Y"),
+                           ('LOC_Z',"Location Z","Location Z"),
+                           ('ROT_X',"Rotation X","Rotation X"),
+                           ('ROT_Y',"Rotation Y","Rotation Y"),
+                           ('ROT_Z',"Rotation Z","Rotation Z"),
+                           ('DIM_X',"Dimension X","Dimension X"),
+                           ('DIM_Y',"Dimension Y","Dimension Y"),
+                           ('DIM_Z',"Dimension Z","Dimension Z"),
+                           ('PROMPTS',"Prompts","Prompts")]
+
+enum_render_type = [('PRR','Photo Realistic Render','Photo Realistic Render'),
+                    ('NPR','Line Drawing','Non-Photo Realistic Render')]    
+
 
 preview_collections = {}
 
-def update_library(self,context):
-    assign_default_libraries(context)
-    
-    if self.library_tabs == 'SCENE':
-        path = fd.get_library_dir("scenes")
-        library_name = context.scene.mv.scene_library_name
-        category = context.scene.mv.scene_category_name
-    elif self.library_tabs == 'PRODUCT':
-        path = fd.get_library_dir("products")
-        library_name = context.scene.mv.product_library_name
-        category = context.scene.mv.product_category_name
-    elif self.library_tabs == 'INSERT':
-        path = fd.get_library_dir("inserts")
-        library_name = context.scene.mv.insert_library_name
-        category = context.scene.mv.insert_category_name
-    elif self.library_tabs == 'ASSEMBLY':
-        path = fd.get_library_dir("assemblies")
-        library_name = context.scene.mv.assembly_library_name
-        category = context.scene.mv.assembly_category_name
-    elif self.library_tabs == 'OBJECT':
-        path = fd.get_library_dir("objects")
-        library_name = context.scene.mv.object_library_name
-        category = context.scene.mv.object_category_name
-    elif self.library_tabs == 'MATERIAL':
-        path = fd.get_library_dir("materials")
-        library_name = context.scene.mv.material_library_name
-        category = context.scene.mv.material_category_name
-    elif self.library_tabs == 'WORLD':
-        path = fd.get_library_dir("worlds")
-        library_name = context.scene.mv.world_library_name
-        category = context.scene.mv.world_category_name
-    else:
-        library_name = ""
-        category = ""
-    
-    full_path = os.path.join(path,library_name,category)
-    if context.screen.show_fullscreen:
-        fd.update_file_browser_space(context,path=path)
-    else:
-        fd.update_file_browser_space(context,path=full_path)
-    
 def update_scene_index(self,context): 
     space_data = context.space_data
     v3d = space_data.region_3d
@@ -116,142 +149,55 @@ def update_text_editor_outline_index(self,context):
   
     bpy.ops.text.find()
     
-def assign_default_libraries(context):
+def assign_default_libraries(self,context):
     library_tabs = context.scene.mv.ui.library_tabs
     lib_name = "" 
-    
-    if library_tabs == 'SCENE':
-        path = fd.get_library_dir("scenes")    
+
     if library_tabs == 'PRODUCT':
-        path = fd.get_library_dir("products")
+        for lib in context.window_manager.cabinetlib.lib_products:
+            if os.path.exists(lib.lib_path):
+                lib = context.window_manager.cabinetlib.lib_products[0]
+                bpy.ops.fd_general.change_library(library_name=lib.name)
+                return
     if library_tabs == 'INSERT':
-        path = fd.get_library_dir("inserts")
+        for lib in context.window_manager.cabinetlib.lib_inserts:
+            if os.path.exists(lib.lib_path):
+                bpy.ops.fd_general.change_library(library_name=lib.name)
+                return
     if library_tabs == 'ASSEMBLY':
-        path = fd.get_library_dir("assemblies")
+        path = utils.get_library_dir("assemblies")
+        dirs = os.listdir(path)
+        for directory in dirs:
+            if os.path.exists(os.path.join(path,directory)):
+                bpy.ops.fd_general.change_library(library_name=directory)
+                return
     if library_tabs == 'OBJECT':
-        path = fd.get_library_dir("objects")
+        path = utils.get_library_dir("objects")
+        dirs = os.listdir(path)
+        for directory in dirs:
+            if os.path.exists(os.path.join(path,directory)):
+                bpy.ops.fd_general.change_library(library_name=directory)
+                return
     if library_tabs == 'MATERIAL':
-        path = fd.get_library_dir("materials")
+        path = utils.get_library_dir("materials")
+        dirs = os.listdir(path)
+        for directory in dirs:
+            if os.path.exists(os.path.join(path,directory)):
+                bpy.ops.fd_general.change_library(library_name=directory)
+                return
     if library_tabs == 'WORLD':
-        path = fd.get_library_dir("worlds")
-        
-    if os.path.exists(path):
-        libs = os.listdir(path)
-    
-        for lib in libs:
-            library_path = os.path.join(path,lib)
-            if os.path.isdir(library_path):
-                if library_tabs == 'SCENE':
-                    context.scene.mv.scene_library_name = lib            
-                    lib_name = lib
-                if library_tabs == 'PRODUCT':
-                    context.scene.mv.product_library_name = lib
-                    lib_name = lib
-                if library_tabs == 'INSERT':
-                    context.scene.mv.insert_library_name = lib
-                    lib_name = lib
-                if library_tabs == 'ASSEMBLY':
-                    context.scene.mv.assembly_library_name = lib
-                    lib_name = lib
-                if library_tabs == 'OBJECT':
-                    context.scene.mv.object_library_name = lib
-                    lib_name = lib
-                if library_tabs == 'MATERIAL':
-                    context.scene.mv.material_library_name = lib
-                    lib_name = lib
-                if library_tabs == 'WORLD':
-                    context.scene.mv.world_library_name = lib
-                    lib_name = lib
-                break
-    
-    if lib_name:
-        lib_path = os.path.join(path,lib_name)
-        cats = os.listdir(lib_path)
-        
-        for cat in cats:
-            category_path = os.path.join(lib_path,cat)
-            if os.path.isdir(category_path) and library_path != category_path:
-                if library_tabs == 'SCENE':
-                    context.scene.mv.scene_category_name = cat                
-                if library_tabs == 'PRODUCT':
-                    context.scene.mv.product_category_name = cat
-                if library_tabs == 'INSERT':
-                    context.scene.mv.insert_category_name = cat
-                if library_tabs == 'ASSEMBLY':
-                    context.scene.mv.assembly_category_name = cat
-                if library_tabs == 'OBJECT':
-                    context.scene.mv.object_category_name = cat
-                if library_tabs == 'MATERIAL':
-                    context.scene.mv.material_category_name = cat
-                if library_tabs == 'WORLD':
-                    context.scene.mv.world_category_name = cat
-                break
-            else:
-                context.scene.mv.scene_category_name = ""
-                context.scene.mv.product_category_name
-                context.scene.mv.insert_category_name = ""
-                context.scene.mv.assembly_category_name = ""
-                context.scene.mv.object_category_name = ""
-                context.scene.mv.material_category_name = ""
-                context.scene.mv.world_category_name = ""
-    else:
-        print('No Libraries in ' + path)
-            
-def select_material(self,context):
-    bpy.ops.object.select_all(action='DESELECT')
-    material = context.scene.cabinetlib.sheets[context.scene.cabinetlib.sheet_index]
-    if material:
-        for obj in context.visible_objects:
-            if obj.type == 'MESH' and obj.cabinetlib.cutpart_name != "":
-                material_name = fd.get_material_name(obj)
-                if material.name == material_name:
-                    obj.select = True
-
-def select_edgebanding(self,context):
-    bpy.ops.object.select_all(action='DESELECT')
-    material = context.scene.cabinetlib.edgebanding[context.scene.cabinetlib.edgeband_index]
-    if material:
-        for obj in context.visible_objects:
-            if obj.type == 'MESH' and obj.cabinetlib.edgepart_name != "":
-                material_name = fd.get_edgebanding_name(obj)
-                if material.name == material_name:
-                    obj.select = True
-
-def enum_project_template_previews(self,context):
-    enum_items = []
-    
-    if context is None:
-        return enum_items
-    
-    path = fd.get_library_dir("project_templates")
-    
-    pcoll = preview_collections["main"]
-    
-    if len(pcoll.my_previews) > 0:
-        return pcoll.my_previews
-    
-    if path and os.path.exists(path):
-        image_paths = []
-        for fn in os.listdir(path):
-            if fn.lower().endswith(".png"):
-                image_paths.append(fn)
-
-        for i, name in enumerate(image_paths):
-            # generates a thumbnail preview for a file.
-            filepath = os.path.join(path, name)
-            thumb = pcoll.load(filepath, filepath, 'IMAGE')
-            filename, ext = os.path.splitext(name)
-            enum_items.append((filename, filename, filepath, thumb.icon_id, i))
-
-    pcoll.my_previews = enum_items
-    pcoll.my_previews_dir = path
-    return pcoll.my_previews
+        path = utils.get_library_dir("worlds")
+        dirs = os.listdir(path)
+        for directory in dirs:
+            if os.path.exists(os.path.join(path,directory)):
+                bpy.ops.fd_general.change_library(library_name=directory)
+                return
 
 def update_library_paths(self,context):
     """ EVENT: saves an XML file to disk to store the path
                of the library data.
     """
-    xml = fd.MV_XML()
+    xml = fd_types.MV_XML()
     root = xml.create_tree()
     paths = xml.add_element(root,'LibraryPaths')
     
@@ -260,31 +206,6 @@ def update_library_paths(self,context):
     else:
         xml.add_element_with_text(paths,'Modules',"")
     
-    if os.path.exists(self.project_path):
-        xml.add_element_with_text(paths,'Scenes',self.scene_library_path)
-    else:
-        xml.add_element_with_text(paths,'Scenes',"")    
-    
-    if os.path.exists(self.project_path):
-        xml.add_element_with_text(paths,'Projects',self.project_path)
-    else:
-        xml.add_element_with_text(paths,'Projects',"")
-        
-    if os.path.exists(self.project_template_path):
-        xml.add_element_with_text(paths,'ProjectTemplates',self.project_template_path)
-    else:
-        xml.add_element_with_text(paths,'ProjectTemplates',"")
-        
-    if os.path.exists(self.product_library_path):
-        xml.add_element_with_text(paths,'Products',self.product_library_path)
-    else:
-        xml.add_element_with_text(paths,'Products',"")
-        
-    if os.path.exists(self.insert_library_path):
-        xml.add_element_with_text(paths,'Inserts',self.insert_library_path)
-    else:
-        xml.add_element_with_text(paths,'Inserts',"")
-        
     if os.path.exists(self.assembly_library_path):
         xml.add_element_with_text(paths,'Assemblies',self.assembly_library_path)
     else:
@@ -305,7 +226,7 @@ def update_library_paths(self,context):
     else:
         xml.add_element_with_text(paths,'Worlds',"")
 
-    xml.write(fd.get_library_path_file())
+    xml.write(utils.get_library_path_file())
 
 class library_items(PropertyGroup):
     is_selected = BoolProperty(name="Is Selected")
@@ -321,9 +242,9 @@ class blend_file(PropertyGroup):
 bpy.utils.register_class(blend_file)
 
 class fd_tab(bpy.types.PropertyGroup):
-    type = EnumProperty(name="Type",items=fd.enums.enum_prompt_tab_types,default='VISIBLE')
+    type = EnumProperty(name="Type",items=enum_prompt_tab_types,default='VISIBLE')
     index = IntProperty(name="Index")
-    calculator_type = EnumProperty(name="Calculator Type",items=fd.enums.enum_calculator_type)
+    calculator_type = EnumProperty(name="Calculator Type",items=enum_calculator_type)
     calculator_deduction = FloatProperty(name="Calculator Deduction",subtype='DISTANCE')
     
 bpy.utils.register_class(fd_tab)
@@ -350,7 +271,7 @@ bpy.utils.register_class(fd_tab_col)
 
 #TODO: implement the standard collections or remove this and add to RNA Structure
 class mvPrompt(bpy.types.PropertyGroup):
-    Type = EnumProperty(name="Type",items=fd.enums.enum_prompt_types)
+    Type = EnumProperty(name="Type",items=enum_prompt_types)
     TabIndex = IntProperty(name="Tab Index",default = 0)
     lock_value = BoolProperty(name="lock value")
     export = BoolProperty(name="Export",default = False,description="This determines if the prompt should be exported")
@@ -413,7 +334,7 @@ class mvPrompt(bpy.types.PropertyGroup):
             
         if self.Type == 'DISTANCE':
             if self.lock_value:
-                row.label(str(fd.unit(self.DistanceValue)))
+                row.label(str(unit.meter_to_active_unit(self.DistanceValue)))
             else:
                 row.prop(self,"DistanceValue",text=prompt_text)
             
@@ -473,7 +394,7 @@ class mvPrompt(bpy.types.PropertyGroup):
         row = layout.row()
         row.label(self.name)
         if self.equal:
-            row.label(str(fd.unit(self.DistanceValue)))
+            row.label(str(unit.meter_to_active_unit(self.DistanceValue)))
             row.prop(self,'equal',text='')
         else:
             row.prop(self,'DistanceValue',text="")
@@ -819,6 +740,7 @@ bpy.utils.register_class(Library_Pointer)
 
 class Material_Slot(PropertyGroup):
     index = IntProperty(name="Index")
+    material_path = StringProperty(name="Material Path")
     pointer_name = StringProperty(name="Pointer Name")
     library_name = StringProperty(name="Library Name")
     category_name = StringProperty(name="Category Name")
@@ -842,44 +764,14 @@ class List_Library_Item(PropertyGroup):
 bpy.utils.register_class(List_Library_Item)
 
 class List_Library(PropertyGroup):
+    package_name = StringProperty(name="Package Name")
     module_name = StringProperty(name="Module Name")
     lib_path = StringProperty(name="Library Path")
     items = CollectionProperty(name="Items",type=List_Library_Item)
     index = IntProperty(name="Index")
 
 bpy.utils.register_class(List_Library)    
-    
-# def prop_changed(self, context):
-#     for area in bpy.context.screen.areas:
-#         if area.type == "TEXT_EDITOR":
-#             area.tag_redraw()    
-#     
-# class CompletionProviders (bpy.types.PropertyGroup):
-#     use_jedi_completion = BoolProperty(default = True, name = "Use Jedi Completion",
-#         update = prop_changed, description = "Use the Jedi autocompletion library for python")
-#     use_word_completion = BoolProperty(default = True, name = "Use Word Completion",
-#         update = prop_changed, description = "The context box will also contain words that you already used in the file")
-#     use_operator_completion = BoolProperty(default = True, name = "Use Operator Completion",
-#         update = prop_changed, description = "Activate the autocompletion for calling operators (bpy.ops)")    
-#     
-# bpy.utils.register_class(CompletionProviders)    
-#     
-# class ContextBoxProperties(bpy.types.PropertyGroup):
-#     font_size = IntProperty(default = 12, name = "Font Size", min = 10, update = prop_changed)
-#     line_height = IntProperty(default = 21, name = "Line Height", min = 5, update = prop_changed)
-#     width = IntProperty(default = 200, name = "Width", min = 10, update = prop_changed)
-#     padding = IntProperty(default = 4, name = "Padding", min = 0, update = prop_changed)
-#     lines = IntProperty(default = 8, name = "Lines", min = 1, update = prop_changed)
-#     
-# bpy.utils.register_class(ContextBoxProperties)     
-# 
-# class DescriptionBoxProperties(bpy.types.PropertyGroup):
-#     font_size = IntProperty(default = 12, name = "Font Size", min = 10, update = prop_changed)
-#     line_height = IntProperty(default = 21, name = "Line Height", min = 5, update = prop_changed)
-#     padding = IntProperty(default = 4, name = "Padding", min = 0, update = prop_changed)
-#     
-# bpy.utils.register_class(DescriptionBoxProperties)        
-    
+
 class List_Module_Members(bpy.types.PropertyGroup):
     index = bpy.props.IntProperty(name="Index")      
     
@@ -1156,82 +1048,82 @@ class Machine_Token(PropertyGroup):
         locations = ""
         for x in range(0,len(self.hole_locations) - 1):
             if self.hole_locations[x] != 0:
-                locations += str(fd.unit(self.hole_locations[x])) + ","
+                locations += str(unit.meter_to_active_unit(self.hole_locations[x])) + ","
         return locations[:-1] #Remove last comma
     
     def create_parameter_dictionary(self):
         param_dict = {}
         if self.type_token == 'CONST':
-            param_dict['Par1'] = str(fd.unit(self.dim_to_first_const_hole))
-            param_dict['Par2'] = str(fd.unit(self.dim_to_last_const_hole))
-            param_dict['Par3'] = str(fd.unit(self.edge_bore_depth))
+            param_dict['Par1'] = str(unit.meter_to_active_unit(self.dim_to_first_const_hole))
+            param_dict['Par2'] = str(unit.meter_to_active_unit(self.dim_to_last_const_hole))
+            param_dict['Par3'] = str(unit.meter_to_active_unit(self.edge_bore_depth))
             param_dict['Par4'] = str(self.edge_bore_dia)
-            param_dict['Par5'] = str(fd.unit(self.face_bore_depth))
+            param_dict['Par5'] = str(unit.meter_to_active_unit(self.face_bore_depth))
             param_dict['Par6'] = str(self.face_bore_dia)
             param_dict['Par7'] = "1" if self.drill_from_opposite_side else "0"
             param_dict['Par8'] = "1" if self.second_hole_at_32mm else "0"
-            param_dict['Par9'] = str(fd.unit(self.distance_between_holes))
+            param_dict['Par9'] = str(unit.meter_to_active_unit(self.distance_between_holes))
             
         if self.type_token == 'HOLES':
             param_dict['Par1'] = self.get_hole_locations()
             param_dict['Par2'] = str(self.edge_bore_dia)
-            param_dict['Par3'] = str(fd.unit(self.edge_bore_depth))
+            param_dict['Par3'] = str(unit.meter_to_active_unit(self.edge_bore_depth))
             param_dict['Par4'] = ""
-            param_dict['Par5'] = str(fd.unit(self.face_bore_depth))
+            param_dict['Par5'] = str(unit.meter_to_active_unit(self.face_bore_depth))
             param_dict['Par6'] = str(self.face_bore_dia)
             param_dict['Par7'] = str(self.drill_from_opposite_side)
             param_dict['Par8'] = str(self.second_hole_at_32mm)
-            param_dict['Par9'] = str(fd.unit(self.distance_between_holes))
+            param_dict['Par9'] = str(unit.meter_to_active_unit(self.distance_between_holes))
             
         if self.type_token in {'DADO','SAW'}:
-            param_dict['Par1'] = str(fd.unit(self.lead_in))
+            param_dict['Par1'] = str(unit.meter_to_active_unit(self.lead_in))
             param_dict['Par2'] = "1" if self.reverse_direction else "0"
-            param_dict['Par3'] = str(fd.unit(self.beginning_depth))
-            param_dict['Par4'] = str(fd.unit(self.lead_out))
-            param_dict['Par5'] = str(fd.unit(self.double_pass))
+            param_dict['Par3'] = str(unit.meter_to_active_unit(self.beginning_depth))
+            param_dict['Par4'] = str(unit.meter_to_active_unit(self.lead_out))
+            param_dict['Par5'] = str(unit.meter_to_active_unit(self.double_pass))
             param_dict['Par6'] = "0"
             param_dict['Par7'] = str(self.tool_number)
-            param_dict['Par8'] = str(fd.unit(self.panel_penetration))
+            param_dict['Par8'] = str(unit.meter_to_active_unit(self.panel_penetration))
             param_dict['Par9'] = str(self.tongue_tool_number)
             
         if self.type_token == 'CAMLOCK':
             param_dict['Par1'] = self.get_hole_locations()
             param_dict['Par2'] = str(self.edge_bore_dia)
-            param_dict['Par3'] = str(fd.unit(self.edge_bore_depth))
-            param_dict['Par4'] = str(fd.unit(self.z_value)) if self.z_value != 0 else ""
+            param_dict['Par3'] = str(unit.meter_to_active_unit(self.edge_bore_depth))
+            param_dict['Par4'] = str(unit.meter_to_active_unit(self.z_value)) if self.z_value != 0 else ""
             param_dict['Par5'] = str(self.face_bore_dia) + "," + str(self.face_bore_dia_2)
-            param_dict['Par6'] = str(fd.unit(self.face_bore_depth)) + "," + str(fd.unit(self.face_bore_depth_2))
-            param_dict['Par7'] = str(fd.unit(self.backset))
+            param_dict['Par6'] = str(unit.meter_to_active_unit(self.face_bore_depth)) + "," + str(unit.meter_to_active_unit(self.face_bore_depth_2))
+            param_dict['Par7'] = str(unit.meter_to_active_unit(self.backset))
             param_dict['Par8'] = str(self.cam_face)
             param_dict['Par9'] = "1" if self.drill_from_opposite_side else "0"
             
         if self.type_token in {'SHLF','SHELF','SHELFSTD'}:
-            param_dict['Par1'] = str(fd.unit(self.space_from_bottom))
-            param_dict['Par2'] = str(fd.unit(self.dim_to_first_row))
-            param_dict['Par3'] = str(fd.unit(self.face_bore_depth))
-            param_dict['Par4'] = str(fd.unit(self.space_from_top))
-            param_dict['Par5'] = str(fd.unit(self.dim_to_second_row))
+            param_dict['Par1'] = str(unit.meter_to_active_unit(self.space_from_bottom))
+            param_dict['Par2'] = str(unit.meter_to_active_unit(self.dim_to_first_row))
+            param_dict['Par3'] = str(unit.meter_to_active_unit(self.face_bore_depth))
+            param_dict['Par4'] = str(unit.meter_to_active_unit(self.space_from_top))
+            param_dict['Par5'] = str(unit.meter_to_active_unit(self.dim_to_second_row))
             param_dict['Par6'] = str(self.face_bore_dia)
-            param_dict['Par7'] = str(fd.unit(self.shelf_hole_spacing))
-            param_dict['Par8'] = str(fd.unit(self.shelf_clip_gap))
+            param_dict['Par7'] = str(unit.meter_to_active_unit(self.shelf_hole_spacing))
+            param_dict['Par8'] = str(unit.meter_to_active_unit(self.shelf_clip_gap))
             param_dict['Par9'] = "1" if self.reverse_direction else "0"
             
         if self.type_token == 'BORE':
-            param_dict['Par1'] = str(fd.unit(self.dim_in_x))
-            param_dict['Par2'] = str(fd.unit(self.dim_in_y))
-            param_dict['Par3'] = str(fd.unit(self.dim_in_z))
+            param_dict['Par1'] = str(unit.meter_to_active_unit(self.dim_in_x))
+            param_dict['Par2'] = str(unit.meter_to_active_unit(self.dim_in_y))
+            param_dict['Par3'] = str(unit.meter_to_active_unit(self.dim_in_z))
             param_dict['Par4'] = str(self.face_bore_dia)
-            param_dict['Par5'] = str(fd.unit(self.end_dim_in_x))
-            param_dict['Par6'] = str(fd.unit(self.end_dim_in_y))
-            param_dict['Par7'] = str(fd.unit(self.distance_between_holes))
+            param_dict['Par5'] = str(unit.meter_to_active_unit(self.end_dim_in_x))
+            param_dict['Par6'] = str(unit.meter_to_active_unit(self.end_dim_in_y))
+            param_dict['Par7'] = str(unit.meter_to_active_unit(self.distance_between_holes))
             param_dict['Par8'] = str(self.associative_dia)
-            param_dict['Par9'] = str(fd.unit(self.associative_depth))
+            param_dict['Par9'] = str(unit.meter_to_active_unit(self.associative_depth))
             
         if self.type_token == 'CORNERNOTCH':
-            param_dict['Par1'] = str(fd.unit(self.dim_in_x))
-            param_dict['Par2'] = str(fd.unit(self.dim_in_y))
-            param_dict['Par3'] = str(fd.unit(self.dim_in_z))
-            param_dict['Par4'] = str(fd.unit(self.lead_in))
+            param_dict['Par1'] = str(unit.meter_to_active_unit(self.dim_in_x))
+            param_dict['Par2'] = str(unit.meter_to_active_unit(self.dim_in_y))
+            param_dict['Par3'] = str(unit.meter_to_active_unit(self.dim_in_z))
+            param_dict['Par4'] = str(unit.meter_to_active_unit(self.lead_in))
             param_dict['Par5'] = ""
             param_dict['Par6'] = ""
             param_dict['Par7'] = str(self.tool_number)
@@ -1239,14 +1131,14 @@ class Machine_Token(PropertyGroup):
             param_dict['Par9'] = ""
             
         if self.type_token == 'SLIDE':
-            param_dict['Par1'] = str(fd.unit(self.dim_from_drawer_bottom))
-            param_dict['Par2'] = str(fd.unit(self.dim_to_first_hole))
-            param_dict['Par3'] = str(fd.unit(self.dim_to_second_hole))
-            param_dict['Par4'] = str(fd.unit(self.dim_to_third_hole))
-            param_dict['Par5'] = str(fd.unit(self.dim_to_fourth_hole))
-            param_dict['Par6'] = str(fd.unit(self.dim_to_fifth_hole))
-            param_dict['Par7'] = str(fd.unit(self.face_bore_depth)) + "|" + str(self.face_bore_dia)
-            param_dict['Par8'] = str(fd.unit(self.drawer_slide_clearance))
+            param_dict['Par1'] = str(unit.meter_to_active_unit(self.dim_from_drawer_bottom))
+            param_dict['Par2'] = str(unit.meter_to_active_unit(self.dim_to_first_hole))
+            param_dict['Par3'] = str(unit.meter_to_active_unit(self.dim_to_second_hole))
+            param_dict['Par4'] = str(unit.meter_to_active_unit(self.dim_to_third_hole))
+            param_dict['Par5'] = str(unit.meter_to_active_unit(self.dim_to_fourth_hole))
+            param_dict['Par6'] = str(unit.meter_to_active_unit(self.dim_to_fifth_hole))
+            param_dict['Par7'] = str(unit.meter_to_active_unit(self.face_bore_depth)) + "|" + str(self.face_bore_dia)
+            param_dict['Par8'] = str(unit.meter_to_active_unit(self.drawer_slide_clearance))
             param_dict['Par9'] = ""
             
         return param_dict
@@ -1374,7 +1266,7 @@ class Machine_Token(PropertyGroup):
                 driver = obj.driver_add(data_path,index)
             else:
                 driver = obj.driver_add(data_path)
-            fd.add_variables_to_driver(driver,driver_vars)
+            utils.add_variables_to_driver(driver,driver_vars)
             driver.driver.expression = expression
         else:
             print("Error: '" + self.name + "' not found while setting expression '" + expression + "'")
@@ -1498,23 +1390,18 @@ class SCENE_PROPERTIES(PropertyGroup):
                                           ('CUTPARTS',"Cut Parts","Cut Parts for cabinets"),
                                           ('EDGEPARTS',"Library Builder","Edge banding for cabinets")],
                                    default = 'MATERIALS')
-    
-    export_type = EnumProperty(name="Export Type",
-                               items=[('LIBRARYMATCH',"Library Match","This matches products in the Microvellum Database"),
-                                      ('SOLIDANALYZER',"Solid Analyzer","This reads the solid geometry and creates products on the fly")],
-                               default = 'LIBRARYMATCH')
-    
+
     sheets = CollectionProperty(name="Materials",
                                 type=Sheet_Stock)
-    
-    sheet_index = IntProperty(name="Material Index",
-                              update=select_material)
-    
+     
+#     sheet_index = IntProperty(name="Material Index",
+#                               update=select_material)
+     
     edgebanding = CollectionProperty(name="Edgebanding",
                                      type=Cutpart)
-    
-    edgeband_index = IntProperty(name="Edgebanding Index",
-                                 update=select_edgebanding)
+     
+#     edgeband_index = IntProperty(name="Edgebanding Index",
+#                                  update=select_edgebanding)
     
     spec_groups = CollectionProperty(name="Spec Groups",
                                      type=Specification_Group)
@@ -1549,101 +1436,6 @@ class SCENE_PROPERTIES(PropertyGroup):
                                 description="Product Tabs",
                                 default='INFO')
     
-    def sync_spec_groups_from_template(self):
-        ''' This adds all of the missing material
-            pointers to your exsisting spec groups
-        '''
-        modules = fd.get_library_modules()
-        
-        for module in modules:
-            mod = __import__(module)
-            if hasattr(mod, 'Material_Pointers'):
-                materials = mod.Material_Pointers
-                for name, obj in inspect.getmembers(materials):
-                    if "__" not in name:
-                        for spec_group in self.spec_groups:
-                            if name not in spec_group.materials:
-                                mat_pointer = spec_group.materials.add()
-                                mat_pointer.name = name
-                                mat_pointer.library_name = obj.library_name
-                                mat_pointer.category_name = obj.category_name
-                                mat_pointer.item_name = obj.item_name
-
-            if hasattr(mod, 'Cutpart_Pointers'):
-                materials = mod.Cutpart_Pointers
-                for name, obj in inspect.getmembers(materials):
-                    if "__" not in name:
-                        for spec_group in self.spec_groups:
-                            if name not in spec_group.cutparts:
-                                cut_pointer = spec_group.cutparts.add()
-                                cut_pointer.name = name
-                                cut_pointer.thickness = obj.thickness
-                                cut_pointer.core = obj.core
-                                cut_pointer.top = obj.top
-                                cut_pointer.bottom = obj.bottom
-                                cut_pointer.mv_pointer_name = obj.mv_pointer_name
-                                
-            if hasattr(mod, 'Edgepart_Pointers'):
-                materials = mod.Edgepart_Pointers
-                for name, obj in inspect.getmembers(materials):
-                    if "__" not in name:
-                        for spec_group in self.spec_groups:
-                            if name not in spec_group.edgeparts:
-                                edge_pointer = spec_group.edgeparts.add()
-                                edge_pointer.name = name
-                                edge_pointer.thickness = obj.thickness
-                                edge_pointer.material = obj.material
-                                edge_pointer.mv_pointer_name = obj.mv_pointer_name                           
-                                
-    def reload_spec_groups_from_template(self):
-        ''' This clears all of the pointers and reloads the
-            specification groups from the library modules
-        '''
-        for specgroup in self.spec_groups:
-            self.spec_groups.remove(0)
-            
-        spec_group = self.spec_groups.add()
-        spec_group.name = "Default Specification Group"
-        
-        modules = fd.get_library_modules()
-        
-        for module in modules:
-            mod = __import__(module)
-            if hasattr(mod, 'Material_Pointers'):
-                materials = mod.Material_Pointers
-                for name, obj in inspect.getmembers(materials):
-                    if "__" not in name: # Ignore built-in attributes 
-                        if name not in spec_group.materials:
-                            mat_pointer = spec_group.materials.add()
-                            mat_pointer.name = name
-                            mat_pointer.library_name = obj.library_name
-                            mat_pointer.category_name = obj.category_name
-                            mat_pointer.item_name = obj.item_name
-                            
-            if hasattr(mod, 'Cutpart_Pointers'):
-                materials = mod.Cutpart_Pointers
-                for name, obj in inspect.getmembers(materials):
-                    if "__" not in name: # Ignore built-in attributes
-                        if name not in spec_group.cutparts:
-                            cut_pointer = spec_group.cutparts.add()
-                            cut_pointer.name = name
-                            cut_pointer.thickness = obj.thickness
-                            cut_pointer.core = obj.core
-                            cut_pointer.top = obj.top
-                            cut_pointer.bottom = obj.bottom
-                            cut_pointer.mv_pointer_name = obj.mv_pointer_name
-                            
-            if hasattr(mod, 'Edgepart_Pointers'):
-                materials = mod.Edgepart_Pointers
-                for name, obj in inspect.getmembers(materials):
-                    if "__" not in name: # Ignore built-in attributes
-                        if name not in spec_group.edgeparts:
-                            edge_pointer = spec_group.edgeparts.add()
-                            edge_pointer.name = name
-                            edge_pointer.thickness = obj.thickness
-                            edge_pointer.material = obj.material
-                            edge_pointer.mv_pointer_name = obj.mv_pointer_name
-                            
 bpy.utils.register_class(SCENE_PROPERTIES)
 
 class WM_PROPERTIES(PropertyGroup):
@@ -1765,15 +1557,15 @@ bpy.utils.register_class(WM_PROPERTIES)
 class fd_object(PropertyGroup):
 
     type = EnumProperty(name="type",
-                        items=fd.enums.enum_object_types,
+                        items=enum_object_types,
                         description="Select the Object Type.",
                         default='NONE')
 
     property_id = StringProperty(name="Property ID",
                                  description="This property allows objects to display a custom property page. This is the operator bl_id.")
 
-    plan_id = StringProperty(name="Plan ID",
-                             description="This property allows a product to define custom plan view drawing. This is the operator bl_id.")
+    plan_draw_id = StringProperty(name="Plan Draw ID",
+                                  description="This property allows products to have a custom 2D plan view drawing. This is the operator bl_id.")
 
     update_id = StringProperty(name="Update ID",
                              description="This property allows a product to be updated after drawing. This is the operator bl_id.")
@@ -1789,7 +1581,7 @@ class fd_object(PropertyGroup):
                                    description="Use this object cut a hole in the selected mesh",
                                    default=False)
 
-    use_sma = BoolProperty(name="Use Solid Model Analyzer",
+    use_sma = BoolProperty(name="Use Part Boarder Algorithm",
                            description="Use Solid Model Analyzer to read geometry",
                            default=False)
 
@@ -1813,6 +1605,15 @@ class fd_object(PropertyGroup):
                                    description="Determines if the object is a cabinet pull.",
                                    default=False)
     
+    package_name = StringProperty(name="Package Name",
+                                  description="This is the python package the assembly is from")
+    
+    module_name = StringProperty(name="Module Name",
+                                description="This is the python module name the assembly is from")
+    
+    class_name = StringProperty(name="Class Name",
+                                description="This is the python class name the assembly is from")    
+    
     opengl_dim = PointerProperty(type=opengl_dim)
 
 bpy.utils.register_class(fd_object)
@@ -1828,30 +1629,44 @@ class fd_interface(PropertyGroup):
                                                  description="Show Default Blender interface")
     
     interface_object_tabs = EnumProperty(name="Interface Object Tabs",
-                                         items=fd.enums.enum_object_tabs,
+                                         items=enum_object_tabs,
                                          default = 'INFO')
     
     interface_group_tabs = EnumProperty(name="Interface Group Tabs",
-                                        items=fd.enums.enum_group_tabs
+                                        items=enum_group_tabs
                                         ,default = 'INFO')
     
     group_tabs = EnumProperty(name="Group Tabs",
-                              items=fd.enums.enum_group_tabs,
+                              items=enum_group_tabs,
                               description="Group Tabs",
                               default='INFO')
     
     group_driver_tabs = EnumProperty(name="Group Driver Tabs",
-                                     items=fd.enums.enum_group_drivers_tabs,
+                                     items=enum_group_drivers_tabs,
                                      default = 'LOC_X')
 
     render_type_tabs = EnumProperty(name="Render Type Tabs",
-                                    items=fd.enums.enum_render_type,
+                                    items=enum_render_type,
                                     default='PRR')
     
+    enum_library_types = [('SCENE',"Scenes","Scenes"),
+                          ('PRODUCT',"Products","Products"),
+                          ('INSERT',"Inserts","Inserts"),
+                          ('ASSEMBLY',"Assemblies","Assemblies"),
+                          ('OBJECT',"Objects","Objects"),
+                          ('MATERIAL',"Materials","Materials"),
+                          ('WORLD',"Worlds","Worlds")]
+    
     library_tabs = EnumProperty(name="Library Tabs",
-                                items=fd.enums.enum_library_types,
+                                items=[('SCENE',"Scenes","Scenes"),
+                                       ('PRODUCT',"Products","Products"),
+                                       ('INSERT',"Inserts","Inserts"),
+                                       ('ASSEMBLY',"Assemblies","Assemblies"),
+                                       ('OBJECT',"Objects","Objects"),
+                                       ('MATERIAL',"Materials","Materials"),
+                                       ('WORLD',"Worlds","Worlds")],
                                 default='PRODUCT',
-                                update=update_library)
+                                update=assign_default_libraries)
     
 bpy.utils.register_class(fd_interface)
 
@@ -1946,12 +1761,12 @@ class fd_scene(PropertyGroup):
 
     default_wall_height = FloatProperty(name="Default Wall Height",
                                         description="Enter the default height when drawings walls",
-                                        default=fd.inches(108),
+                                        default=unit.inch(108),
                                         unit='LENGTH')
     
     default_wall_depth = FloatProperty(name="Default Wall Depth",
                                         description="Enter the default depth when drawings walls",
-                                        default=fd.inches(6),
+                                        default=unit.inch(6),
                                         unit='LENGTH')
 
     job_name = StringProperty(name="Job Name")
@@ -1983,14 +1798,7 @@ class fd_window_manager(PropertyGroup):
     
     data_from_libs = CollectionProperty(name="Blend Files",type=blend_file)
     
-    project_templates = EnumProperty(name="Projects Templates",items=enum_project_template_previews)
-    
     library_module_path = StringProperty(name="Library Module Path",default="",subtype='DIR_PATH',update=update_library_paths)
-    scene_library_path = StringProperty(name="Scene Library Path",default="",subtype='DIR_PATH',update=update_library_paths)
-    project_path = StringProperty(name="Project Path",default="",subtype='DIR_PATH',update=update_library_paths)
-    project_template_path = StringProperty(name="Project Template Path",default="",subtype='DIR_PATH',update=update_library_paths)
-    product_library_path = StringProperty(name="Product Library Path",default="",subtype='DIR_PATH',update=update_library_paths)
-    insert_library_path = StringProperty(name="Insert Library Path",default="",subtype='DIR_PATH',update=update_library_paths)
     assembly_library_path = StringProperty(name="Assembly Library Path",default="",subtype='DIR_PATH',update=update_library_paths)
     object_library_path = StringProperty(name="Object Library Path",default="",subtype='DIR_PATH',update=update_library_paths)
     material_library_path = StringProperty(name="Material Library Path",default="",subtype='DIR_PATH',update=update_library_paths)
@@ -2021,7 +1829,7 @@ def register():
     pcoll = bpy.utils.previews.new()
     pcoll.my_previews_dir = ""
     pcoll.my_previews = ()
-
+ 
     preview_collections["main"] = pcoll
     
 def unregister():

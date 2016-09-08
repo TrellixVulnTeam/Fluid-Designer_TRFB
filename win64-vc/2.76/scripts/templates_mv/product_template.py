@@ -1,11 +1,11 @@
 # This is an example template for Library Assemblies
 import bpy
-import fd
+from mv import fd_types
 
 # Add Library References below import as constants
 PART = ("Cabinet Assemblies","Cut Parts","Part with Front Edgebanding")
 
-class PRODUCT_New_Assembly(fd.Library_Assembly):
+class PRODUCT_New_Assembly(fd_types.Assembly):
     library_name = "Library Name"
     category_name = ""
     assembly_name = ""

@@ -17,9 +17,10 @@
 # ##### END GPL LICENSE BLOCK #####
 
 import bpy
-import fd
 import os
 import re
+import inspect
+from mv import utils, unit
 from bpy.types import Header, Menu, Operator
 
 from bpy.props import (StringProperty,
@@ -50,7 +51,7 @@ class OPS_apply_materials_from_pointers(Operator):
     
     def execute(self,context):
         for obj in bpy.data.objects:
-            fd.assign_materials_from_pointers(obj)
+            utils.assign_materials_from_pointers(obj)
         return{'FINISHED'}
 
 class OPS_add_material_slot(Operator):
@@ -92,7 +93,7 @@ class OPS_material_properties(Operator):
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
 
     def draw(self, context):
         material = bpy.data.materials[self.material_name]
@@ -238,7 +239,7 @@ class OPS_create_material_template(Operator):
     
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
 
     def draw(self, context):
         layout = self.layout
@@ -362,7 +363,7 @@ class OPS_change_product_spec_group(Operator):
         for child in obj_bp.children:
             child.cabinetlib.spec_group_name = spec_group_name
             child.cabinetlib.spec_group_index = spec_group_index
-            fd.assign_materials_from_pointers(child)
+            utils.assign_materials_from_pointers(child)
             if len(child.children) > 0:
                 self.change_spec_group_for_children(child,spec_group_name)
 
@@ -404,7 +405,7 @@ class OPS_clear_spec_group(Operator):
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
 
     def draw(self, context):
         layout = self.layout
@@ -457,7 +458,7 @@ class OPS_copy_selected_spec_group(Operator):
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
 
     def draw(self, context):
         layout = self.layout
@@ -496,7 +497,7 @@ class OPS_delete_spec_group(Operator):
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
 
     def draw(self, context):
         layout = self.layout
@@ -529,23 +530,67 @@ class OPS_rename_spec_group(Operator):
         self.new_spec_group_name = spec_group.name
         self.old_spec_group_name = spec_group.name
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
 
     def draw(self, context):
         layout = self.layout
         layout.prop(self,'new_spec_group_name')
 
 class OPS_reload_spec_group_from_library_modules(Operator):
-    """ This will reload all of the defaults for the template.
-    """
     bl_idname = "fd_material.reload_spec_group_from_library_modules"
     bl_label = "Reload Specification Group From Library Modules"
     bl_description = "This will clear all of the specification group information and reload from the template"
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        library = context.scene.cabinetlib
-        library.reload_spec_groups_from_template()
+        from importlib import import_module
+        for specgroup in context.scene.cabinetlib.spec_groups:
+            context.scene.cabinetlib.spec_groups.remove(0)
+            
+        spec_group = context.scene.cabinetlib.spec_groups.add()
+        spec_group.name = "Default Specification Group"
+        
+        packages = utils.get_library_packages(context)
+        
+        for package in packages:
+            pkg = import_module(package)            
+            for mod_name, mod in inspect.getmembers(pkg):
+                for name, obj in inspect.getmembers(mod):        
+                    if hasattr(mod, 'Material_Pointers'):
+                        materials = mod.Material_Pointers
+                        for name, obj in inspect.getmembers(materials):
+                            if "__" not in name: # Ignore built-in attributes 
+                                if name not in spec_group.materials:
+                                    mat_pointer = spec_group.materials.add()
+                                    mat_pointer.name = name
+                                    mat_pointer.library_name = obj.library_name
+                                    mat_pointer.category_name = obj.category_name
+                                    mat_pointer.item_name = obj.item_name
+                                    
+                    if hasattr(mod, 'Cutpart_Pointers'):
+                        cutparts = mod.Cutpart_Pointers
+                        for name, obj in inspect.getmembers(cutparts):
+                            if "__" not in name: # Ignore built-in attributes
+                                if name not in spec_group.cutparts:
+                                    cut_pointer = spec_group.cutparts.add()
+                                    cut_pointer.name = name
+                                    cut_pointer.thickness = obj.thickness
+                                    cut_pointer.core = obj.core
+                                    cut_pointer.top = obj.top
+                                    cut_pointer.bottom = obj.bottom
+                                    cut_pointer.mv_pointer_name = obj.mv_pointer_name
+                    
+                    if hasattr(mod, 'Edgepart_Pointers'):
+                        edgeparts = mod.Edgepart_Pointers
+                        for name, obj in inspect.getmembers(edgeparts):
+                            if "__" not in name: # Ignore built-in attributes
+                                if name not in spec_group.edgeparts:
+                                    edge_pointer = spec_group.edgeparts.add()
+                                    edge_pointer.name = name
+                                    edge_pointer.thickness = obj.thickness
+                                    edge_pointer.material = obj.material
+                                    edge_pointer.mv_pointer_name = obj.mv_pointer_name
+
         return {'FINISHED'}
 
 class OPS_set_pointer(Operator):
@@ -558,7 +603,7 @@ class OPS_set_pointer(Operator):
     
     @classmethod
     def poll(cls, context):
-        filepath = fd.get_selected_file_from_file_browser(context)
+        filepath = utils.get_selected_file_from_file_browser(context)
         if filepath:
             return True
         else:
@@ -567,7 +612,7 @@ class OPS_set_pointer(Operator):
     def execute(self, context):
         library = context.scene.cabinetlib
         active_specgroup = library.spec_groups[library.spec_group_index]
-        filepath = fd.get_selected_file_from_file_browser(context)
+        filepath = utils.get_selected_file_from_file_browser(context)
         path, file_name = os.path.split(filepath)
         file, ext = os.path.splitext(file_name)
         category_name = os.path.basename(path)
@@ -594,7 +639,7 @@ class OPS_assign_materials_from_pointers(Operator):
     object_name = StringProperty(name="Object Name")
 
     def execute(self, context):
-        fd.assign_materials_from_pointers(context.object)
+        utils.assign_materials_from_pointers(context.object)
         return {'FINISHED'}
     
 #TODO: Update operator to remove cabinetlib. Many libraries use this as a way to update all materials
@@ -609,7 +654,7 @@ class OPS_update_scene_from_pointers(Operator):
 
         for obj in bpy.data.objects:
             if obj.type in {'MESH','CURVE'}:
-                fd.assign_materials_from_pointers(obj)
+                utils.assign_materials_from_pointers(obj)
 
         return {'FINISHED'}
     
@@ -633,21 +678,23 @@ class OPS_get_materials(Operator):
         
         for obj in context.visible_objects:
             if obj.cabinetlib.type_mesh == 'CUTPART':
-                mat_name = fd.get_material_name(obj)
+                mat_name = utils.get_material_name(obj)
                 if mat_name not in sheets:
                     mat = sheets.add()
-                    mat.thickness = fd.get_part_thickness(obj)
+                    mat.thickness = utils.get_part_thickness(obj)
                     mat.name = mat_name
                     sheet = mat.sizes.add() 
-                    sheet.width = fd.inches(48) #TODO: Make a way set defaults
-                    sheet.length = fd.inches(98) #TODO: Make a way set defaults
+                    sheet.width = unit.inch(48) #TODO: Make a way set defaults
+                    sheet.length = unit.inch(98) #TODO: Make a way set defaults
                     
             if obj.cabinetlib.type_mesh == 'EDGEBANDING':
-                edge_name = fd.get_edgebanding_name(obj)
-                if edge_name not in edgebanding:
-                    mat = edgebanding.add()
-                    mat.thickness = fd.get_part_thickness(obj)
-                    mat.name= edge_name
+                pass
+            #TODO: Setup edgebanding materials
+#                 edge_name = utils.get_edgebanding_name(obj)
+#                 if edge_name not in edgebanding:
+#                     mat = edgebanding.add()
+#                     mat.thickness = utils.get_part_thickness(obj)
+#                     mat.name= edge_name
                     
             if obj.mv.type == 'BPASSEMBLY' and obj.cabinetlib.type_group == 'PRODUCT':
                 product = products.add()
@@ -716,7 +763,7 @@ class OPS_sync_material_slots(Operator):
             for index, mat_slot in enumerate(obj.material_slots):
                 slot = obj.cabinetlib.material_slots.add()
                 
-        fd.assign_materials_from_pointers(obj)
+        utils.assign_materials_from_pointers(obj)
         return {'FINISHED'}
     
 class OPS_assign_material_interface(bpy.types.Operator):
@@ -738,13 +785,13 @@ class OPS_assign_material_interface(bpy.types.Operator):
         for material in active_spec_group.materials:
             material.assign_material = False
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(600))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(600))
     
     def execute(self,context):
         path, filename = os.path.split(self.filepath)
         file, ext = os.path.splitext(filename)
         file_dir = os.path.basename(path)
-        material = fd.get_material(file_dir,file)
+        material = utils.get_material(file_dir,file)
 
         library = context.scene.cabinetlib
         active_spec_group = library.spec_groups[library.spec_group_index]
@@ -806,7 +853,7 @@ class OPS_assign_material(Operator):
 #             material = context.scene.materiallib.scene_materials.add()
 #             material.name = self.material.name
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
         
     def draw(self,context):
         layout = self.layout

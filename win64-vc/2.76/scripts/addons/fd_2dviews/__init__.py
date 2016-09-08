@@ -29,7 +29,7 @@ bl_info = {
 }
 
 import bpy
-import fd
+from mv import utils, fd_types, unit
 import math
 import os
 import time
@@ -141,8 +141,6 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
     
     ignore_obj_list = []
     
-    font = None
-    
     def get_world(self):
         if "2D Environment" in bpy.data.worlds:
             return bpy.data.worlds["2D Environment"]
@@ -200,7 +198,7 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
     
     def group_children(self,grp,obj):
         if obj.mv.type != 'CAGE' and obj not in self.ignore_obj_list:
-            grp.objects.link(obj)
+            grp.objects.link(obj)   
         for child in obj.children:
             if len(child.children) > 0:
                 self.group_children(grp,child)
@@ -210,15 +208,16 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
                         grp.objects.link(child)  
         return grp
     
+    def create_default_plan(self,obj_bp):
+        pass
+    
     def create_plan_view_scene(self,context):
         bpy.ops.scene.new('INVOKE_DEFAULT',type='EMPTY')   
         pv_scene = context.scene
         pv_scene.name = "Plan View"
         pv_scene.mv.name_scene = "Plan View"
         pv_scene.mv.plan_view_scene = True
-        
-        item_number = 1
-        
+    
         for obj in self.main_scene.objects:
             if obj.mv.type == 'BPWALL':
                 pv_scene.objects.link(obj)
@@ -227,42 +226,57 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
                     if child.mv.is_wall_mesh:
                         child.select = True
                         pv_scene.objects.link(child)
-                wall = fd.Wall(obj_bp = obj)
+                wall = fd_types.Wall(obj_bp = obj)
                 
-                dim = fd.Dimension()
+                dim = fd_types.Dimension()
                 dim.parent(wall.obj_bp)
-                dim.start_y(value = fd.inches(4) + wall.obj_y.location.y)
-                dim.start_z(value = wall.obj_z.location.z + fd.inches(6))
-                dim.end_x(value = wall.obj_x.location.x)
+                dim.start_y(value = unit.inch(4) + wall.obj_y.location.y)
+                dim.start_z(value = wall.obj_z.location.z + unit.inch(6))
+                dim.end_x(value = wall.obj_x.location.x)  
                 
                 self.ignore_obj_list.append(dim.anchor)
                 self.ignore_obj_list.append(dim.end_point)
-                
+  
                 bpy.ops.object.text_add()
                 text = context.active_object
                 text.parent = wall.obj_bp
-                text.location = (wall.obj_x.location.x/2,fd.inches(1.5),wall.obj_z.location.z)
+                text.location = (wall.obj_x.location.x/2,unit.inch(1.5),wall.obj_z.location.z)
                 text.data.size = .1
                 text.data.body = wall.obj_bp.mv.name_object
                 text.data.align = 'CENTER'
                 text.data.font = self.font
-                
+                 
                 self.ignore_obj_list.append(dim.anchor)
                 self.ignore_obj_list.append(dim.end_point)
-                
+                 
                 obj_bps = wall.get_wall_groups()
                 #Create Cubes for all products
                 for obj_bp in obj_bps:
-                    obj_bp.cabinetlib.item_number = item_number
-                    item_number += 1
-                    if obj_bp.mv.plan_id != "":
-                        eval('bpy.ops.' + obj_bp.mv.plan_id + '("INVOKE_DEFAULT",object_name=obj_bp.name)')
+                    if obj_bp.mv.plan_draw_id != "":
+                        eval('bpy.ops.' + obj_bp.mv.plan_draw_id + '(object_name=obj_bp.name)')
                     else:
-                        bpy.ops.fd_general.draw_plan(object_name=obj_bp.name)
-                    
-                wall_mesh = wall.get_wall_mesh()
-                if wall_mesh:
-                    wall_mesh.select = True
+                        assembly = fd_types.Assembly(obj_bp)
+                        assembly_mesh = utils.create_cube_mesh(assembly.obj_bp.mv.name_object,
+                                                            (assembly.obj_x.location.x,
+                                                             assembly.obj_y.location.y,
+                                                             assembly.obj_z.location.z))
+                        assembly_mesh.parent = wall.obj_bp
+                        assembly_mesh.location = assembly.obj_bp.location
+                        assembly_mesh.rotation_euler = assembly.obj_bp.rotation_euler
+                        assembly_mesh.mv.type = 'CAGE'
+                        distance = unit.inch(14) if assembly.obj_bp.location.z > 1 else unit.inch(8)
+                        distance += wall.obj_y.location.y
+                        
+                        dim = fd_types.Dimension()
+                        dim.parent(assembly_mesh)
+                        dim.start_y(value = distance)
+                        dim.start_z(value = 0)
+                        dim.end_x(value = assembly.obj_x.location.x)
+                        
+                        self.ignore_obj_list.append(dim.anchor)
+                        self.ignore_obj_list.append(dim.end_point)
+                        
+                wall.get_wall_mesh().select = True
                 
         camera = self.create_camera(pv_scene)
         camera.rotation_euler.z = math.radians(-90.0)
@@ -282,7 +296,7 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
         new_scene.mv.elevation_scene = True
         
         self.group_children(wall_group,wall.obj_bp)                    
-        wall_mesh = fd.create_cube_mesh(wall.obj_bp.mv.name_object,(wall.obj_x.location.x,wall.obj_y.location.y,wall.obj_z.location.z))
+        wall_mesh = utils.create_cube_mesh(wall.obj_bp.mv.name_object,(wall.obj_x.location.x,wall.obj_y.location.y,wall.obj_z.location.z))
         wall_mesh.parent = wall.obj_bp
         wall_group.objects.link(wall_mesh)
         
@@ -299,8 +313,8 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
         
         text = context.active_object
         text.parent = wall.obj_bp
-        text.location.x = fd.inches(-2)
-        text.location.z = fd.inches(-10)
+        text.location.x = unit.inch(-2)
+        text.location.z = unit.inch(-10)
         text.rotation_euler.x = math.radians(90)
         text.data.size = .1
         text.data.body = wall.obj_bp.mv.name_object
@@ -318,8 +332,8 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
     def execute(self, context):
         context.window_manager.mv.use_opengl_dimensions = True
         
-        self.font = fd.get_custom_font()
-
+        self.font = utils.get_custom_font()
+        
         bpy.ops.fd_scene.clear_2d_views()
         
         self.main_scene = context.scene
@@ -328,7 +342,7 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
         
         for obj in self.main_scene.objects:
             if obj.mv.type == 'BPWALL':
-                wall = fd.Wall(obj_bp = obj)
+                wall = fd_types.Wall(obj_bp = obj)
                 if len(wall.get_wall_groups()) > 0:
                     self.create_elv_view_scene(context, wall)
 
@@ -364,7 +378,7 @@ class OPERATOR_render_2d_views(bpy.types.Operator):
         while not os.path.exists(bpy.path.abspath(scene.render.filepath) + ".jpg"):
             time.sleep(0.1)
         
-        img_result = fd.render_opengl(self,context)
+        img_result = utils.render_opengl(self,context)
         
         image_view = context.window_manager.mv.image_views.add()
         image_view.name = img_result.name
@@ -597,7 +611,7 @@ class OPERATOR_create_pdf(bpy.types.Operator):
 
         #FIX FILE PATH To remove all double backslashes 
         fixed_file_path = os.path.normpath(file_path)
-        
+
         if os.path.exists(os.path.join(fixed_file_path,file_name)):
             os.system('start "Title" /D "'+fixed_file_path+'" "' + file_name + '"')
         else:

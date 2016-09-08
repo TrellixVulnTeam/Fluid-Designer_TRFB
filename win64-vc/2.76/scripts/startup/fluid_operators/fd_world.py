@@ -30,7 +30,7 @@ from bpy.props import (StringProperty,
                        EnumProperty,
                        CollectionProperty)
 
-import fd
+from mv import utils
 
 class OPS_remove_world(Operator):# IMPLEMENT ALL DELETE FUNCTIONS 
     bl_idname = "fd_world.remove_world"
@@ -47,7 +47,7 @@ class OPS_remove_world(Operator):# IMPLEMENT ALL DELETE FUNCTIONS
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(300))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(300))
 
     def draw(self, context):
         world = bpy.data.worlds[self.world_name]
@@ -70,7 +70,7 @@ class OPS_clear_unused_worlds_from_file(Operator):# IMPLEMENT ALL DELETE FUNCTIO
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
 
     def draw(self, context):
         layout = self.layout
@@ -88,7 +88,7 @@ class OPS_show_world_options(Operator):# IMPLEMENT ALL DELETE FUNCTIONS
     
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(300))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(300))
     
     def draw(self, context):
         layout = self.layout

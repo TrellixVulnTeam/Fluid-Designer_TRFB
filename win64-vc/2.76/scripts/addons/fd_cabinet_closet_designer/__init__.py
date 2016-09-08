@@ -29,7 +29,6 @@ bl_info = {
 }
 
 import bpy
-import fd
 import math
 
 from bpy.types import PropertyGroup, UIList, Panel, Operator

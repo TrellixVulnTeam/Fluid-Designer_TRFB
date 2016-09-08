@@ -29,7 +29,7 @@ bl_info = {
 }
 
 import bpy
-import fd
+from mv import fd_types, utils, unit
 import math
 from mathutils import Vector
 import os
@@ -57,33 +57,33 @@ def enum_carpet(self,context):
     if context is None:
         return []
     
-    icon_dir = os.path.join(fd.get_library_dir("materials"),FLOORING_LIBRARY_NAME,CARPET_CATEGORY_NAME)
+    icon_dir = os.path.join(utils.get_library_dir("materials"),FLOORING_LIBRARY_NAME,CARPET_CATEGORY_NAME)
     pcoll = preview_collections["carpet"]
-    return fd.get_previews(icon_dir,pcoll)
+    return utils.get_image_enum_previews(icon_dir,pcoll)
 
 def enum_wood_floor(self,context):
     if context is None:
         return []
 
-    icon_dir = os.path.join(fd.get_library_dir("materials"),FLOORING_LIBRARY_NAME,HARDWOOD_CATEGORY_NAME)
+    icon_dir = os.path.join(utils.get_library_dir("materials"),FLOORING_LIBRARY_NAME,HARDWOOD_CATEGORY_NAME)
     pcoll = preview_collections["wood_floor"]
-    return fd.get_previews(icon_dir,pcoll)
+    return utils.get_image_enum_previews(icon_dir,pcoll)
 
 def enum_tile_floor(self,context):
     if context is None:
         return []
 
-    icon_dir = os.path.join(fd.get_library_dir("materials"),FLOORING_LIBRARY_NAME,TILE_CATEGORY_NAME)
+    icon_dir = os.path.join(utils.get_library_dir("materials"),FLOORING_LIBRARY_NAME,TILE_CATEGORY_NAME)
     pcoll = preview_collections["tile"]
-    return fd.get_previews(icon_dir,pcoll)
+    return utils.get_image_enum_previews(icon_dir,pcoll)
 
 def enum_wall_material(self,context):
     if context is None:
         return []
 
-    icon_dir = os.path.join(fd.get_library_dir("materials"),PAINT_LIBRARY_NAME,PAINT_CATEGORY_NAME)
+    icon_dir = os.path.join(utils.get_library_dir("materials"),PAINT_LIBRARY_NAME,PAINT_CATEGORY_NAME)
     pcoll = preview_collections["paint"]
-    return fd.get_previews(icon_dir,pcoll)
+    return utils.get_image_enum_previews(icon_dir,pcoll)
 
 def update_wall_index(self,context): 
     bpy.ops.object.select_all(action='DESELECT')
@@ -336,16 +336,16 @@ class FD_UL_walls(UIList):
             if wall_bp.fd_roombuilder.is_floor or wall_bp.fd_roombuilder.is_ceiling:
                 layout.label(text="",icon='MESH_GRID')
                 layout.label(text=item.name + "   " + count_text)
-                layout.label("Area: " + str(fd.unit(wall_bp.dimensions.x) * fd.unit(wall_bp.dimensions.y)))
+                layout.label("Area: " + str(unit.meter_to_active_unit(wall_bp.dimensions.x) * unit.meter_to_active_unit(wall_bp.dimensions.y)))
                 if wall_bp.hide:
                     layout.operator('fd_roombuilder.show_plane',text="",icon='RESTRICT_VIEW_ON',emboss=False).object_name = wall_bp.name
                 else:
                     layout.operator('fd_roombuilder.hide_plane',text="",icon='RESTRICT_VIEW_OFF',emboss=False).object_name = wall_bp.name
             else:
-                wall = fd.Wall(wall_bp)
+                wall = fd_types.Wall(wall_bp)
                 layout.label(text="",icon='SNAP_FACE')
                 layout.label(text=item.name + "   " + count_text)
-                layout.label("Length: " + str(fd.unit(wall.obj_x.location.x)))
+                layout.label("Length: " + str(unit.meter_to_active_unit(wall.obj_x.location.x)))
                 if wall.obj_bp.hide:
                     layout.operator('fd_assembly.show_wall',text="",icon='RESTRICT_VIEW_ON',emboss=False).wall_bp_name = wall_bp.name
                 else:
@@ -390,25 +390,25 @@ class OPERATOR_Add_Obstacle(Operator):
 
     obstacle_width = FloatProperty(name="Obstacle Width",
                                    description="Enter the Width of the Obstacle",
-                                   default=fd.inches(3),
+                                   default=unit.inch(3),
                                    unit='LENGTH',
                                    precision=4)
 
     obstacle_height = FloatProperty(name="Obstacle Height",
                                     description="Enter the Height of the Obstacle",
-                                    default=fd.inches(4),
+                                    default=unit.inch(4),
                                     unit='LENGTH',
                                     precision=4)
 
     x_location = FloatProperty(name="X Location",
                                description="Enter the X Location of the Obstacle",
-                               default=fd.inches(0),
+                               default=unit.inch(0),
                                unit='LENGTH',
                                precision=4)
 
     z_location = FloatProperty(name="Z Location",
                                description="Enter the Z Location of the Obstacle",
-                               default=fd.inches(0),
+                               default=unit.inch(0),
                                unit='LENGTH',
                                precision=4)
 
@@ -451,7 +451,7 @@ class OPERATOR_Add_Obstacle(Operator):
         self.set_draw_type(bpy.context, 'TEXTURED')
 
         if self.click_ok == False: # Only delete The obstacle if user didn't click OK
-            fd.delete_object_and_children(self.obstacle.obj_bp)
+            utils.delete_object_and_children(self.obstacle.obj_bp)
         
     def set_draw_type(self,context,draw_type='WIRE'):
         for obj in context.scene.objects:
@@ -470,7 +470,7 @@ class OPERATOR_Add_Obstacle(Operator):
         
         self.wall_item = context.scene.fd_roombuilder.walls[context.scene.fd_roombuilder.wall_index]
         wall_bp = context.scene.objects[self.wall_item.bp_name]
-        self.wall = fd.Wall(wall_bp)
+        self.wall = fd_types.Wall(wall_bp)
             
         self.set_draw_type(context)
         
@@ -484,7 +484,7 @@ class OPERATOR_Add_Obstacle(Operator):
                     self.base_point = obstacle.base_point
             
             obj_bp = context.scene.objects[self.obstacle_bp_name]
-            self.obstacle = fd.Assembly(obj_bp)
+            self.obstacle = fd_types.Assembly(obj_bp)
             self.obstacle_name = self.obstacle.obj_bp.mv.name_object
             self.obstacle_height = self.obstacle.obj_z.location.z
             self.obstacle_width = self.obstacle.obj_x.location.x
@@ -500,24 +500,23 @@ class OPERATOR_Add_Obstacle(Operator):
             if self.base_point == 'BOTTOM_RIGHT':
                 self.x_location = self.wall.obj_x.location.x - self.obstacle.obj_bp.location.x - self.obstacle_width
                 self.z_location = self.obstacle.obj_bp.location.z
-            fd.delete_object_and_children(obj_bp)
+            utils.delete_object_and_children(obj_bp)
             
         #Create Obstacle Assembly 
-        self.obstacle = fd.Assembly()
+        self.obstacle = fd_types.Assembly()
         self.obstacle.create_assembly()
         cage = self.obstacle.get_cage()
         cage.select = True
         cage.show_x_ray = True
-        cage.mv.type = 'OBSTACLE'
         self.obstacle.obj_x.hide = True
         self.obstacle.obj_y.hide = True
         self.obstacle.obj_z.hide = True
         
         self.obstacle.obj_bp.parent = self.wall.obj_bp
         self.obstacle.obj_x.location.x = self.obstacle_width
-        self.obstacle.obj_y.location.y = self.wall.obj_y.location.y + fd.inches(2)
+        self.obstacle.obj_y.location.y = self.wall.obj_y.location.y + unit.inch(2)
         self.obstacle.obj_z.location.z = self.obstacle_height
-        self.obstacle.obj_bp.location.y = - fd.inches(1)
+        self.obstacle.obj_bp.location.y = - unit.inch(1)
         #Set bp_name for obstacle item just in case user doesn't click OK.
         if obstacle_item:
             obstacle_item.bp_name = self.obstacle.obj_bp.name
@@ -529,9 +528,9 @@ class OPERATOR_Add_Obstacle(Operator):
         self.click_ok = True
         Width = self.obstacle.get_var('dim_x','Width')
         
-        dim = fd.Dimension()
+        dim = fd_types.Dimension()
         dim.parent(self.obstacle.obj_bp)
-        dim.start_z(value = fd.inches(.5))
+        dim.start_z(value = unit.inch(.5))
         dim.start_x('Width/2',[Width])
         dim.set_label(self.obstacle_name)
         
@@ -619,25 +618,25 @@ class OPERATOR_Add_Floor_Obstacle(Operator):
 
     obstacle_width = FloatProperty(name="Obstacle Width",
                                    description="Enter the Width of the Obstacle",
-                                   default=fd.inches(3),
+                                   default=unit.inch(3),
                                    unit='LENGTH',
                                    precision=4)
 
     obstacle_depth = FloatProperty(name="Obstacle Depth",
                                    description="Enter the Depth of the Obstacle",
-                                   default=fd.inches(4),
+                                   default=unit.inch(4),
                                    unit='LENGTH',
                                    precision=4)
 
     x_location = FloatProperty(name="X Location",
                                description="Enter the X Location of the Obstacle",
-                               default=fd.inches(0),
+                               default=unit.inch(0),
                                unit='LENGTH',
                                precision=4)
 
     y_location = FloatProperty(name="Y Location",
                                description="Enter the Y Location of the Obstacle",
-                               default=fd.inches(0),
+                               default=unit.inch(0),
                                unit='LENGTH',
                                precision=4)
 
@@ -648,10 +647,10 @@ class OPERATOR_Add_Floor_Obstacle(Operator):
     def check(self, context):
         if self.obstacle and self.plane:
             
-            self.obstacle.obj_bp.location.z = fd.inches(-1)
+            self.obstacle.obj_bp.location.z = unit.inch(-1)
             self.obstacle.obj_y.location.y = self.obstacle_depth
             self.obstacle.obj_x.location.x = self.obstacle_width
-            self.obstacle.obj_z.location.z = fd.inches(2)
+            self.obstacle.obj_z.location.z = unit.inch(2)
             
             if self.base_point == 'FRONT_LEFT':
                 self.obstacle.obj_bp.location.x = self.x_location
@@ -683,9 +682,9 @@ class OPERATOR_Add_Floor_Obstacle(Operator):
     def set_obstacle_defaults(self,context):
         if self.obstacle_bp_name in context.scene.objects:
             obj_bp = context.scene.objects[self.obstacle_bp_name]
-            self.obstacle = fd.Assembly(obj_bp)
+            self.obstacle = fd_types.Assembly(obj_bp)
         else:
-            self.obstacle = fd.Assembly()
+            self.obstacle = fd_types.Assembly()
             self.obstacle.create_assembly()
         self.obstacle_name = self.obstacle.obj_bp.mv.name_object
         self.obstacle_depth = self.obstacle.obj_y.location.y
@@ -702,13 +701,13 @@ class OPERATOR_Add_Floor_Obstacle(Operator):
         if self.base_point == 'BACK_RIGHT':
             self.x_location = self.obstacle.obj_bp.location.x - self.obstacle_width
             self.y_location = self.obstacle.obj_bp.location.y - self.obstacle_depth
-#         fd.delete_object_and_children(obj_bp)
+#         utils.delete_object_and_children(obj_bp)
     
     def __del__(self):
         self.set_draw_type(bpy.context,'TEXTURED')
         
         if self.obstacle and self.obstacle_bp_name == "": # Only delete The obstacle if user didn't click OK
-            fd.delete_object_and_children(self.obstacle.obj_bp)
+            utils.delete_object_and_children(self.obstacle.obj_bp)
     
     def invoke(self,context,event):
         wm = context.window_manager
@@ -734,7 +733,7 @@ class OPERATOR_Add_Floor_Obstacle(Operator):
         self.obstacle.obj_bp.parent = self.plane
         self.obstacle.obj_x.location.x = self.obstacle_width
         self.obstacle.obj_y.location.y = self.obstacle_depth
-        self.obstacle.obj_z.location.z = - fd.inches(1)
+        self.obstacle.obj_z.location.z = - unit.inch(1)
         self.obstacle.obj_bp.location.y = self.y_location
         
         self.check(context)
@@ -745,9 +744,9 @@ class OPERATOR_Add_Floor_Obstacle(Operator):
         Width = self.obstacle.get_var('dim_x','Width')
         Depth = self.obstacle.get_var('dim_y','Depth')
         
-        dim = fd.Dimension()
+        dim = fd_types.Dimension()
         dim.parent(self.obstacle.obj_bp)
-        dim.start_z(value = fd.inches(.5))
+        dim.start_z(value = unit.inch(.5))
         dim.start_y('Depth/2',[Depth])
         dim.start_x('Width/2',[Width])
         dim.set_label(self.obstacle_name)
@@ -807,43 +806,43 @@ class OPERATOR_Build_Room(Operator):
 
     back_wall_length = FloatProperty(name="Back Wall Length",
                                      description="Enter the Back Wall Length",
-                                     default=fd.inches(120),
+                                     default=unit.inch(120),
                                      unit='LENGTH',
                                      precision=4)
 
     side_wall_length = FloatProperty(name="Side Wall Length",
                                      description="Enter the Side Wall Length",
-                                     default=fd.inches(120),
+                                     default=unit.inch(120),
                                      unit='LENGTH',
                                      precision=4)
     
     left_return_length = FloatProperty(name="Left Return Length",
                                        description="Enter the Left Return Wall Length",
-                                       default=fd.inches(25),
+                                       default=unit.inch(25),
                                        unit='LENGTH',
                                        precision=4)
     
     right_return_length = FloatProperty(name="Right Return Length",
                                        description="Enter the Right Return Wall Length",
-                                       default=fd.inches(25),
+                                       default=unit.inch(25),
                                        unit='LENGTH',
                                        precision=4)
     
     wall_height = FloatProperty(name="Wall Height",
                                 description="Enter the Wall Height",
-                                default=fd.inches(108),
+                                default=unit.inch(108),
                                 unit='LENGTH',
                                 precision=4)
     
     wall_thickness = FloatProperty(name="Wall Thickness",
                                    description="Enter the Wall Thickness",
-                                   default=fd.inches(4),
+                                   default=unit.inch(4),
                                    unit='LENGTH',
                                    precision=4)
     
     opening_height = FloatProperty(name="Opening Height",
                                    description="Enter the Height of the Opening",
-                                   default=fd.inches(83),
+                                   default=unit.inch(83),
                                    unit='LENGTH',
                                    precision=4)
     
@@ -865,12 +864,12 @@ class OPERATOR_Build_Room(Operator):
     
     def set_camera_position(self,context):
         view3d = context.space_data.region_3d
-        if fd.unit(self.back_wall_length) / 17 < 7:
+        if unit.meter_to_active_unit(self.back_wall_length) / 17 < 7:
             distance = 7
-        elif fd.unit(self.back_wall_length) / 17 > 12:
+        elif unit.meter_to_active_unit(self.back_wall_length) / 17 > 12:
             distance = 12
         else:
-            distance = fd.unit(self.back_wall_length) / 17
+            distance = unit.meter_to_active_unit(self.back_wall_length) / 17
         view3d.view_distance = distance
         view3d.view_location = (self.back_wall_length/2,self.side_wall_length,0)
         view3d.view_rotation = (.8416,.4984,-.1004,-.1824)
@@ -898,7 +897,7 @@ class OPERATOR_Build_Room(Operator):
         
         self.door.obj_bp.location.x = self.right_return_length
         self.door.obj_x.location.x = self.back_wall_length - self.right_return_length - self.left_return_length
-        self.door.obj_y.location.y = self.wall_thickness + fd.inches(.01)
+        self.door.obj_y.location.y = self.wall_thickness + unit.inch(.01)
         self.door.obj_z.location.z = self.opening_height
 
         self.left_side_wall.obj_z.hide = True
@@ -985,7 +984,7 @@ class OPERATOR_Build_Room(Operator):
             self.update_single_room()
         
     def create_wall(self,context):
-        wall = fd.Wall()
+        wall = fd_types.Wall()
         wall.create_wall()
         wall.build_wall_mesh()
         wall.obj_bp.location = (0,0,0)
@@ -1024,20 +1023,22 @@ class OPERATOR_Build_Room(Operator):
         entry_wall.data.vertices[5].co[0] -= self.wall_thickness 
         entry_wall.data.vertices[6].co[0] += self.wall_thickness 
         
-        self.door = fd.get_product_class("Entry Doors","Entry Doors","Entry Door Frame")
-        self.door.draw()
+        #TODO: Develop a way for users to change entry door style. (Sliding, Bifold, Single, Double)
+        bp = utils.get_group(os.path.join(os.path.dirname(__file__),"Entry Doors","Entry Door Frame.blend"))
+        self.door = fd_types.Assembly(bp)
         self.door.obj_bp.parent = self.entry_wall.obj_bp
         
-        objs = fd.get_child_objects(self.door.obj_bp)
+        objs = utils.get_child_objects(self.door.obj_bp)
         for obj_bool in objs:
+            obj_bool.draw_type = 'TEXTURED'
             if obj_bool.mv.use_as_bool_obj:
                 mod = entry_wall.modifiers.new(obj_bool.name,'BOOLEAN')
                 mod.object = obj_bool
                 mod.operation = 'DIFFERENCE'
         
-        fd.connect_objects_location(self.left_side_wall.obj_x,self.back_wall.obj_bp)
-        fd.connect_objects_location(self.back_wall.obj_x,self.right_side_wall.obj_bp)
-        fd.connect_objects_location(self.right_side_wall.obj_x,self.entry_wall.obj_bp)
+        utils.connect_objects_location(self.left_side_wall.obj_x,self.back_wall.obj_bp)
+        utils.connect_objects_location(self.back_wall.obj_x,self.right_side_wall.obj_bp)
+        utils.connect_objects_location(self.right_side_wall.obj_x,self.entry_wall.obj_bp)
         
     def build_single_wall(self,context):
         self.back_wall = self.create_wall(context)
@@ -1055,7 +1056,7 @@ class OPERATOR_Build_Room(Operator):
         left_side_wall.data.vertices[2].co[0] += self.wall_thickness 
         left_side_wall.data.vertices[6].co[0] += self.wall_thickness 
 
-        fd.connect_objects_location(self.left_side_wall.obj_x,self.back_wall.obj_bp)
+        utils.connect_objects_location(self.left_side_wall.obj_x,self.back_wall.obj_bp)
         
     def build_u_shape_room(self,context):
         self.left_side_wall = self.create_wall(context)
@@ -1078,11 +1079,11 @@ class OPERATOR_Build_Room(Operator):
         right_side_wall.data.vertices[1].co[0] -= self.wall_thickness 
         right_side_wall.data.vertices[5].co[0] -= self.wall_thickness 
         
-        fd.connect_objects_location(self.left_side_wall.obj_x,self.back_wall.obj_bp)
-        fd.connect_objects_location(self.back_wall.obj_x,self.right_side_wall.obj_bp)
+        utils.connect_objects_location(self.left_side_wall.obj_x,self.back_wall.obj_bp)
+        utils.connect_objects_location(self.back_wall.obj_x,self.right_side_wall.obj_bp)
         
     def invoke(self,context,event):
-        fd.delete_obj_list(bpy.data.objects)
+        utils.delete_obj_list(bpy.data.objects)
         props = bpy.context.scene.fd_roombuilder
         self.wall_height = context.scene.mv.default_wall_height
         self.wall_thickness = context.scene.mv.default_wall_depth
@@ -1172,11 +1173,11 @@ class OPERATOR_Collect_Walls(Operator):
     def assign_floor_material(self,context,obj):
         props = context.scene.fd_roombuilder
         if props.floor_type == 'CARPET':
-            material = fd.get_material((FLOORING_LIBRARY_NAME,CARPET_CATEGORY_NAME),props.carpet_material)
+            material = utils.get_material((FLOORING_LIBRARY_NAME,CARPET_CATEGORY_NAME),props.carpet_material)
         if props.floor_type == 'WOOD':    
-            material = fd.get_material((FLOORING_LIBRARY_NAME,HARDWOOD_CATEGORY_NAME),props.wood_floor_material)
+            material = utils.get_material((FLOORING_LIBRARY_NAME,HARDWOOD_CATEGORY_NAME),props.wood_floor_material)
         if props.floor_type == 'TILE':    
-            material = fd.get_material((FLOORING_LIBRARY_NAME,TILE_CATEGORY_NAME),props.tile_material)
+            material = utils.get_material((FLOORING_LIBRARY_NAME,TILE_CATEGORY_NAME),props.carpet_material)
         if material:
             bpy.ops.fd_object.unwrap_mesh(object_name=obj.name)
             bpy.ops.fd_object.add_material_slot(object_name=obj.name)
@@ -1185,7 +1186,7 @@ class OPERATOR_Collect_Walls(Operator):
 
     def assign_wall_material(self,context,obj):
         props = context.scene.fd_roombuilder
-        material = fd.get_material((PAINT_LIBRARY_NAME,PAINT_CATEGORY_NAME),props.wall_material)
+        material = utils.get_material((PAINT_LIBRARY_NAME,PAINT_CATEGORY_NAME),props.wall_material)
         if material:
             bpy.ops.fd_object.unwrap_mesh(object_name=obj.name)
             bpy.ops.fd_object.add_material_slot(object_name=obj.name)
@@ -1219,7 +1220,7 @@ class OPERATOR_Collect_Walls(Operator):
         
         for obj in context.scene.objects:
             if obj.mv.type == 'BPWALL':
-                wall = fd.Wall(obj)
+                wall = fd_types.Wall(obj)
                 self.assign_wall_material(context, wall.get_wall_mesh())
                 wall = props.walls.add()
                 wall.name = obj.mv.name_object
@@ -1256,7 +1257,7 @@ class OPERATOR_Delete_Obstacle(Operator):
             
         obj_bp = context.scene.objects[self.obstacle_bp_name]
         
-        fd.delete_object_and_children(obj_bp)
+        utils.delete_object_and_children(obj_bp)
         return {'FINISHED'}
 
 class OPERATOR_Hide_Plane(Operator):
@@ -1271,7 +1272,7 @@ class OPERATOR_Hide_Plane(Operator):
         else:
             obj = context.active_object
 
-        children = fd.get_child_objects(obj)
+        children = utils.get_child_objects(obj)
         
         for child in children:
             child.hide = True
@@ -1292,7 +1293,7 @@ class OPERATOR_Show_Plane(Operator):
         else:
             obj = context.active_object
 
-        children = fd.get_child_objects(obj)
+        children = utils.get_child_objects(obj)
         
         for child in children:
             if child.type != 'EMPTY':
@@ -1317,7 +1318,7 @@ class OPERATOR_Select_Two_Points(Operator):
     
     def cancel_drop(self,context,event):
         context.window.cursor_set('DEFAULT')
-        fd.delete_obj_list([self.drawing_plane])
+        utils.delete_obj_list([self.drawing_plane])
         return {'FINISHED'}
         
     def __del__(self):
@@ -1334,14 +1335,14 @@ class OPERATOR_Select_Two_Points(Operator):
     def modal(self, context, event):
         context.window.cursor_set('PAINT_BRUSH')
         context.area.tag_redraw()
-        selected_point, selected_obj = fd.get_selection_point(context,event,objects=[self.drawing_plane]) #Pass in Drawing Plane
+        selected_point, selected_obj = utils.get_selection_point(context,event,objects=[self.drawing_plane]) #Pass in Drawing Plane
         bpy.ops.object.select_all(action='DESELECT')
         if selected_obj:
             if event.type == 'LEFTMOUSE' and event.value == 'PRESS':
                 if self.first_point != (0,0,0):
                     self.second_point = selected_point
                     
-                    distance = fd.calc_distance(self.first_point,self.second_point)
+                    distance = utils.calc_distance(self.first_point,self.second_point)
                     
                     diff = context.scene.fd_roombuilder.background_image_scale / distance
 

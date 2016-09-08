@@ -34,7 +34,7 @@ from bpy.props import (StringProperty,
                        CollectionProperty)
 
 import math
-import fd
+from mv import fd_types, utils, unit
 
 class fd_prompt_collection(PropertyGroup):
     add = BoolProperty(name="Add")
@@ -56,7 +56,7 @@ class OPS_turn_on_driver(Operator):
 
     def execute(self, context):
         ui = context.scene.mv.ui
-        self.group = fd.Assembly(bpy.data.objects[self.object_name])
+        self.group = fd_types.Assembly(bpy.data.objects[self.object_name])
         self.group.obj_bp.select = True
         if ui.group_driver_tabs == 'LOC_X':
             self.group.obj_bp.driver_add('location',0)
@@ -116,7 +116,7 @@ class OPS_turn_off_driver(Operator):
     
     def execute(self, context):
         ui = context.scene.mv.ui
-        self.group = fd.Assembly(bpy.data.objects[self.object_name])
+        self.group = fd_types.Assembly(bpy.data.objects[self.object_name])
         if ui.group_driver_tabs == 'LOC_X':
             self.group.obj_bp.driver_remove('location',0)
         if ui.group_driver_tabs == 'LOC_Y':
@@ -233,9 +233,9 @@ class OPS_get_vars_from_object(Operator):
 
     def execute(self, context):
         obj = bpy.data.objects[self.object_name]
-        obj_bp = fd.get_assembly_bp(obj)
+        obj_bp = utils.get_assembly_bp(obj)
         if obj_bp:
-            self.group = fd.Assembly(obj_bp)
+            self.group = fd_types.Assembly(obj_bp)
             for DR in obj.animation_data.drivers:
                 if self.data_path in DR.data_path and DR.array_index == self.array_index:
                     DR.driver.show_debug_info = False
@@ -336,12 +336,12 @@ class OPS_get_vars_from_object(Operator):
     def invoke(self,context,event):
         self.reset_variables()
         obj = bpy.data.objects[self.object_name]
-        obj_bp = fd.get_assembly_bp(obj)
+        obj_bp = utils.get_assembly_bp(obj)
         if obj_bp:
-            self.group = fd.Assembly(obj_bp)
+            self.group = fd_types.Assembly(obj_bp)
             self.get_part_prompts()
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
 
     def draw(self, context):
         layout = self.layout

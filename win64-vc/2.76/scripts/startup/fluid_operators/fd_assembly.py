@@ -31,7 +31,7 @@ from bpy.props import (StringProperty,
                        EnumProperty,
                        CollectionProperty)
 
-import fd
+from mv import unit, utils, fd_types
 
 def update_vector_groups(obj_bp):
     """ This is used to add all of the vector groups to 
@@ -69,8 +69,8 @@ class OPS_add_wall(Operator):
                                     ('RIGHT',"Right","")],
                              default='STRAIGHT')
     
-    wall_length = FloatProperty(name="Wall Length",default=fd.inches(120),unit='LENGTH')
-    wall_height = FloatProperty(name="Wall Height",default=fd.inches(108),unit='LENGTH')
+    wall_length = FloatProperty(name="Wall Length",default=unit.inch(120),unit='LENGTH')
+    wall_height = FloatProperty(name="Wall Height",default=unit.inch(108),unit='LENGTH')
     
     rotation = FloatProperty(name="Rotation")
     group_wall = None
@@ -88,14 +88,14 @@ class OPS_add_wall(Operator):
      
     def __del__(self):
         if self.delete_wall: # Only Delete Wall if user didn't click OK
-            fd.delete_object_and_children(self.group_wall.obj_bp)
+            utils.delete_object_and_children(self.group_wall.obj_bp)
             
     def invoke(self,context,event):
         wm = context.window_manager
         if context.active_object:
-            obj_wall_bp = fd.get_wall_bp(context.active_object)
+            obj_wall_bp = utils.get_wall_bp(context.active_object)
             if obj_wall_bp:
-                self.selected_wall = fd.Wall(obj_wall_bp)
+                self.selected_wall = fd_types.Wall(obj_wall_bp)
                 self.rotation = math.degrees(obj_wall_bp.rotation_euler.z)
             else:
                 self.direction = 'STRAIGHT'
@@ -106,10 +106,10 @@ class OPS_add_wall(Operator):
         
         self.create_wall(context)
         self.update_wall(context)
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
          
     def create_wall(self,context):
-        self.group_wall = fd.Wall()
+        self.group_wall = fd_types.Wall()
         self.group_wall.create_wall()
         obj_mesh = self.group_wall.build_wall_mesh()
         self.group_wall.obj_bp.location = (0,0,0)
@@ -125,7 +125,7 @@ class OPS_add_wall(Operator):
             wm.mv.wall_rotation = self.rotation + -90
         self.group_wall.obj_bp.rotation_euler.z = math.radians(wm.mv.wall_rotation)
         self.group_wall.obj_x.location.x = self.wall_length
-        self.group_wall.obj_y.location.y = fd.inches(1)
+        self.group_wall.obj_y.location.y = unit.inch(1)
         self.group_wall.obj_z.location.z = self.wall_height
 
         if self.found_wall(context) == False or self.add_to_selected == False:
@@ -179,7 +179,7 @@ class OPS_add_wall(Operator):
             self.group_wall.obj_bp.location = context.scene.cursor_location
         else:
             if self.selected_wall:
-                fd.connect_objects_location(self.selected_wall.obj_x,self.group_wall.obj_bp)
+                utils.connect_objects_location(self.selected_wall.obj_x,self.group_wall.obj_bp)
             
         if self.zoom_all:
             bpy.ops.view3d.view_all(center=True)
@@ -205,9 +205,9 @@ class OPS_draw_walls(Operator):
     header_text = "(Esc, Right Click) = Cancel Command  :  (Left Click) = Place Wall  :  (Ctrl) = Disconnect/Move Wall"
     
     def cancel_drop(self,context,event):
-        fd.delete_object_and_children(self.wall.obj_bp)
+        utils.delete_object_and_children(self.wall.obj_bp)
         context.window.cursor_set('DEFAULT')
-        fd.delete_obj_list([self.drawing_plane])
+        utils.delete_obj_list([self.drawing_plane])
         return {'FINISHED'}
         
     def __del__(self):
@@ -218,7 +218,7 @@ class OPS_draw_walls(Operator):
         if self.previous_wall:
             con = self.previous_wall.obj_x
             
-        self.wall = fd.Wall()
+        self.wall = fd_types.Wall()
         self.wall.create_wall()
         obj_mesh = self.wall.build_wall_mesh()
         self.wall.obj_bp.location = self.starting_point
@@ -227,13 +227,13 @@ class OPS_draw_walls(Operator):
         self.wall.obj_y.location.y = bpy.context.scene.mv.default_wall_depth
         self.wall.obj_bp.cabinetlib.item_number = self.get_wall_count()
         if con:
-            fd.connect_objects_location(con,self.wall.obj_bp)
+            utils.connect_objects_location(con,self.wall.obj_bp)
             
         width = self.wall.get_var("dim_x","width")
         height = self.wall.get_var("dim_z","height")
         depth = self.wall.get_var("dim_y","depth")
              
-        dim = fd.Dimension()
+        dim = fd_types.Dimension()
         dim.parent(self.wall.obj_bp)
         dim.start_y('depth+INCH(5)',[depth])
         dim.start_z('height+INCH(5)',[height])
@@ -254,9 +254,9 @@ class OPS_draw_walls(Operator):
             else:
                 value = eval(self.typed_value)
                 if bpy.context.scene.unit_settings.system == 'METRIC':
-                    self.wall.obj_x.location.x = fd.millimeters(float(value))
+                    self.wall.obj_x.location.x = unit.millimeter(float(value))
                 else:
-                    self.wall.obj_x.location.x = fd.inches(float(value))
+                    self.wall.obj_x.location.x = unit.inch(float(value))
             
         if math.fabs(y) > math.fabs(x):
             if y > 0:
@@ -268,9 +268,9 @@ class OPS_draw_walls(Operator):
             else:
                 value = eval(self.typed_value)
                 if bpy.context.scene.unit_settings.system == 'METRIC':
-                    self.wall.obj_x.location.x = fd.millimeters(float(value))
+                    self.wall.obj_x.location.x = unit.millimeter(float(value))
                 else:
-                    self.wall.obj_x.location.x = fd.inches(float(value))
+                    self.wall.obj_x.location.x = unit.inch(float(value))
                 
     def extend_wall(self):
         if self.previous_wall:
@@ -339,23 +339,13 @@ class OPS_draw_walls(Operator):
                 
                 mesh.update()
                 
-                fd.create_vertex_group_for_hooks(obj,[2,3,6,7,8,9,10,11],'X Dimension')
-                fd.create_vertex_group_for_hooks(obj,[1,2,8,11,6,5],'Y Dimension')
-                fd.create_vertex_group_for_hooks(obj,[4,5,6,7,10,11],'Z Dimension')
-                fd.hook_vertex_group_to_object(obj,'X Dimension',self.previous_wall.obj_x)
-                fd.hook_vertex_group_to_object(obj,'Y Dimension',self.previous_wall.obj_y)
-                fd.hook_vertex_group_to_object(obj,'Z Dimension',self.previous_wall.obj_z)
+                utils.create_vertex_group_for_hooks(obj,[2,3,6,7,8,9,10,11],'X Dimension')
+                utils.create_vertex_group_for_hooks(obj,[1,2,8,11,6,5],'Y Dimension')
+                utils.create_vertex_group_for_hooks(obj,[4,5,6,7,10,11],'Z Dimension')
+                utils.hook_vertex_group_to_object(obj,'X Dimension',self.previous_wall.obj_x)
+                utils.hook_vertex_group_to_object(obj,'Y Dimension',self.previous_wall.obj_y)
+                utils.hook_vertex_group_to_object(obj,'Z Dimension',self.previous_wall.obj_z)
                 
-                #We shouldn't need this anymore now that we rebuild the mesh.
-                #THIS IS NEEDED FOR A RETURN WALL TO BE CREATED FOR 2D ELEVATION DRAWINGS
-#                 return_obj = fd.create_cube_mesh('Return Wall',(fd.inches(.1),fd.inches(.2),size[2]))
-#                 return_obj.parent = self.previous_wall.obj_bp
-#                 return_obj.mv.type = 'CAGE'
-#                 return_obj.location.x = self.previous_wall.obj_x.location.x
-#                 fd.create_vertex_group_for_hooks(return_obj,[0,1,2,3,4,5,6,7],'X Dimension')
-#                 fd.create_vertex_group_for_hooks(return_obj,[4,5,6,7],'Z Dimension')
-#                 fd.hook_vertex_group_to_object(return_obj,'X Dimension',self.previous_wall.obj_x)
-#                 fd.hook_vertex_group_to_object(return_obj,'Z Dimension',self.previous_wall.obj_z)
                 self.previous_wall.obj_x.hide = True
                 self.previous_wall.obj_y.hide = True
                 self.previous_wall.obj_z.hide = True
@@ -430,12 +420,12 @@ class OPS_draw_walls(Operator):
             
     def modal(self, context, event):
         self.set_type_value(event)
-        wall_length_text = str(fd.unit(round(self.wall.obj_x.location.x,4)))
+        wall_length_text = str(unit.meter_to_active_unit(round(self.wall.obj_x.location.x,4)))
         wall_length_unit = '"' if context.scene.unit_settings.system == 'IMPERIAL' else 'mm'
         context.area.header_text_set(text=self.header_text + '   (Current Wall Length = ' + wall_length_text + wall_length_unit + ')')
         context.window.cursor_set('PAINT_BRUSH')
         context.area.tag_redraw()
-        selected_point, selected_obj = fd.get_selection_point(context,event,objects=[self.drawing_plane]) #Pass in Drawing Plane
+        selected_point, selected_obj = utils.get_selection_point(context,event,objects=[self.drawing_plane]) #Pass in Drawing Plane
         bpy.ops.object.select_all(action='DESELECT')
         if selected_obj:
             if event.ctrl:
@@ -443,7 +433,6 @@ class OPS_draw_walls(Operator):
                 self.wall.obj_bp.location.x = selected_point[0]
                 self.wall.obj_bp.location.y = selected_point[1]
                 self.wall.obj_bp.location.z = 0
-                self.wall.obj_x.location.x = 0
                 self.starting_point = (self.wall.obj_bp.location.x, self.wall.obj_bp.location.y, 0)
             else:
                 selected_obj.select = True
@@ -461,9 +450,9 @@ class OPS_draw_walls(Operator):
         return {'RUNNING_MODAL'}
         
     def execute(self,context):
-        wall_bp = fd.get_wall_bp(context.active_object)
+        wall_bp = utils.get_wall_bp(context.active_object)
         if wall_bp:
-            self.previous_wall = fd.Wall(wall_bp)
+            self.previous_wall = fd_types.Wall(wall_bp)
             self.starting_point = (self.previous_wall.obj_x.matrix_world[0][3], self.previous_wall.obj_x.matrix_world[1][3], self.previous_wall.obj_x.matrix_world[2][3])
             
         self.create_wall()
@@ -484,14 +473,14 @@ class OPS_add_assembly(Operator):
     bl_options = {'UNDO'}
     
     assembly_size = FloatVectorProperty(name="Group Size",
-                                        default=(fd.inches(24),fd.inches(24),fd.inches(24)))
+                                        default=(unit.inch(24),unit.inch(24),unit.inch(24)))
     
     @classmethod
     def poll(cls, context):
         return True
     
     def execute(self, context):
-        group = fd.Assembly()
+        group = fd_types.Assembly()
         group.create_assembly()
         group.obj_x.location.x = self.assembly_size[0]
         group.obj_y.location.y = self.assembly_size[1]
@@ -515,20 +504,20 @@ class OPS_add_mesh_to_assembly(Operator):
     @classmethod
     def poll(cls, context):
         if context.active_object:
-            obj_bp = fd.get_assembly_bp(context.active_object)
+            obj_bp = utils.get_assembly_bp(context.active_object)
             if obj_bp:
                 return True
         return False
 
     def execute(self, context):
-        obj_bp = fd.get_assembly_bp(context.active_object)
-        assembly = fd.Assembly(obj_bp)
+        obj_bp = utils.get_assembly_bp(context.active_object)
+        assembly = fd_types.Assembly(obj_bp)
         obj_bp = assembly.obj_bp
         dim_x = assembly.obj_x.location.x
         dim_y = assembly.obj_y.location.y
         dim_z = assembly.obj_z.location.z
 
-        obj_mesh = fd.create_cube_mesh(self.mesh_name,(dim_x,dim_y,dim_z))
+        obj_mesh = utils.create_cube_mesh(self.mesh_name,(dim_x,dim_y,dim_z))
                 
         if obj_mesh:
             obj_mesh.mv.name_object = self.mesh_name
@@ -546,7 +535,7 @@ class OPS_add_mesh_to_assembly(Operator):
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
 
     def draw(self, context):
         layout = self.layout
@@ -568,7 +557,7 @@ class OPS_add_empty_to_assembly(Operator):
         return True
 
     def execute(self, context):
-        obj_bp = fd.get_assembly_bp(context.active_object)
+        obj_bp = utils.get_assembly_bp(context.active_object)
 
         #NOTE: Since Mesh hooks are maintained by object name
         #      You cannot have two emptyhooks with the same name.       
@@ -588,7 +577,7 @@ class OPS_add_empty_to_assembly(Operator):
         obj_empty = context.active_object
 
         if obj_empty:
-            obj_empty.empty_draw_size = fd.inches(1)
+            obj_empty.empty_draw_size = unit.inch(1)
             obj_empty.mv.name_object = self.empty_name
             obj_empty.mv.use_as_mesh_hook = self.use_as_mesh_hook
             if obj_bp:
@@ -601,7 +590,7 @@ class OPS_add_empty_to_assembly(Operator):
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
 
     def draw(self, context):
         layout = self.layout
@@ -624,8 +613,8 @@ class OPS_add_curve_to_assembly(Operator):
         return True
 
     def execute(self, context):
-        obj_bp = fd.get_assembly_bp(context.active_object)
-        group = fd.Assembly(obj_bp)
+        obj_bp = utils.get_assembly_bp(context.active_object)
+        group = fd_types.Assembly(obj_bp)
         dim_x = group.obj_x.location.x
 
         bpy.ops.curve.primitive_bezier_curve_add(enter_editmode=False)
@@ -649,7 +638,7 @@ class OPS_add_curve_to_assembly(Operator):
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
 
     def draw(self, context):
         layout = self.layout
@@ -670,7 +659,7 @@ class OPS_add_text_to_assembly(Operator):
         return True
 
     def execute(self, context):
-        obj_bp = fd.get_assembly_bp(context.active_object)
+        obj_bp = utils.get_assembly_bp(context.active_object)
 
         bpy.ops.object.text_add()
         obj_text = context.active_object
@@ -687,7 +676,7 @@ class OPS_add_text_to_assembly(Operator):
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
 
     def draw(self, context):
         layout = self.layout
@@ -703,16 +692,16 @@ class OPS_make_group_from_selected_assembly(Operator):
     
     @classmethod
     def poll(cls, context):
-        obj_bp = fd.get_parent_assembly_bp(context.object)
+        obj_bp = utils.get_parent_assembly_bp(context.object)
         if obj_bp:
             return True
         else:
             return False
 
     def execute(self, context):
-        obj_bp = fd.get_parent_assembly_bp(context.object)
+        obj_bp = utils.get_parent_assembly_bp(context.object)
         if obj_bp:
-            list_obj = fd.get_child_objects(obj_bp)
+            list_obj = utils.get_child_objects(obj_bp)
             for obj in list_obj:
                 obj.hide = False
                 obj.hide_select = False
@@ -723,11 +712,11 @@ class OPS_make_group_from_selected_assembly(Operator):
         return {'FINISHED'}
 
     def invoke(self,context,event):
-        obj_bp = fd.get_parent_assembly_bp(context.object)
+        obj_bp = utils.get_parent_assembly_bp(context.object)
         if obj_bp:
             self.assembly_name = obj_bp.mv.name_object
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
 
     def draw(self, context):
         layout = self.layout
@@ -741,7 +730,7 @@ class OPS_select_selected_assembly_base_point(Operator):
     @classmethod
     def poll(cls, context):
         obj = context.active_object
-        obj_bp = fd.get_parent_assembly_bp(obj)
+        obj_bp = utils.get_parent_assembly_bp(obj)
         if obj_bp:
             return True
         else:
@@ -749,7 +738,7 @@ class OPS_select_selected_assembly_base_point(Operator):
 
     def execute(self, context):
         obj = context.active_object
-        obj_bp = fd.get_parent_assembly_bp(obj)
+        obj_bp = utils.get_parent_assembly_bp(obj)
         if obj_bp:
             bpy.ops.object.select_all(action='DESELECT')
             obj_bp.hide = False
@@ -799,7 +788,7 @@ class OPS_load_active_assembly_objects(Operator):
         for current_obj in scene.children_objects:
             scene.children_objects.remove(0)
         
-        group = fd.Assembly(obj)
+        group = fd_types.Assembly(obj)
         group.set_object_names()
         
         scene.active_object_name = obj.name
@@ -825,7 +814,7 @@ class OPS_rename_assembly(Operator):
     def execute(self, context):
         obj_bp = bpy.data.objects[self.object_name]
         obj_bp.mv.name_object = self.new_name
-        group = fd.Assembly(obj_bp)
+        group = fd_types.Assembly(obj_bp)
         group.set_object_names()
         return {'FINISHED'}
 
@@ -833,7 +822,7 @@ class OPS_rename_assembly(Operator):
         wm = context.window_manager
         obj_bp = bpy.data.objects[self.object_name]
         self.new_name = obj_bp.mv.name_object
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
 
     def draw(self, context):
         layout = self.layout
@@ -849,7 +838,7 @@ class OPS_delete_selected_assembly(Operator):
     @classmethod
     def poll(cls, context):
         obj = context.active_object
-        obj_bp = fd.get_parent_assembly_bp(obj)
+        obj_bp = utils.get_parent_assembly_bp(obj)
         if obj_bp:
             return True
         else:
@@ -860,7 +849,7 @@ class OPS_delete_selected_assembly(Operator):
             return bpy.data.objects[self.object_name]
         else:
             obj = context.object
-            return fd.get_parent_assembly_bp(obj)
+            return utils.get_parent_assembly_bp(obj)
     
     def get_boolean_objects(self,obj_bp,bool_list):
         for child in obj_bp.children:
@@ -877,8 +866,8 @@ class OPS_delete_selected_assembly(Operator):
         for bool_obj in bool_list:
             self.remove_referenced_modifiers(context, bool_obj)
         obj_list = []
-        obj_list = fd.get_child_objects(obj_bp,obj_list)
-        fd.delete_obj_list(obj_list)
+        obj_list = utils.get_child_objects(obj_bp,obj_list)
+        utils.delete_obj_list(obj_list)
         return {'FINISHED'}
 
     def remove_referenced_modifiers(self,context,obj_ref):
@@ -893,7 +882,7 @@ class OPS_delete_selected_assembly(Operator):
                             obj.modifiers.remove(mod)
 
     def make_opening_available(self,obj_bp):
-        insert = fd.Assembly(obj_bp)
+        insert = fd_types.Assembly(obj_bp)
         if obj_bp.parent:
             for child in obj_bp.parent.children:
                 if child.cabinetlib.type_group == 'OPENING' and insert.obj_bp.location == child.location:
@@ -910,7 +899,7 @@ class OPS_delete_selected_assembly(Operator):
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(300))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(300))
 
     def draw(self, context):
         obj_bp = self.get_bp(context)
@@ -925,7 +914,7 @@ class OPS_copy_selected_assembly(Operator):
     @classmethod
     def poll(cls, context):
         obj = context.active_object
-        obj_bp = fd.get_parent_assembly_bp(obj)
+        obj_bp = utils.get_parent_assembly_bp(obj)
         if obj_bp:
             return True
         else:
@@ -934,10 +923,10 @@ class OPS_copy_selected_assembly(Operator):
     def execute(self, context):
         obj_bools = []
         obj = context.object
-        obj_bp = fd.get_parent_assembly_bp(obj)
+        obj_bp = utils.get_parent_assembly_bp(obj)
         if obj_bp:
             obj_list = []
-            obj_list = fd.get_child_objects(obj_bp,obj_list)
+            obj_list = utils.get_child_objects(obj_bp,obj_list)
             bpy.ops.object.select_all(action='DESELECT')
             for obj in obj_list:
                 obj.hide = False
@@ -962,7 +951,7 @@ class OPS_copy_selected_assembly(Operator):
             #ASSIGN BOOLEAN MODIFIERS TO WALL
             if obj_bp.parent:
                 if obj_bp.parent.mv.type == 'BPWALL':
-                    wall = fd.Wall(obj_bp.parent)
+                    wall = fd_types.Wall(obj_bp.parent)
                     mesh = wall.get_wall_mesh()
                     for obj_bool in obj_bools:
                         mod = mesh.modifiers.new(obj_bool.name,'BOOLEAN')
@@ -987,12 +976,12 @@ class OPS_connect_mesh_to_hooks_in_assembly(Operator):
     
     def execute(self, context):
         obj = bpy.data.objects[self.object_name]
-        group_bp = fd.get_assembly_bp(obj)
-        wall_bp = fd.get_wall_bp(obj)
+        group_bp = utils.get_assembly_bp(obj)
+        wall_bp = utils.get_wall_bp(obj)
         if group_bp:
-            group = fd.Assembly(group_bp)
+            group = fd_types.Assembly(group_bp)
         elif wall_bp:
-            group = fd.Wall(wall_bp)
+            group = fd_types.Wall(wall_bp)
         hooklist = []
         for child in group.obj_bp.children:
             if child.type == 'EMPTY'  and child.mv.use_as_mesh_hook:
@@ -1001,18 +990,18 @@ class OPS_connect_mesh_to_hooks_in_assembly(Operator):
         if obj.mode == 'EDIT':
             bpy.ops.object.editmode_toggle()
         
-        fd.apply_hook_modifiers(obj)
+        utils.apply_hook_modifiers(obj)
         for vgroup in obj.vertex_groups:
             if vgroup.name == 'X Dimension':
-                fd.hook_vertex_group_to_object(obj,'X Dimension',group.obj_x)
+                utils.hook_vertex_group_to_object(obj,'X Dimension',group.obj_x)
             elif vgroup.name == 'Y Dimension':
-                fd.hook_vertex_group_to_object(obj,'Y Dimension',group.obj_y)
+                utils.hook_vertex_group_to_object(obj,'Y Dimension',group.obj_y)
             elif vgroup.name == 'Z Dimension':
-                fd.hook_vertex_group_to_object(obj,'Z Dimension',group.obj_z)
+                utils.hook_vertex_group_to_object(obj,'Z Dimension',group.obj_z)
             else:
                 for hook in hooklist:
                     if hook.mv.name_object == vgroup.name:
-                        fd.hook_vertex_group_to_object(obj,vgroup.name,hook)
+                        utils.hook_vertex_group_to_object(obj,vgroup.name,hook)
                 
         obj.lock_location = (True,True,True)
                 
@@ -1052,7 +1041,7 @@ class OPS_select_product(Operator):
     def execute(self, context):
         obj = bpy.data.objects[self.object_name]
         obj_list = []
-        obj_list = fd.get_child_objects(obj,obj_list)
+        obj_list = utils.get_child_objects(obj,obj_list)
         bpy.ops.object.select_all(action='DESELECT')
         for obj in obj_list:
             obj.hide = False
@@ -1065,7 +1054,7 @@ class OPS_display_selected_wall(Operator):
     
     def execute(self, context):
         obj = context.active_object
-        wall_bp = fd.get_wall_bp(obj)
+        wall_bp = utils.get_wall_bp(obj)
         wall_bps = []
         for obj in context.visible_objects:
             if obj.mv.type == 'BPWALL':
@@ -1074,12 +1063,12 @@ class OPS_display_selected_wall(Operator):
         for wall in wall_bps:
             if wall != wall_bp:
                 children = []
-                children = fd.get_child_objects(wall)
+                children = utils.get_child_objects(wall)
                 
                 for child in children:
                     child.hide = True
             else:
-                wall_assembly = fd.Assembly(wall)
+                wall_assembly = fd_types.Assembly(wall)
                 wall_assembly.obj_x.select = True
                 wall_assembly.obj_y.select = True
                 wall_assembly.obj_z.select = True
@@ -1100,9 +1089,9 @@ class OPS_hide_wall(Operator):
         else:
             obj = context.active_object
             
-        wall_bp = fd.get_wall_bp(obj)
+        wall_bp = utils.get_wall_bp(obj)
         
-        children = fd.get_child_objects(wall_bp)
+        children = utils.get_child_objects(wall_bp)
         
         for child in children:
             child.hide = True
@@ -1123,9 +1112,9 @@ class OPS_show_wall(Operator):
         else:
             obj = context.active_object
             
-        wall_bp = fd.get_wall_bp(obj)
+        wall_bp = utils.get_wall_bp(obj)
         
-        children = fd.get_child_objects(wall_bp)
+        children = utils.get_child_objects(wall_bp)
         
         for child in children:
             if child.type != 'EMPTY':
@@ -1148,7 +1137,7 @@ class OPS_display_all_walls(Operator):
                 wall_bps.append(obj)
                 
         for wall in wall_bps:
-            children = fd.get_child_objects(wall)
+            children = utils.get_child_objects(wall)
             
             for child in children:
                 if child.type == 'MESH' and not child.mv.type == 'CAGE':

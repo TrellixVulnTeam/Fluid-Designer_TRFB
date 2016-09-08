@@ -1,24 +1,24 @@
 # This is an example template for defining a custom python function
 import bpy
-import fd
+from mv import unit
 from bpy.app.handlers import persistent
 
 def MV_CLOSET_PANEL_PRICE(depth):
-    if depth <= fd.inches(12):
+    if depth <= unit.inch(12):
         return 195
-    elif depth <= fd.inches(14):
+    elif depth <= unit.inch(14):
         return 215
-    elif depth <= fd.inches(16):
+    elif depth <= unit.inch(16):
         return 235
-    elif depth <= fd.inches(20):
+    elif depth <= unit.inch(20):
         return 275
-    elif depth <= fd.inches(24):
+    elif depth <= unit.inch(24):
         return 315
-    elif depth <= fd.inches(32):
+    elif depth <= unit.inch(32):
         return 380
-    elif depth <= fd.inches(36):
+    elif depth <= unit.inch(36):
         return 470
-    elif depth <= fd.inches(48):
+    elif depth <= unit.inch(48):
         return 510
     else:
         return 1000000

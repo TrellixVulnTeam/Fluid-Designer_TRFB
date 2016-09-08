@@ -30,7 +30,7 @@ from bpy.props import (StringProperty,
                        EnumProperty,
                        CollectionProperty)
 import os
-import fd
+from mv import utils, fd_types, unit
 import inspect
 import subprocess
 import sys
@@ -93,42 +93,7 @@ class OPS_drag_and_drop(Operator):
         if library_tabs == 'MATERIAL':
             bpy.ops.fd_general.drop_material('INVOKE_DEFAULT',filepath = self.filepath)
         if library_tabs == 'WORLD':
-            bpy.ops.fd_general.drop_world('INVOKE_DEFAULT',filepath = self.filepath,world_name = filename)
-        if library_tabs == 'SCENE':
-            bpy.ops.fd_general.drop_scene('INVOKE_DEFAULT',filepath = self.filepath,scene_name = filename)            
-        return {'FINISHED'}
-
-class OPS_drop_scene(Operator):
-    bl_idname = "fd_general.drop_scene"
-    bl_label = "Drop World"
-    bl_options = {'UNDO'}
-  
-    #READONLY
-    filepath = StringProperty(name="Filepath")
-    scene_name = StringProperty(name="World Name")
-    
-    def invoke(self, context, event):
-        path, ext = os.path.splitext(self.filepath)
-        if ext == '.blend':
-            bpy.ops.fd_general.open_blend_file('INVOKE_DEFAULT',filepath=self.filepath)
-            return {'FINISHED'}
-        
-        files = os.listdir(os.path.dirname(path))
-        
-        for file in files:
-            blendname, ext = os.path.splitext(file)
-            if ext == ".blend":
-                blendfile_path = os.path.join(os.path.dirname(path),file)
-                with bpy.data.libraries.load(blendfile_path, False, False) as (data_from, data_to):
-                    for scene in data_from.scenes:
-                        if scene == self.scene_name:
-                            if scene not in bpy.data.scenes:
-                                data_to.scenes = [scene]
-                                break
-                         
-                for scene in data_to.scenes:
-                    context.screen.scene = scene
-                    
+            bpy.ops.fd_general.drop_world('INVOKE_DEFAULT',filepath = self.filepath,world_name = filename)           
         return {'FINISHED'}
 
 class OPS_drop_product(Operator):
@@ -155,7 +120,7 @@ class OPS_drop_product(Operator):
 
     def assign_boolean(self,obj):
         if obj:
-            objs = fd.get_child_objects(self.product.obj_bp)
+            objs = utils.get_child_objects(self.product.obj_bp)
             for obj_bool in objs:
                 if obj_bool.mv.use_as_bool_obj:
                     mod = obj.modifiers.new(obj_bool.name,'BOOLEAN')
@@ -165,20 +130,27 @@ class OPS_drop_product(Operator):
     def __del__(self):
         bpy.context.area.header_text_set()
 
-    def get_product(self):
+    def get_product(self,context):
         import time
         start_time = time.time()
         bpy.ops.object.select_all(action='DESELECT')
-        obj_bp = fd.get_product_group(self.library_name,self.category_name,self.product_name)
-        if obj_bp:
-            self.product = fd.Assembly(obj_bp)
+        lib = context.window_manager.cabinetlib.lib_products[self.library_name]
+        blend_path = os.path.join(lib.lib_path,self.category_name,self.product_name + ".blend")
+        obj_bp = None
+        if os.path.exists(blend_path):
+            obj_bp = utils.get_group(blend_path)
+            self.product = fd_types.Assembly(obj_bp)
         else:
-            self.product = fd.get_product_class(self.library_name,self.category_name,self.product_name)
-            self.product.draw()
+            self.product = utils.get_product_class(context,self.library_name,self.category_name,self.product_name)
         if self.product:
-            if self.product.obj_bp.mv.update_id != "":
-                eval('bpy.ops.' + self.product.obj_bp.mv.update_id + '("INVOKE_DEFAULT",object_name=self.product.obj_bp.name)')
-            fd.init_objects(self.product.obj_bp)
+            if obj_bp:
+                if self.product.obj_bp.mv.update_id != "":
+                    eval('bpy.ops.' + self.product.obj_bp.mv.update_id + '("INVOKE_DEFAULT",object_name=self.product.obj_bp.name)')
+            else:
+                self.product.draw()
+                self.product.update()
+
+            utils.init_objects(self.product.obj_bp)
             self.default_z_loc = self.product.obj_bp.location.z
             self.default_height = self.product.obj_z.location.z
             self.default_depth = self.product.obj_y.location.y
@@ -187,8 +159,8 @@ class OPS_drop_product(Operator):
 
     def invoke(self,context,event):
         context.window.cursor_set('WAIT')
-        selected_point, selected_obj = fd.get_selection_point(context,event)
-        self.get_product()
+        selected_point, selected_obj = utils.get_selection_point(context,event)
+        self.get_product(context)
         if self.product is None:
             bpy.ops.fd_general.error('INVOKE_DEFAULT',message="Could Not Find Product Class: " + "\\" + self.library_name + "\\" + self.category_name + "\\" + self.product_name)
             return {'CANCELLED'}
@@ -199,7 +171,7 @@ class OPS_drop_product(Operator):
 
     def cancel_drop(self,context,event):
         if self.product:
-            fd.delete_object_and_children(self.product.obj_bp)
+            utils.delete_object_and_children(self.product.obj_bp)
         bpy.context.window.cursor_set('DEFAULT')
 #         bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
         return {'FINISHED'}
@@ -234,8 +206,8 @@ class OPS_drop_product(Operator):
                                        sel_product.obj_x.matrix_world[1][3],
                                        sel_product.obj_x.matrix_world[2][3])
             
-            dist_to_bp = fd.calc_distance(cursor_location,sel_product_world_loc)
-            dist_to_x = fd.calc_distance(cursor_location,sel_product_x_world_loc)
+            dist_to_bp = utils.calc_distance(cursor_location,sel_product_world_loc)
+            dist_to_x = utils.calc_distance(cursor_location,sel_product_x_world_loc)
             if dist_to_bp < dist_to_x:
                 return 'LEFT'
             else:
@@ -244,14 +216,14 @@ class OPS_drop_product(Operator):
             return 'CENTER'
 
     def product_drop(self,context,event):
-        selected_point, selected_obj = fd.get_selection_point(context,event)
+        selected_point, selected_obj = utils.get_selection_point(context,event)
         self.mouse_loc = (event.mouse_region_x,event.mouse_region_y)
-        obj_wall_bp = fd.get_wall_bp(selected_obj)
-        wall = fd.Wall(obj_wall_bp)
-        obj_product_bp = fd.get_bp(selected_obj,'PRODUCT')
+        obj_wall_bp = utils.get_wall_bp(selected_obj)
+        wall = fd_types.Wall(obj_wall_bp)
+        obj_product_bp = utils.get_bp(selected_obj,'PRODUCT')
         sel_product = None
         if obj_product_bp:
-            sel_product = fd.Assembly(obj_product_bp)
+            sel_product = fd_types.Assembly(obj_product_bp)
             placement = self.get_placement(sel_product, selected_point)
             rot = sel_product.obj_bp.rotation_euler.z
             if wall.obj_bp:
@@ -285,10 +257,10 @@ class OPS_drop_product(Operator):
             self.product.obj_bp.rotation_euler = wall.obj_bp.rotation_euler
             self.product.obj_bp.location.x = selected_point[0]
             self.product.obj_bp.location.y = selected_point[1]
-            obj_bp = fd.get_assembly_bp(selected_obj)
+            obj_bp = utils.get_assembly_bp(selected_obj)
             rot = wall.obj_bp.rotation_euler.z
             if obj_bp:
-                sel_assembly = fd.Assembly(obj_bp)
+                sel_assembly = fd_types.Assembly(obj_bp)
                 if sel_assembly:
                     placement = self.get_placement(sel_assembly, selected_point)
                     if placement == 'LEFT':
@@ -311,7 +283,7 @@ class OPS_drop_product(Operator):
             
         if event.type == 'LEFTMOUSE':
             if sel_product and sel_product.obj_bp.cabinetlib.placement_type == 'Corner':
-                next_wall = fd.get_next_wall(sel_product,placement)
+                next_wall = sel_product.get_next_wall(placement)
                 if next_wall:
                     obj_wall_bp = next_wall.obj_bp
                 else:
@@ -321,7 +293,7 @@ class OPS_drop_product(Operator):
                         obj_wall_bp = None
 
             if obj_wall_bp:
-                x_loc = fd.calc_distance((self.product.obj_bp.location.x,self.product.obj_bp.location.y,0),
+                x_loc = utils.calc_distance((self.product.obj_bp.location.x,self.product.obj_bp.location.y,0),
                                         (obj_wall_bp.matrix_local[0][3],obj_wall_bp.matrix_local[1][3],0))
                 self.product.obj_bp.location = (0,0,self.product.obj_bp.location.z)
                 self.product.obj_bp.rotation_euler = (0,0,0)
@@ -337,7 +309,7 @@ class OPS_drop_product(Operator):
 
         if event.type == 'RIGHTMOUSE':
             if obj_wall_bp:
-                x_loc = fd.calc_distance((self.product.obj_bp.location.x,self.product.obj_bp.location.y,0),
+                x_loc = utils.calc_distance((self.product.obj_bp.location.x,self.product.obj_bp.location.y,0),
                                         (obj_wall_bp.matrix_local[0][3],obj_wall_bp.matrix_local[1][3],0))
                 self.product.obj_bp.location = (0,0,self.product.obj_bp.location.z)
                 self.product.obj_bp.rotation_euler = (0,0,0)
@@ -370,7 +342,6 @@ class OPS_drop_insert(Operator):
     bl_idname = "fd_general.drop_insert"
     bl_label = "Drop Insert"
     bl_description = "This will add an insert to the scene"
-#     bl_options = {'UNDO'}
 
     product_name = StringProperty(name="Product Name")
     category_name = StringProperty(name="Category Name")
@@ -393,31 +364,37 @@ class OPS_drop_insert(Operator):
     def __del__(self):
         bpy.context.area.header_text_set()
 
-    def get_insert(self):
+    def get_insert(self,context):
         bpy.ops.object.select_all(action='DESELECT')
-        obj_bp = fd.get_insert_group(self.library_name,self.category_name,self.product_name)
-        if obj_bp:
-            self.insert = fd.Assembly(obj_bp)
+        lib = context.window_manager.cabinetlib.lib_inserts[self.library_name]
+        blend_path = os.path.join(lib.lib_path,self.category_name,self.product_name + ".blend")
+        obj_bp = None
+        if os.path.exists(blend_path):
+            obj_bp = utils.get_group(blend_path)
+            self.insert = fd_types.Assembly(obj_bp)
         else:
-            self.insert = fd.get_insert_class(self.library_name,self.category_name,self.product_name)        
-        if self.insert:
-            if obj_bp:
-                pass
+            self.insert = utils.get_insert_class(context,self.library_name,self.category_name,self.product_name)
+
+        if obj_bp:
+            pass
+        #TODO: SET UP UPDATE OPERATOR
 #                 self.insert.update(obj_bp)
-            else:
-                self.insert.draw()
-            self.show_openings()
-            fd.init_objects(self.insert.obj_bp)
-            self.default_z_loc = self.insert.obj_bp.location.z
-            self.default_height = self.insert.obj_z.location.z
-            self.default_depth = self.insert.obj_y.location.y
+        else:
+            self.insert.draw()
+            self.insert.update()
+            
+        self.show_openings()
+        utils.init_objects(self.insert.obj_bp)
+        self.default_z_loc = self.insert.obj_bp.location.z
+        self.default_height = self.insert.obj_z.location.z
+        self.default_depth = self.insert.obj_y.location.y
 
     def invoke(self,context,event):
         context.window.cursor_set('WAIT')
-        self.get_insert()
+        self.get_insert(context)
         if self.insert is None:
             bpy.ops.fd_general.error('INVOKE_DEFAULT',message="Could Not Find Insert Class: " + "\\" + self.library_name + "\\" + self.category_name + "\\" + self.product_name)
-            return {'CANCELLED'}        
+            return {'CANCELLED'}
         context.window.cursor_set('PAINT_BRUSH')
         context.scene.update() # THE SCENE MUST BE UPDATED FOR RAY CAST TO WORK
         context.window_manager.modal_handler_add(self)
@@ -425,7 +402,7 @@ class OPS_drop_insert(Operator):
 
     def cancel_drop(self,context,event):
         if self.insert:
-            fd.delete_object_and_children(self.insert.obj_bp)
+            utils.delete_object_and_children(self.insert.obj_bp)
         bpy.context.window.cursor_set('DEFAULT')
         return {'FINISHED'}
 
@@ -435,9 +412,9 @@ class OPS_drop_insert(Operator):
             opening = None
             if obj.cabinetlib.type_group == 'OPENING':
                 if insert_type in {'INTERIOR','SPLITTER'}:
-                    opening = fd.Assembly(obj) if obj.cabinetlib.interior_open else None
+                    opening = fd_types.Assembly(obj) if obj.cabinetlib.interior_open else None
                 if insert_type == 'EXTERIOR':
-                    opening = fd.Assembly(obj) if obj.cabinetlib.exterior_open else None
+                    opening = fd_types.Assembly(obj) if obj.cabinetlib.exterior_open else None
                 if opening:
                     cage = opening.get_cage()
                     opening.obj_x.hide = True
@@ -449,14 +426,14 @@ class OPS_drop_insert(Operator):
 
     def selected_opening(self,selected_obj):
         if selected_obj:
-            opening = fd.Assembly(selected_obj.parent)
+            opening = fd_types.Assembly(selected_obj.parent)
             self.insert.obj_bp.parent = opening.obj_bp.parent
             self.insert.obj_bp.location = opening.obj_bp.location
             self.insert.obj_bp.rotation_euler = opening.obj_bp.rotation_euler
             self.insert.obj_x.location.x = opening.obj_x.location.x
             self.insert.obj_y.location.y = opening.obj_y.location.y
             self.insert.obj_z.location.z = opening.obj_z.location.z
-            fd.run_calculators(self.insert.obj_bp)
+            utils.run_calculators(self.insert.obj_bp)
             return opening
             
     def place_insert(self,opening):
@@ -468,7 +445,7 @@ class OPS_drop_insert(Operator):
             opening.obj_bp.cabinetlib.interior_open = False
             opening.obj_bp.cabinetlib.exterior_open = False
 
-        fd.copy_assembly_drivers(opening,self.insert)
+        utils.copy_assembly_drivers(opening,self.insert)
         #DONT ASSIGN PROPERTIES ID's SO USERS CAN ACCESS PROPERTIES FOR INSERTS USED IN CLOSET LIBRARY
 #         cabinet_utils.set_property_id(self.insert.obj_bp,opening.obj_bp.mv.property_id)
         for obj in self.objects:
@@ -481,7 +458,7 @@ class OPS_drop_insert(Operator):
             bpy.ops.fd_general.error('INVOKE_DEFAULT',message="There are no openings in this scene.")
             return self.cancel_drop(context,event)
         else:
-            selected_point, selected_obj = fd.get_selection_point(context,event,objects=self.objects)
+            selected_point, selected_obj = utils.get_selection_point(context,event,objects=self.objects)
             bpy.ops.object.select_all(action='DESELECT')
             selected_opening = self.selected_opening(selected_obj)
             if selected_opening:
@@ -491,8 +468,8 @@ class OPS_drop_insert(Operator):
                     self.place_insert(selected_opening)
                     context.scene.objects.active = self.insert.obj_bp
                     # THIS NEEDS TO BE RUN TWICE TO AVOID RECAL ERRORS
-                    fd.run_calculators(self.insert.obj_bp)
-                    fd.run_calculators(self.insert.obj_bp)
+                    utils.run_calculators(self.insert.obj_bp)
+                    utils.run_calculators(self.insert.obj_bp)
 
                     bpy.context.window.cursor_set('DEFAULT')
                     return {'FINISHED'}
@@ -532,12 +509,12 @@ class OPS_drop_material(Operator):
         file, ext = os.path.splitext(filename)
         path2, folder_dir = os.path.split(path)
         print('MAT PATH',path2)
-        if path2 == fd.get_library_dir("materials"):
-            self.material = fd.get_material((folder_dir,),file)
+        if path2 == utils.get_library_dir("materials"):
+            self.material = utils.get_material((folder_dir,),file)
         else:
             path2, folder_dir = os.path.split(path)
             path3, folder_dir2 = os.path.split(path2)
-            self.material = fd.get_material((folder_dir2,folder_dir),file)
+            self.material = utils.get_material((folder_dir2,folder_dir),file)
         
     def cancel_drop(self,context,event):
         context.window.cursor_set('DEFAULT')
@@ -547,7 +524,7 @@ class OPS_drop_material(Operator):
         context.window.cursor_set('PAINT_BRUSH')
         context.area.tag_redraw()
         context.area.header_text_set(text=self.header_text)
-        selected_point, selected_obj = fd.get_selection_point(context,event)
+        selected_point, selected_obj = utils.get_selection_point(context,event)
         bpy.ops.object.select_all(action='DESELECT')
         if selected_obj:
             selected_obj.select = True
@@ -610,7 +587,7 @@ class OPS_drop_assembly(Operator):
 #     bl_options = {'UNDO'}
     
     #READONLY
-    filepath = StringProperty(name="Material Name")
+    filepath = StringProperty(name="FilePath")
     type_insert = StringProperty(name="Type Insert")
     
     item_name = None
@@ -628,16 +605,12 @@ class OPS_drop_assembly(Operator):
         bpy.context.area.header_text_set()
 
     def get_assembly(self,context):
-        path, filename = os.path.split(self.filepath)
-        file, ext = os.path.splitext(filename)
-        path2, folder_dir = os.path.split(path)
-
-        if path2 == fd.get_library_dir("assemblies"):
-            self.assembly = fd.get_assembly((folder_dir,),file)
+        file, ext = os.path.splitext(self.filepath)
+        obj_bp = utils.get_group(file+'.blend')
+        if obj_bp:
+            self.assembly = fd_types.Assembly(obj_bp)
         else:
-            path2, folder_dir = os.path.split(path)
-            path3, folder_dir2 = os.path.split(path2)
-            self.assembly = fd.get_assembly((folder_dir2,folder_dir),file)
+            print("NO BP FOODNDOS")
     
     def invoke(self, context, event):
         self.get_assembly(context)
@@ -649,13 +622,13 @@ class OPS_drop_assembly(Operator):
 
     def cancel_drop(self,context,event):
         if self.assembly:
-            fd.delete_object_and_children(self.assembly.obj_bp)
+            utils.delete_object_and_children(self.assembly.obj_bp)
         bpy.context.window.cursor_set('DEFAULT')
         return {'FINISHED'}
 
     def set_child_properties(self,obj):
         for child in obj.children:
-            fd.assign_materials_from_pointers(child)
+            utils.assign_materials_from_pointers(child)
             if child.mv.use_as_bool_obj:
                 self.machining_objs.append(child)
                 child.hide = True
@@ -667,9 +640,9 @@ class OPS_drop_assembly(Operator):
             self.set_child_properties(child)
 
     def assembly_drop(self,context,event):
-        selected_point, selected_obj = fd.get_selection_point(context,event)
+        selected_point, selected_obj = utils.get_selection_point(context,event)
         bpy.ops.object.select_all(action='DESELECT')
-        obj_wall_bp = fd.get_wall_bp(selected_obj)
+        obj_wall_bp = utils.get_wall_bp(selected_obj)
         if obj_wall_bp:
             self.assembly.obj_bp.rotation_euler = obj_wall_bp.rotation_euler
         self.assembly.obj_bp.location = selected_point
@@ -682,7 +655,7 @@ class OPS_drop_assembly(Operator):
                     mod = selected_obj.modifiers.new('Cutout',type='BOOLEAN')
                     mod.operation = 'DIFFERENCE'
                     mod.object = machining_obj   
-                    fd.delete_obj_list(self.cages)
+                    utils.delete_obj_list(self.cages)
 
             bpy.ops.object.select_all(action='DESELECT')
             self.assembly.delete_cage()
@@ -728,17 +701,9 @@ class OPS_drop_object(Operator):
         bpy.context.area.header_text_set()
     
     def get_object(self,context):
-        path, filename = os.path.split(self.filepath)
-        file, ext = os.path.splitext(filename)
-        path2, folder_dir = os.path.split(path)
-        self.file_name = file
-        if path2 == fd.get_library_dir("objects"):
-            self.obj = fd.get_object((folder_dir,),file)
-        else:
-            path2, folder_dir = os.path.split(path)
-            path3, folder_dir2 = os.path.split(path2)
-            self.obj = fd.get_object((folder_dir2,folder_dir),file)
-    
+        file, ext = os.path.splitext(self.filepath)
+        self.obj = utils.get_object(file+".blend")
+
     def invoke(self, context, event):
         self.get_object(context)
         self.obj.draw_type = 'WIRE'
@@ -750,20 +715,20 @@ class OPS_drop_object(Operator):
     def cancel_drop(self,context,event):
         objs  = []
         objs.append(self.obj)
-        fd.delete_obj_list(objs)
+        utils.delete_obj_list(objs)
         bpy.context.window.cursor_set('DEFAULT')
         return {'FINISHED'}
 
     def object_drop(self,context,event):
-        selected_point, selected_obj = fd.get_selection_point(context,event)
+        selected_point, selected_obj = utils.get_selection_point(context,event)
         bpy.ops.object.select_all(action='DESELECT')
-        obj_product_bp = fd.get_bp(selected_obj,'PRODUCT')
+        obj_product_bp = utils.get_bp(selected_obj,'PRODUCT')
         self.obj.location = selected_point
 
         if event.type == 'LEFTMOUSE' and event.value == 'PRESS':
             self.obj.draw_type = 'TEXTURED'
             bpy.context.window.cursor_set('DEFAULT')
-            fd.assign_materials_from_pointers(self.obj)
+            utils.assign_materials_from_pointers(self.obj)
             context.scene.objects.active = self.obj
             self.obj.select = True
             self.obj.mv.name_object = self.file_name
@@ -774,7 +739,7 @@ class OPS_drop_object(Operator):
                 if selected_obj.parent.mv.type == 'BPWALL':
                     self.obj.draw_type = 'TEXTURED'
                     bpy.context.window.cursor_set('DEFAULT')
-                    fd.assign_materials_from_pointers(self.obj)
+                    utils.assign_materials_from_pointers(self.obj)
                     context.scene.objects.active = self.obj
                     self.obj.select = True
                     self.obj.location = (0,0,0)
@@ -865,8 +830,8 @@ class OPS_place_product(bpy.types.Operator):
         self.product.obj_x.location.x = self.default_width - (self.left_offset + self.right_offset)
     
     def check(self,context):
-        left_x = fd.get_collision_location(self.product.obj_bp,'LEFT')
-        right_x = fd.get_collision_location(self.product.obj_bp,'RIGHT')
+        left_x = self.product.get_collision_location('LEFT')
+        right_x = self.product.get_collision_location('RIGHT')
         offsets = self.left_offset + self.right_offset
         self.set_product_defaults()
         if self.placement_on_wall == 'FILL':
@@ -891,19 +856,19 @@ class OPS_place_product(bpy.types.Operator):
         if self.placement_on_wall == 'FILL_RIGHT':
             self.product.obj_bp.location.x = self.selected_location + self.left_offset
             self.product.obj_x.location.x = ((right_x - self.selected_location) - offsets) / self.quantity
-        fd.run_calculators(self.product.obj_bp)
+        utils.run_calculators(self.product.obj_bp)
         self.update_quantity_cage()
         return True
     
     def copy_product(self,product):
         bpy.ops.object.select_all(action='DESELECT')
-        list_children = fd.get_child_objects(product.obj_bp)
+        list_children = utils.get_child_objects(product.obj_bp)
         for child in list_children:
             child.hide = False
             child.select = True
         bpy.ops.object.duplicate_move()
         obj = bpy.data.objects[bpy.context.object.name]
-        new_product = fd.Assembly(fd.get_bp(obj,'PRODUCT'))
+        new_product = fd_types.Assembly(utils.get_bp(obj,'PRODUCT'))
         return new_product
 
     def update_quantity_cage(self):
@@ -925,7 +890,7 @@ class OPS_place_product(bpy.types.Operator):
     
     def invoke(self, context, event):
         obj = bpy.data.objects[self.object_name]
-        self.product = fd.Assembly(fd.get_bp(obj,'PRODUCT'))
+        self.product = fd_types.Assembly(utils.get_bp(obj,'PRODUCT'))
         self.selected_location = self.product.obj_bp.location.x
         self.default_width = self.product.obj_x.location.x
         self.product_width = self.product.obj_x.location.x
@@ -934,7 +899,7 @@ class OPS_place_product(bpy.types.Operator):
         self.right_offset = 0
         self.quantity = 1
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
     
     def execute(self,context):
         x_placement = self.product.obj_bp.location.x + self.product.obj_x.location.x
@@ -973,7 +938,7 @@ class OPS_place_product(bpy.types.Operator):
                     x_placement += self.product.obj_x.location.x
                 
         for product_bp in products:
-            fd.init_objects(product_bp)
+            utils.init_objects(product_bp)
             
         return {'FINISHED'}
     
@@ -1009,7 +974,7 @@ class OPS_place_product(bpy.types.Operator):
         if self.placement_on_wall in {'LEFT','RIGHT','CENTER'}:
             col.prop(self,"product_width",text="X Dimension")
         else:
-            col.label('X Dimension: ' + str(round(fd.unit(self.product.obj_x.location.x),4)))
+            col.label('X Dimension: ' + str(round(unit.meter_to_active_unit(self.product.obj_x.location.x),4)))
         col.prop(self.product.obj_y,"location",index=1,text="Y Dimension")
         col.prop(self.product.obj_z,"location",index=2,text="Z Dimension")
 
@@ -1028,35 +993,10 @@ class OPS_change_library(Operator):
     def execute(self, context):
         library_tabs = context.scene.mv.ui.library_tabs
         
-        if library_tabs == 'SCENE':
-            path = os.path.join(fd.get_library_dir("scenes"),self.library_name)
-            context.scene.mv.scene_library_name = self.library_name
-            dirs = os.listdir(path)
-            for cat in dirs:
-                target_path = os.path.join(path,cat)
-                if os.path.isdir(target_path):
-                    context.scene.mv.scene_category_name = cat
-                    path = target_path
-                    break
-                else:
-                    context.scene.mv.scene_category_name = ""        
-        
         if library_tabs == 'PRODUCT':
-#             context.scene.mv.product_library_name = self.library_name
-#             lib = context.window_manager.cabinetlib.lib_products[self.library_name]
-#             path = lib.lib_path
-#             dirs = os.listdir(path)
-#             for cat in dirs:
-#                 target_path = os.path.join(path,cat)
-#                 if os.path.isdir(target_path):
-#                     context.scene.mv.product_category_name = cat
-#                     path = target_path
-#                     break
-#                 else:
-#                     context.scene.mv.product_category_name = ""       
-
-            path = os.path.join(fd.get_library_dir("products"),self.library_name)
             context.scene.mv.product_library_name = self.library_name
+            lib = context.window_manager.cabinetlib.lib_products[self.library_name]
+            path = lib.lib_path
             dirs = os.listdir(path)
             for cat in dirs:
                 target_path = os.path.join(path,cat)
@@ -1066,10 +1006,11 @@ class OPS_change_library(Operator):
                     break
                 else:
                     context.scene.mv.product_category_name = ""
-            
+
         elif library_tabs == 'INSERT':
-            path = os.path.join(fd.get_library_dir("inserts"),self.library_name)
             context.scene.mv.insert_library_name = self.library_name
+            lib = context.window_manager.cabinetlib.lib_inserts[self.library_name]
+            path = lib.lib_path
             dirs = os.listdir(path)
             for cat in dirs:
                 target_path = os.path.join(path,cat)
@@ -1081,7 +1022,7 @@ class OPS_change_library(Operator):
                     context.scene.mv.insert_category_name = ""
             
         elif library_tabs == 'ASSEMBLY':
-            path = os.path.join(fd.get_library_dir("assemblies"),self.library_name)
+            path = os.path.join(utils.get_library_dir("assemblies"),self.library_name)
             context.scene.mv.assembly_library_name = self.library_name
             dirs = os.listdir(path)
             for cat in dirs:
@@ -1094,7 +1035,7 @@ class OPS_change_library(Operator):
                     context.scene.mv.assembly_category_name = ""
             
         elif library_tabs == 'OBJECT':
-            path = os.path.join(fd.get_library_dir("objects"),self.library_name)
+            path = os.path.join(utils.get_library_dir("objects"),self.library_name)
             context.scene.mv.object_library_name = self.library_name
             dirs = os.listdir(path)
             for cat in dirs:
@@ -1107,7 +1048,7 @@ class OPS_change_library(Operator):
                     context.scene.mv.object_category_name = ""
                     
         elif library_tabs == 'MATERIAL':
-            path = os.path.join(fd.get_library_dir("materials"),self.library_name)
+            path = os.path.join(utils.get_library_dir("materials"),self.library_name)
             context.scene.mv.material_library_name = self.library_name
             dirs = os.listdir(path)
             for cat in dirs:
@@ -1120,7 +1061,7 @@ class OPS_change_library(Operator):
                     context.scene.mv.material_category_name = ""
             
         elif library_tabs == 'WORLD':
-            path = os.path.join(fd.get_library_dir("worlds"),self.library_name)
+            path = os.path.join(utils.get_library_dir("worlds"),self.library_name)
             context.scene.mv.world_library_name = self.library_name
             dirs = os.listdir(path)
             for cat in dirs:
@@ -1133,7 +1074,7 @@ class OPS_change_library(Operator):
                     context.scene.mv.world_category_name = ""
             
         if os.path.isdir(path):
-            fd.update_file_browser_space(context,path)
+            utils.update_file_browser_space(context,path)
         else:
             print("ERROR")
         return {'FINISHED'}
@@ -1141,7 +1082,7 @@ class OPS_change_library(Operator):
 class OPS_change_category(Operator):
     bl_idname = "fd_general.change_category"
     bl_label = "Change Category"
-
+    
     category_name = StringProperty(name="Category Name")
     
     @classmethod
@@ -1152,34 +1093,34 @@ class OPS_change_category(Operator):
         library_tabs = context.scene.mv.ui.library_tabs
         if library_tabs == 'SCENE':
             library_name = context.scene.mv.scene_library_name
-            path = os.path.join(fd.get_library_dir("scenes"),library_name,self.category_name)
+            path = os.path.join(utils.get_library_dir("scenes"),library_name,self.category_name)
             context.scene.mv.scene_category_name = self.category_name        
         if library_tabs == 'PRODUCT':
-            library_name = context.scene.mv.product_library_name
-            path = os.path.join(fd.get_library_dir("products"),library_name,self.category_name)
+            lib = context.window_manager.cabinetlib.lib_products[context.scene.mv.product_library_name]
+            path = os.path.join(lib.lib_path,self.category_name)         
             context.scene.mv.product_category_name = self.category_name
         elif library_tabs == 'INSERT':
-            library_name = context.scene.mv.insert_library_name
-            path = os.path.join(fd.get_library_dir("inserts"),library_name,self.category_name)
+            lib = context.window_manager.cabinetlib.lib_inserts[context.scene.mv.insert_library_name]
+            path = os.path.join(lib.lib_path,self.category_name)    
             context.scene.mv.insert_category_name = self.category_name
         elif library_tabs == 'ASSEMBLY':
             library_name = context.scene.mv.assembly_library_name
-            path = os.path.join(fd.get_library_dir("assemblies"),library_name,self.category_name)
+            path = os.path.join(utils.get_library_dir("assemblies"),library_name,self.category_name)
             context.scene.mv.assembly_category_name = self.category_name
         elif library_tabs == 'OBJECT':
             library_name = context.scene.mv.object_library_name
-            path = os.path.join(fd.get_library_dir("objects"),library_name,self.category_name)
+            path = os.path.join(utils.get_library_dir("objects"),library_name,self.category_name)
             context.scene.mv.object_category_name = self.category_name
         elif library_tabs == 'MATERIAL':
             library_name = context.scene.mv.material_library_name
-            path = os.path.join(fd.get_library_dir("materials"),library_name,self.category_name)
+            path = os.path.join(utils.get_library_dir("materials"),library_name,self.category_name)
             context.scene.mv.material_category_name = self.category_name
         elif library_tabs == 'WORLD':
             library_name = context.scene.mv.world_library_name
-            path = os.path.join(fd.get_library_dir("worlds"),library_name,self.category_name)
+            path = os.path.join(utils.get_library_dir("worlds"),library_name,self.category_name)
             context.scene.mv.world_category_name = self.category_name
         if os.path.isdir(path):
-            fd.update_file_browser_space(context,path)
+            utils.update_file_browser_space(context,path)
         else:
             print("ERROR")
         return {'FINISHED'}
@@ -1250,14 +1191,14 @@ class OPS_properties(Operator):
                     bpy.ops.fd_object.camera_properties('INVOKE_DEFAULT')
                     return{'FINISHED'}    
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
 
     def draw(self, context):
         layout = self.layout
         obj = context.object
         if obj and obj.parent:
             if obj.parent.mv.type == 'BPWALL' and obj.mv.type != 'BPASSEMBLY':
-                wall = fd.Wall(obj.parent)
+                wall = fd_types.Wall(obj.parent)
                 wall.draw_transform(layout)
                 for obj in wall.obj_bp.children:
                     if obj.type == 'MESH':
@@ -1268,58 +1209,14 @@ class OPS_properties(Operator):
                             row.prop_enum(obj, "draw_type", 'TEXTURED',text="Textured") 
                 return None
         
-        obj_bp = fd.get_parent_assembly_bp(obj)
+        obj_bp = utils.get_parent_assembly_bp(obj)
         if obj_bp:
-            group = fd.Assembly(obj_bp)
+            group = fd_types.Assembly(obj_bp)
             group.draw_transform(layout,show_prompts=True)
         else:
-            fd.draw_object_info(layout,obj)
+            utils.draw_object_info(layout,obj)
             if obj.type == 'LAMP':
-                fd.draw_object_data(layout,obj)
-
-class OPS_Draw_Plan(bpy.types.Operator):
-    bl_idname = "fd_general.draw_plan"
-    bl_label = "Draw Plan View"
-    bl_description = "Creates the plan view for products without a custom drawing instructions"
-    
-    object_name = bpy.props.StringProperty(name="Object Name",default="")
-    
-    def execute(self, context):
-        obj_bp = bpy.data.objects[self.object_name]
-        assembly = fd.Assembly(obj_bp)
-
-        assembly_mesh = fd.create_cube_mesh(assembly.obj_bp.mv.name_object,
-                                            (assembly.obj_x.location.x,
-                                             assembly.obj_y.location.y,
-                                             assembly.obj_z.location.z))
-
-        assembly_mesh.matrix_world = assembly.obj_bp.matrix_world
-#         assembly_mesh.rotation_euler = assembly.obj_bp.rotation_euler
-        assembly_mesh.mv.type = 'CAGE'
-        
-        distance = fd.inches(18) if assembly.obj_bp.location.z > 1 else fd.inches(12)
-        distance += fd.inches(6)
-        
-        dim = fd.Dimension()
-        dim.parent(assembly_mesh)
-        dim.start_y(value = distance)
-        dim.start_z(value = 0)
-        dim.end_x(value = assembly.obj_x.location.x)        
-        
-        bpy.ops.object.text_add()
-        text = context.active_object
-        text.parent = assembly_mesh
-        text.location.x = assembly_mesh.dimensions.x/2
-        text.location.y = -assembly_mesh.dimensions.y + fd.inches(1)
-        text.location.z = math.fabs(assembly_mesh.dimensions.z)
-        text.data.size = .1
-        text.data.body = str(assembly.obj_bp.cabinetlib.item_number)
-        text.data.align = 'CENTER'
-        text.data.font = fd.get_custom_font()
-        
-        #TODO: Draw Fillers, Cabinet Shapes, Cabinet Text, Item Number
-        
-        return {'FINISHED'}
+                utils.draw_object_data(layout,obj)
 
 class OPS_load_library_modules(Operator):
     """ This will load all of the products from the products module.
@@ -1329,108 +1226,74 @@ class OPS_load_library_modules(Operator):
     bl_description = "This will load the available product library modules"
     bl_options = {'UNDO'}
 
-    def get_library(self,libraries,library_name,module_name):
+    def get_library(self,libraries,library_name,module_name,package_name,path):
         if library_name in libraries:
             lib = libraries[library_name]
         else:
             lib = libraries.add()
             lib.name = library_name
             lib.module_name = module_name
+            lib.package_name = package_name
+            lib.lib_path = path
         return lib
-            
-    def load_product_libraries(self,context):
-        from importlib import import_module, reload
+
+    def execute(self, context):
+        from importlib import import_module
         wm = context.window_manager.cabinetlib
-        path, filename = os.path.split(__file__)
-        files = os.listdir(path)
-        
+
         for library in wm.lib_products:
             wm.lib_products.remove(0)
         
-        modules = fd.get_library_modules()
-        
-        mods = []
-        
-        for module in sys.modules:
-            if "LM_" in module:
-                mods.append(module)
-            
-        # You have to manually delete modules in order for python to reload them
-        for mod in mods:
-            del sys.modules[mod]
-        
-        for module in modules:
-            mod1 = import_module(module)
-            mod = reload(mod1)
-            for name, obj in inspect.getmembers(mod):
-                if inspect.isclass(obj) and "PRODUCT_" in name:
-                    product = obj()
-                    lib = self.get_library(wm.lib_products,product.library_name,module)
-                    item = lib.items.add()
-                    item.name = product.assembly_name
-                    item.class_name = name
-                    item.library_name = product.library_name
-                    item.category_name = product.category_name
-                    library_path = fd.get_library_dir("products")
-                    thumbnail_path = os.path.join(library_path,item.library_name,item.category_name,item.name.strip() + ".png")
-                    if os.path.exists(thumbnail_path):
-                        item.has_thumbnail = True
-                    else:
-                        item.has_thumbnail = False
-                    file_path = os.path.join(library_path,item.library_name,item.category_name,item.name.strip() + ".blend")
-                    if os.path.exists(file_path):
-                        item.has_file = True
-                    else:
-                        item.has_file = False
-            
-    def load_insert_libraries(self,context):
-        from importlib import import_module, reload
-        wm = context.window_manager.cabinetlib
-        path, filename = os.path.split(__file__)
-        files = os.listdir(path)
-        
         for library in wm.lib_inserts:
-            wm.lib_inserts.remove(0)
+            wm.lib_inserts.remove(0)        
         
-        modules = fd.get_library_modules()
+        packages = utils.get_library_packages(context)
         
-        mods = []
-        
-        for module in sys.modules:
-            if "LM_" in module:
-                mods.append(module)
-            
-        # You have to manually delete modules in order for python to reload them
-        for mod in mods:
-            del sys.modules[mod]
-        
-        for module in modules:
-            mod1 = import_module(module)
-            mod = reload(mod1)
-            for name, obj in inspect.getmembers(mod):
-                if inspect.isclass(obj) and "INSERT_" in name:
-                    insert = obj()
-                    lib = self.get_library(wm.lib_inserts,insert.library_name,module)
-                    item = lib.items.add()
-                    item.name = insert.assembly_name
-                    item.class_name = name
-                    item.library_name = insert.library_name
-                    item.category_name = insert.category_name
-                    library_path = fd.get_library_dir("inserts")
-                    thumbnail_path = os.path.join(library_path,item.library_name,item.category_name,item.name.strip() + ".png")
-                    if os.path.exists(thumbnail_path):
-                        item.has_thumbnail = True
-                    else:
-                        item.has_thumbnail = False
-                    file_path = os.path.join(library_path,item.library_name,item.category_name,item.name.strip() + ".blend")
-                    if os.path.exists(file_path):
-                        item.has_file = True
-                    else:
-                        item.has_file = False
+        for package in packages:
+            pkg = import_module(package)
+            for mod_name, mod in inspect.getmembers(pkg):
+                for name, obj in inspect.getmembers(mod):
+                    if inspect.isclass(obj) and "PRODUCT_" in name:
+                        product = obj()
+                        path = os.path.join(os.path.dirname(pkg.__file__),"products",product.library_name)
+                        lib = self.get_library(wm.lib_products,product.library_name,mod_name,package,path)
+                        item = lib.items.add()
+                        item.name = product.assembly_name
+                        item.class_name = name
+                        item.library_name = product.library_name
+                        item.category_name = product.category_name
+                        item.lib_path = os.path.join(os.path.dirname(pkg.__file__),"products",product.library_name)
+                        thumbnail_path = os.path.join(item.lib_path,item.category_name,item.name.strip() + ".png")
+                        if os.path.exists(thumbnail_path):
+                            item.has_thumbnail = True
+                        else:
+                            item.has_thumbnail = False
+                        file_path = os.path.join(item.lib_path,item.category_name,item.name.strip() + ".blend")
+                        if os.path.exists(file_path):
+                            item.has_file = True
+                        else:
+                            item.has_file = False            
                             
-    def execute(self, context):
-        self.load_product_libraries(context)
-        self.load_insert_libraries(context)
+                    if inspect.isclass(obj) and "INSERT_" in name:
+                        insert = obj()
+                        path = os.path.join(os.path.dirname(pkg.__file__),"inserts",insert.library_name)
+                        lib = self.get_library(wm.lib_inserts,insert.library_name,mod_name,package,path)
+                        item = lib.items.add()
+                        item.name = insert.assembly_name
+                        item.class_name = name
+                        item.library_name = insert.library_name
+                        item.category_name = insert.category_name
+                        item.lib_path = os.path.join(os.path.dirname(pkg.__file__),"inserts",insert.library_name)
+                        thumbnail_path = os.path.join(item.lib_path,item.category_name,item.name.strip() + ".png")
+                        if os.path.exists(thumbnail_path):
+                            item.has_thumbnail = True
+                        else:
+                            item.has_thumbnail = False
+                        file_path = os.path.join(item.lib_path,item.category_name,item.name.strip() + ".blend")
+                        if os.path.exists(file_path):
+                            item.has_file = True
+                        else:
+                            item.has_file = False       
         return {'FINISHED'}
 
 class OPS_brd_library_items(Operator):
@@ -1452,7 +1315,9 @@ class OPS_brd_library_items(Operator):
     
     item_list = []
     current_product = 0
+    package_name = ""
     module_name = ""
+    library_path = ""
     
     placement = 0
     
@@ -1466,13 +1331,19 @@ class OPS_brd_library_items(Operator):
     
     def invoke(self, context, event):
         wm = context.window_manager
+        
         if self.library_type == 'PRODUCT':
             collection = wm.cabinetlib.lib_products[wm.cabinetlib.lib_product_index].items
             self.module_name = wm.cabinetlib.lib_products[wm.cabinetlib.lib_product_index].module_name
+            self.package_name = wm.cabinetlib.lib_products[wm.cabinetlib.lib_product_index].package_name
+            self.library_path = wm.cabinetlib.lib_products[wm.cabinetlib.lib_product_index].lib_path
+            
         if self.library_type == 'INSERT':
             collection = wm.cabinetlib.lib_inserts[wm.cabinetlib.lib_insert_index].items
             self.module_name = wm.cabinetlib.lib_inserts[wm.cabinetlib.lib_insert_index].module_name
-
+            self.package_name = wm.cabinetlib.lib_inserts[wm.cabinetlib.lib_insert_index].package_name
+            self.library_path = wm.cabinetlib.lib_inserts[wm.cabinetlib.lib_insert_index].lib_path
+            
         self.item_list = []
         for item in collection:
             if item.selected:
@@ -1515,35 +1386,40 @@ class OPS_brd_library_items(Operator):
         filepath = get_thumbnail_path()
         script = os.path.join(bpy.app.tempdir,'thumbnail.py')
         script_file = open(script,'w')
-        script_file.write("import bpy\n")
         script_file.write("import fd\n")
+        script_file.write("import bpy\n")
+        script_file.write("import os\n")
         script_file.write("bpy.ops.fd_material.reload_spec_group_from_library_modules()\n")
-        script_file.write("import " + self.module_name + "\n")
-        script_file.write("item = " + self.module_name + "." + class_name + "()\n")
+        script_file.write("from mv import utils\n")
+        script_file.write("pkg = __import__('" + self.package_name + "')\n")
+        script_file.write("item = eval('pkg." + self.module_name + "." + class_name + "()')" + "\n")
         script_file.write("item.draw()\n")
-        script_file.write("fd.render_thumbnail(item)\n")
+        script_file.write("tn_path = os.path.join(r'" + self.library_path + "',item.category_name,item.assembly_name)\n")
+        script_file.write('utils.render_assembly(item,tn_path)\n')
+        
         script_file.close()
-        subprocess.call(bpy.app.binary_path + ' "' + filepath + '" -b --python "' + script + '"')
-    
+        subprocess.call(bpy.app.binary_path + ' "' + filepath + '" -b --python "' + script + '"')    
+
     def build_product(self,class_name):
         script = os.path.join(bpy.app.tempdir,'building.py')
         script_file = open(script,'w')
-        script_file.write("import fd\n")
-        script_file.write("import " + self.module_name + "\n")
-        script_file.write("item = " + self.module_name + "." + class_name + "()\n")
+        script_file.write("from mv import utils\n")
+        script_file.write("pkg = __import__('" + self.package_name + "')\n")
+        script_file.write("item = eval('pkg." + self.module_name + "." + class_name + "()')" + "\n")
         script_file.write("item.draw()\n")
-        script_file.write("fd.save_assembly(item)\n")
+        script_file.write('utils.save_assembly(item,r"' + self.library_path + '"' + ')\n')
         script_file.close()
-        subprocess.call(bpy.app.binary_path + ' -b --python "' + script + '"')
+        subprocess.call(bpy.app.binary_path + ' -b --python "' + script + '"')    
     
     def draw_product(self,class_name):
-        mod = __import__(self.module_name)
-        print(self.module_name)
-        item = eval("mod." + class_name + "()")
+        pkg = __import__(self.package_name)
+        print("DRAWING",self.package_name,self.module_name,class_name)
+        item = eval("pkg." + self.module_name + "." + class_name + "()")
         item.draw()
-        fd.init_objects(item.obj_bp)
+        item.update()
+        utils.init_objects(item.obj_bp)
         item.obj_bp.location.x = self.placement
-        self.placement += item.obj_x.location.x + fd.inches(10)
+        self.placement += item.obj_x.location.x + unit.inch(10)
         
     def cancel(self, context):
         progress = context.window_manager.cabinetlib
@@ -1551,35 +1427,6 @@ class OPS_brd_library_items(Operator):
         wm = context.window_manager
         wm.event_timer_remove(self._timer)
         return {'FINISHED'}
-
-#TODO: Implement Create Project Operator
-class OPS_create_project(Operator):
-    bl_idname = "fd_general.create_project"
-    bl_label = "Create Project"
-
-    project_name = StringProperty(name="Project Name",default="New Project")
-    template_name = StringProperty(name="Template Name")
-    
-    def check(self,context):
-        return True
-    
-    def execute(self, context):
-        save_dir = os.path.join(PROJECTS,self.project_name)
-        if not os.path.exists(save_dir):
-            if not os.path.exists(save_dir): os.makedirs(save_dir)
-            bpy.ops.wm.save_as_mainfile(filepath=os.path.join(save_dir,self.project_name + ".blend"))     
-        return {'FINISHED'}
-        
-    def invoke(self,context,event):
-        wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(350))
-        
-    def draw(self, context):
-        path = os.path.join(PROJECTS,self.project_name)
-        layout = self.layout
-        if os.path.exists(path):
-            layout.label("Project Name already exists",icon='ERROR')
-        layout.prop(self,"project_name")
 
 class OPS_load_fluid_designer_defaults(Operator):
     bl_idname = "fd_general.load_fluid_designer_defaults"
@@ -1604,7 +1451,7 @@ class OPS_load_fluid_designer_defaults(Operator):
         
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(550))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(550))
         
     def draw(self, context):
         layout = self.layout
@@ -1623,7 +1470,7 @@ class OPS_load_blender_defaults(Operator):
         
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(350))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(350))
         
     def draw(self, context):
         layout = self.layout
@@ -1644,7 +1491,7 @@ class OPS_save_startup_file(Operator):
         
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
         
     def draw(self, context):
         layout = self.layout
@@ -1667,7 +1514,7 @@ class OPS_open_blend_file(Operator):
         
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(300))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(300))
         
     def draw(self, context):
         layout = self.layout
@@ -1719,7 +1566,7 @@ class OPS_dialog_show_filters(Operator):
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(300))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(300))
 
     def draw(self, context):
         layout = self.layout
@@ -1753,7 +1600,7 @@ class OPS_error(Operator):
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(380))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(380))
 
     def draw(self, context):
         layout = self.layout
@@ -1768,7 +1615,7 @@ class OPS_set_cursor_location(Operator):
 
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(200))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(200))
 
     def draw(self, context):
         layout = self.layout
@@ -1802,20 +1649,6 @@ class OPS_open_browser_window(Operator):
             subprocess.Popen(['xdg-open' , os.path.normpath(self.path)])
         return {'FINISHED'}
 
-class OPS_open_fluid_designer_pro(Operator):
-    bl_idname = "fd_general.open_fluid_designer_pro"
-    bl_label = "Open Fluid Designer Pro"
-    bl_description = "This will open FDPro"
-
-    path = StringProperty(name="Message",default="Error")
-
-    def execute(self, context):
-        import subprocess
-        app_path = "C:\\Development\\Microvellum V7 Trunk\\Fluid Designer\\bin\\x86\\D-CM70-2010\\Fluid Designer.exe"
-        if 'Windows' in str(bpy.app.build_platform):
-            subprocess.Popen(app_path + ' "OP"' +' "TEST ARGUMENTS"')
-        return {'FINISHED'}
-
 #USEFUL FOR REFERENCE
 class OPS_check_for_updates(Operator):
     bl_idname = "fd_general.check_for_updates"
@@ -1846,7 +1679,7 @@ class OPS_check_for_updates(Operator):
                 new_line = line.replace('</p>','')
                 self.info['InstallPath'] = new_line[len('InstallPath='):].strip()
 
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(320))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(320))
         
     def draw(self, context):
         layout = self.layout
@@ -1872,7 +1705,7 @@ class OPS_dimension_interface(Operator):
         
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(320))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(320))
         
     def draw(self, context):
         wm = context.window_manager.mv
@@ -1911,12 +1744,12 @@ class OPS_toggle_dimension_handles(Operator):
         for obj in context.scene.objects:
             if obj.mv.type == 'VISDIM_A':
                 obj.empty_draw_type = 'SPHERE'
-                obj.empty_draw_size = fd.inches(1)
+                obj.empty_draw_size = unit.inch(1)
                 obj.hide = False if self.turn_on else True
             elif obj.mv.type == 'VISDIM_B':
                 obj.rotation_euler.z = math.radians(-90)
                 obj.empty_draw_type = 'CONE'
-                obj.empty_draw_size = fd.inches(2)
+                obj.empty_draw_size = unit.inch(2)
                 obj.hide = False if self.turn_on else True
         return {'FINISHED'}
 
@@ -1926,8 +1759,8 @@ class OPS_create_single_dimension(Operator):
 
     def execute(self, context):
         bpy.ops.object.select_all(action='DESELECT')
-        dim = fd.Dimension()
-        dim.end_x(value = fd.inches(0))
+        dim = fd_types.Dimension()
+        dim.end_x(value = unit.inch(0))
         dim.anchor.select = True
         context.scene.objects.active = dim.anchor
         bpy.ops.fd_general.toggle_dimension_handles(turn_on=True)
@@ -1971,7 +1804,7 @@ class OPS_Add_Dimension(Operator):
     
     @classmethod
     def poll(cls, context):
-        if fd.get_bp(context.object, 'PRODUCT'):
+        if utils.get_bp(context.object, 'PRODUCT'):
             return True   
         else:
             return False 
@@ -2096,7 +1929,7 @@ class OPS_Add_Dimension(Operator):
             obj_del = []
             obj_del.append(self.dimension.anchor)
             obj_del.append(self.dimension.end_point)
-            fd.delete_obj_list(obj_del)
+            utils.delete_obj_list(obj_del)
     
     def invoke(self, context, event):
         wm = context.window_manager
@@ -2105,18 +1938,18 @@ class OPS_Add_Dimension(Operator):
             wm.mv.use_opengl_dimensions = True
         
         if context.object:
-            obj_wall_bp = fd.get_wall_bp(context.object)
+            obj_wall_bp = utils.get_wall_bp(context.object)
             if obj_wall_bp:
-                self.wall = fd.Wall(obj_wall_bp)
+                self.wall = fd_types.Wall(obj_wall_bp)
                 
-#             obj_assembly_bp = fd.get_parent_assembly_bp(context.object)
-            obj_assembly_bp = fd.get_bp(context.object, 'PRODUCT')
+#             obj_assembly_bp = utils.get_parent_assembly_bp(context.object)
+            obj_assembly_bp = utils.get_bp(context.object, 'PRODUCT')
             if obj_assembly_bp:
-                self.assembly = fd.Assembly(obj_assembly_bp)
-                wall_bp = fd.get_wall_bp(obj_assembly_bp)
-                self.wall = fd.Wall(wall_bp)
+                self.assembly = fd_types.Assembly(obj_assembly_bp)
+                wall_bp = utils.get_wall_bp(obj_assembly_bp)
+                self.wall = fd_types.Wall(wall_bp)
         
-        self.dimension = fd.Dimension()
+        self.dimension = fd_types.Dimension()
         self.dimension.set_color(value=7)
         self.dimension.parent(obj_assembly_bp)
         self.dimension.end_point.location.x = self.assembly.obj_x.location.x
@@ -2130,7 +1963,7 @@ class OPS_Add_Dimension(Operator):
         self.label = ""
         
         
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(550))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(550))
     
     def execute(self, context):
         self.del_dim = False
@@ -2405,7 +2238,7 @@ class OPS_project_info(Operator):
         
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(350))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(350))
         
     def draw(self, context):
         props = context.scene.mv
@@ -2514,7 +2347,7 @@ class OPS_append_items(Operator):
     def invoke(self,context,event):
         self.blend_files = context.window_manager.mv.data_from_libs
         
-        self.path = fd.get_file_browser_path(context)
+        self.path = utils.get_file_browser_path(context)
         self.library_tabs = context.scene.mv.ui.library_tabs
         files = os.listdir(self.path)
         
@@ -2554,7 +2387,7 @@ class OPS_append_items(Operator):
                             self.item_icon = 'WORLD'                                      
         
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(350))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(350))
     
     def check(self,context):
         return True
@@ -2666,7 +2499,7 @@ class OPS_create_thumbnails(Operator):
         file.write("for mat in data_to.materials:\n")
         file.write("    bpy.ops.mesh.primitive_cube_add()\n")
         file.write("    obj = bpy.context.scene.objects.active\n")
-        file.write("    obj.dimensions = (fd.inches(24),fd.inches(24),fd.inches(24))\n")
+        file.write("    obj.dimensions = (unit.inch(24),unit.inch(24),unit.inch(24))\n")
         file.write("    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)\n")
         file.write("    mod = obj.modifiers.new('bevel','BEVEL')\n")
         file.write("    mod.segments = 5\n")
@@ -2732,7 +2565,7 @@ class OPS_create_thumbnails(Operator):
 
     def invoke(self,context,event):
         self.blend_files = context.window_manager.mv.data_from_libs
-        self.path = fd.get_file_browser_path(context)
+        self.path = utils.get_file_browser_path(context)
         self.library_tabs = context.scene.mv.ui.library_tabs
         files = os.listdir(self.path)
         
@@ -2769,7 +2602,7 @@ class OPS_create_thumbnails(Operator):
                             self.item_icon = 'WORLD'                                      
         
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(350))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(350))
     
     def check(self,context):
         return True
@@ -2813,7 +2646,6 @@ class OPS_create_thumbnails(Operator):
 #------REGISTER
 classes = [
            OPS_drag_and_drop,
-           OPS_drop_scene,
            OPS_drop_product,
            OPS_drop_insert,
            OPS_drop_material,
@@ -2821,7 +2653,6 @@ classes = [
            OPS_drop_object,
            OPS_drop_world,
            OPS_properties,
-           OPS_Draw_Plan,
            OPS_change_mode,
            OPS_load_library_modules,
            OPS_brd_library_items,
@@ -2841,9 +2672,7 @@ classes = [
            OPS_set_cursor_location,
            OPS_load_blender_defaults,
            OPS_open_browser_window,
-           OPS_open_fluid_designer_pro,
            OPS_check_for_updates,
-           OPS_create_project,
            OPS_dimension_interface,
            OPS_toggle_dimension_handles,
            OPS_create_single_dimension,

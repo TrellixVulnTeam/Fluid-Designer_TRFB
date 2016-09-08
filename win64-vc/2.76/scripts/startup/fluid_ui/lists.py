@@ -18,8 +18,7 @@
 
 import bpy
 from bpy.types import Panel, Menu, Header, UIList
-
-import fd
+from mv import unit
 
 class FD_UL_materials(bpy.types.UIList):
 
@@ -57,7 +56,7 @@ class FD_UL_promptitems(UIList):
         if item.Type == 'COMBOBOX':
             layout.label(str(item.EnumIndex))
         if item.Type == 'DISTANCE':
-            layout.label(str(fd.unit(item.DistanceValue)))
+            layout.label(str(unit.meter_to_active_unit(item.DistanceValue)))
         if item.Type == 'ANGLE':
             layout.label(str(item.AngleValue))
         if item.Type == 'PERCENTAGE':

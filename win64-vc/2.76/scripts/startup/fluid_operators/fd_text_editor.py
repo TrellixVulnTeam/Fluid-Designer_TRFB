@@ -14,8 +14,8 @@ from bpy.props import (StringProperty,
                        CollectionProperty)
 
 import os
-import fd
 import inspect
+from mv import utils
 
 class OPS_load_library_module(Operator):
     bl_idname = "fd_scripting_tools.load_library_module"
@@ -70,7 +70,7 @@ class OPS_save_and_load_library_module(Operator):
         layout.prop(self, "library_module_name", text = "Library Module Name")    
     
     def execute(self,context):
-        library_module_path = fd.get_library_scripts_dir()
+        library_module_path = utils.get_library_scripts_dir()
         
         for file in os.listdir(path=library_module_path):
             if self.library_module_name.replace(" ","_") in file:
@@ -156,23 +156,6 @@ class OPS_read_active_module(Operator):
             elif inspect.isclass(obj) and "LM_" in obj.__module__:
                 mod_member = wm.module_members.add()
                 mod_member.name = name   
-#                 product = obj()
-#                 item = lib.items.add()
-#                 item.name = product.assembly_name
-#                 item.class_name = name
-#                 item.library_name = product.library_name
-#                 item.category_name = product.category_name
-#                 library_path = fd.get_library_dir("products")
-#                 thumbnail_path = os.path.join(library_path,item.library_name,item.category_name,item.name.strip() + ".png")
-#                 if os.path.exists(thumbnail_path):
-#                     item.has_thumbnail = True
-#                 else:
-#                     item.has_thumbnail = False
-#                 file_path = os.path.join(library_path,item.library_name,item.category_name,item.name.strip() + ".blend")
-#                 if os.path.exists(file_path):
-#                     item.has_file = True
-#                 else:
-#                     item.has_file = False        
 
         return {'FINISHED'} 
     

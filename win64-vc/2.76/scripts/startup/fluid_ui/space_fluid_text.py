@@ -19,8 +19,7 @@
 import bpy
 from bpy.types import Header, Menu, Panel
 import os
-
-import fd
+from mv import utils
 
 class LIST_module_members(bpy.types.UIList):
 
@@ -137,7 +136,7 @@ class MENU_Library_Modules(Menu):
     def draw(self, context):
         layout = self.layout
         dir, filename = os.path.split(__file__)
-        script_library_path = fd.get_library_scripts_dir()
+        script_library_path = utils.get_library_scripts_dir()
         files = os.listdir(script_library_path)
         col = layout.column(align=True)
         for file in files:

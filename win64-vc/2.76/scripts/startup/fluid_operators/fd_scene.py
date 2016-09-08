@@ -18,14 +18,13 @@
 
 import bpy
 import bgl
-import fd
 import math
 from bpy.types import Header, Menu, Operator
 import os, subprocess
 import time
 from bpy.app.handlers import persistent
 import bpy_extras.image_utils as img_utils
-
+from mv import utils, fd_types, unit
 from bpy.props import (StringProperty,
                        BoolProperty,
                        IntProperty,
@@ -57,7 +56,7 @@ def get_export_prompts(obj_bp):
         if prompt.Type == 'TEXT':
             prompts[prompt.name] = str(prompt.TextValue)
         if prompt.Type == 'DISTANCE':
-            prompts[prompt.name] = str(round(fd.meter_to_unit(prompt.DistanceValue),4))
+            prompts[prompt.name] = str(round(unit.meter_to_active_unit(prompt.DistanceValue),4))
         if prompt.Type == 'ANGLE':
             prompts[prompt.name] = str(prompt.AngleValue)
         if prompt.Type == 'PERCENTAGE':
@@ -166,7 +165,7 @@ class OPS_render_scene(Operator):
             while not os.path.exists(bpy.path.abspath(context.scene.render.filepath) + "." + file_format):
                 time.sleep(0.1)
                 
-            img_result = fd.render_opengl(self,context)
+            img_result = utils.render_opengl(self,context)
             
             if self.write_still == True:
                 abs_filepath = bpy.path.abspath(context.scene.render.filepath)
@@ -199,7 +198,7 @@ class OPS_render_settings(Operator):
     
     def invoke(self,context,event):
         wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
 
     def draw(self, context):
         layout = self.layout
@@ -301,7 +300,7 @@ class OPS_create_unity_build(Operator): #Not Used
 class OPS_prepare_For_sketchfab(Operator):
     """ This prepares the scene for uploading to Sketchfab.
     """
-    bl_idname = "fd_scene.delete_hidden_objects"
+    bl_idname = "cabinetlib.delete_hidden_objects"
     bl_label = "Delete Hidden Objects"
     bl_description = "This simplifies the scene."
     bl_options = {'UNDO'}
@@ -329,12 +328,11 @@ class OPS_prepare_For_sketchfab(Operator):
         
         self._timer = wm.event_timer_add(0.001, context.window)
         wm.modal_handler_add(self)
-        
         if context.area.type == 'VIEW_3D':
             args = (self, context)
-            self._handle = bpy.types.SpaceView3D.draw_handler_add(fd.draw_callback_px, args, 'WINDOW', 'POST_PIXEL')
+            self._handle = bpy.types.SpaceView3D.draw_handler_add(utils.draw_callback_px, args, 'WINDOW', 'POST_PIXEL')
             self.mouse_loc = []
-            self.mouse_text = "Preparing Object " + str(self.current_item + 1) + " of " + str(len(self.objects))
+            self.mouse_text = "Preparing Object "  + str(self.current_item + 1) + " of " + str(len(self.objects))
             self.header_text = "Preparing Object " + str(self.current_item + 1) + " of " + str(len(self.objects))
         return {'RUNNING_MODAL'}    
     
@@ -345,27 +343,35 @@ class OPS_prepare_For_sketchfab(Operator):
             return self.cancel(context)
         
         if event.type == 'TIMER':
-            if self.current_item + 1 <= len(self.objects):                 
+            if self.current_item + 1 <= len(self.objects):                     
                 obj = self.objects[self.current_item]
                 bpy.context.scene.objects.active = obj
-
+                #clear shapekeys
                 if obj.data.shape_keys:
-                    bpy.ops.fd_object.apply_shape_keys(object_name=obj.name)                         
+                    bpy.ops.fd_object.apply_shape_keys(object_name=obj.name)           
                 
-                if obj.animation_data:
-                    for DR in obj.animation_data.drivers:
-                        try:
-                            obj.driver_remove(DR.data_path) 
-                        except:
-                            pass                
-                
+                #clear modifiers 
+#                 for mod in obj.modifiers:
+#                     bpy.ops.object.modifier_apply(mod.name)
+#                 if obj.modifiers != 'NONE':  
+                    #obj.to_mesh(context.scene,True,'PREVIEW')
+                    #This needs to be done in the correct order (mods applied only if first in stack)
                 bpy.ops.fd_object.apply_hook_modifiers(object_name=obj.name)
                 bpy.ops.fd_object.apply_bool_modifiers(object_name=obj.name)
-                      
+                    #bpy.ops.fd_object.apply_array_modifiers(object_name=obj.name)
+#                     #Apply Bevel Modifiers
+                
+                #clear drivers 
+                if obj.animation_data:
+                    for DR in obj.animation_data.drivers:
+                        obj.driver_remove(DR.data_path)                 
+                
+                #clear vertex groups         
                 if obj.vertex_groups:
                     bpy.context.scene.objects.active = obj
                     bpy.ops.object.vertex_group_remove(all=True) 
-                     
+                
+                #clear parent and keep transformation          
                 obj.matrix_local = obj.matrix_world
                 obj.parent = None
                     
@@ -384,30 +390,32 @@ class OPS_prepare_For_sketchfab(Operator):
     
     def delete_extra_objs(self):  
         for obj in bpy.context.scene.objects:
-            if obj not in self.delete_objs:
-                if obj.parent:
-                    if obj.parent.mv.type != 'BPWALL': 
+            if obj.parent:
+                if obj.parent.mv.type != 'BPWALL': 
+                    if obj not in self.delete_objs:
                         self.delete_objs.append(obj)
-                                 
-                        if obj.type == 'EMPTY':
+                             
+                    if obj.type == 'EMPTY':
+                        if obj not in self.delete_objs:
                             self.delete_objs.append(obj)
-                                 
-                        if obj.mv.type == 'BPASSEMBLY':
+                             
+                    if obj.mv.type == 'BPASSEMBLY':
+                        if obj not in self.delete_objs:
                             self.delete_objs.append(obj)
-                                 
-                if obj.mv.use_as_bool_obj:
+                             
+            if obj.mv.use_as_bool_obj:
+                if obj not in self.delete_objs:
                     self.delete_objs.append(obj)
-                     
-                if obj.mv.type in {'BPWALL','BPASSEMBLY','VPDIMX','VPDIMY','VPDIMZ'}:
+                 
+            if obj.mv.type in {'BPWALL','BPASSEMBLY','VPDIMX','VPDIMY','VPDIMZ'}:
+                if obj not in self.delete_objs:
                     self.delete_objs.append(obj)    
-                        
-                if obj.hide == True or obj.hide_select == True:
-                    self.delete_objs.append(obj) 
                     
-                if "MACHINING" in obj.name:
+            if obj.hide == True or obj.hide_select == True:
+                if obj not in self.delete_objs:
                     self.delete_objs.append(obj) 
                       
-        fd.delete_obj_list(self.delete_objs)        
+        utils.delete_obj_list(self.delete_objs)        
     
     def cancel(self, context):
         progress = context.window_manager.cabinetlib
@@ -416,26 +424,6 @@ class OPS_prepare_For_sketchfab(Operator):
         wm.event_timer_remove(self._timer)
         bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
         return {'FINISHED'}    
-
-class OPS_bake_lighting(Operator):
-    """ Bakes lighting into textures.
-    """
-    bl_idname = "fd_scene.bake_lighting"
-    bl_label = "Bake Lighting"
-    bl_description = "This bakes lighting into textures."
-    bl_options = {'REGISTER', 'UNDO'}
-    
-    def execute(self, context):
-        for obj in bpy.context.scene.objects:
-            if len(obj.material_slots) > 0:
-                for mat_slot in obj.material_slots:
-                    if mat_slot.material:
-                        #ADD EMISSION NODE
-                        #mat_slot.material.node_tree.nodes.new("ShaderNodeEmission")
-                        for node in mat_slot.material.node_tree.nodes:
-                            print(node.bl_idname)
-        
-        return{'FINISHED'}
 
 class OPS_join_meshes_by_material(Operator):
     bl_idname = "fd_scene.join_meshes_by_material"
@@ -531,7 +519,7 @@ class OPS_Prepare_Plan_view(Operator):
             
         for obj in pv_scene.objects:
             if obj.mv.type == 'BPWALL':
-                wall = fd.Wall(obj_bp = obj)
+                wall = fd_types.Wall(obj_bp = obj)
                 wall.get_wall_mesh().select = True
                 
         cam_name = "Plan View Camera"
@@ -600,7 +588,7 @@ class OPS_Prepare_Plan_view_OLD(Operator):
             
         for obj in pv_scene.objects:
             if obj.mv.type == 'BPWALL':
-                wall = fd.Wall(obj_bp = obj)
+                wall = fd_types.Wall(obj_bp = obj)
                 wall.get_wall_mesh().select = True
                 
         cam_name = "Plan View Camera"
@@ -707,7 +695,7 @@ class OPS_Prepare_2d_elevations(Operator):
          
         for obj in context.scene.objects:
             if obj.mv.type == 'BPWALL':
-                wall = fd.Wall(obj_bp = obj)
+                wall = fd_types.Wall(obj_bp = obj)
                 walls.append(wall)
                 if len(wall.get_wall_groups()) > 0:
                      
@@ -845,12 +833,12 @@ class OPS_genereate_views(Operator):
                     if child.mv.is_wall_mesh:
                         child.select = True
                         pv_scene.objects.link(child)
-                wall = fd.Wall(obj_bp = obj)
+                wall = fd_types.Wall(obj_bp = obj)
                 obj_bps = wall.get_wall_groups()
                 #Create Cubes for all products
                 for obj_bp in obj_bps:
-                    assembly = fd.Assembly(obj_bp)
-                    assembly_mesh = fd.create_cube_mesh(assembly.obj_bp.mv.name_object,
+                    assembly = fd_types.Assembly(obj_bp)
+                    assembly_mesh = utils.create_cube_mesh(assembly.obj_bp.mv.name_object,
                                                         (assembly.obj_x.location.x,
                                                          assembly.obj_y.location.y,
                                                          assembly.obj_z.location.z))
@@ -875,7 +863,7 @@ class OPS_genereate_views(Operator):
         
         wall_group = bpy.data.groups.new(wall.obj_bp.name)
         self.group_children(wall_group,wall.obj_bp)                    
-        wall_mesh = fd.create_cube_mesh(wall.obj_bp.mv.name_object,(wall.obj_x.location.x,wall.obj_y.location.y,wall.obj_z.location.z))
+        wall_mesh = utils.create_cube_mesh(wall.obj_bp.mv.name_object,(wall.obj_x.location.x,wall.obj_y.location.y,wall.obj_z.location.z))
         wall_mesh.parent = wall.obj_bp
         wall_group.objects.link(wall_mesh)  
         
@@ -907,7 +895,7 @@ class OPS_genereate_views(Operator):
         
         for obj in self.main_scene.objects:
             if obj.mv.type == 'BPWALL':
-                wall = fd.Wall(obj_bp = obj)
+                wall = fd_types.Wall(obj_bp = obj)
                 if len(wall.get_wall_groups()) > 0:
                     self.create_elv_view_scene(context, wall)
                     
@@ -956,7 +944,7 @@ class OPS_prepare_2d_views(Operator):
         camera_obj.rotation_euler.x = math.radians(90.0) 
         camera_obj.rotation_euler.z = wall.obj_bp.rotation_euler.z    
         camera_obj.location = wall.obj_bp.location 
-        camera_obj.location.x = fd.inches(12)
+        camera_obj.location.x = unit.inch(12)
         camera_obj.data.ortho_scale += self.ev_pad
         
         #Set Camera to View entire scene
@@ -1032,11 +1020,11 @@ class OPS_prepare_2d_views(Operator):
         #Create a cube for all products
         for obj in pv_scene.objects:
             if obj.mv.type == 'BPWALL':
-                wall = fd.Wall(obj_bp = obj)
+                wall = fd_types.Wall(obj_bp = obj)
                 obj_bps = wall.get_wall_groups()
                 for obj_bp in obj_bps:
-                    assembly = fd.Assembly(obj_bp)
-                    assembly_mesh = fd.create_cube_mesh(assembly.obj_bp.mv.name_object,
+                    assembly = fd_types.Assembly(obj_bp)
+                    assembly_mesh = utils.create_cube_mesh(assembly.obj_bp.mv.name_object,
                                                         (assembly.obj_x.location.x,
                                                          assembly.obj_y.location.y,
                                                          assembly.obj_z.location.z))
@@ -1069,7 +1057,7 @@ class OPS_prepare_2d_views(Operator):
         # Create a scene for every wall
         for obj in main_scene.objects:
             if obj.mv.type == 'BPWALL':
-                wall = fd.Wall(obj_bp = obj)
+                wall = fd_types.Wall(obj_bp = obj)
                 if len(wall.get_wall_groups()) > 0:
                     bpy.ops.scene.new('INVOKE_DEFAULT',type='EMPTY')
                     new_scene = context.scene
@@ -1081,7 +1069,7 @@ class OPS_prepare_2d_views(Operator):
                     
                     wall_group = bpy.data.groups.new(wall.obj_bp.name)
                     self.group_children(wall_group,wall.obj_bp)                    
-                    wall_mesh = fd.create_cube_mesh(wall.obj_bp.mv.name_object,(wall.obj_x.location.x,wall.obj_y.location.y,wall.obj_z.location.z))
+                    wall_mesh = utils.create_cube_mesh(wall.obj_bp.mv.name_object,(wall.obj_x.location.x,wall.obj_y.location.y,wall.obj_z.location.z))
                     wall_mesh.parent = wall.obj_bp
                     wall_group.objects.link(wall_mesh)  
                     
@@ -1197,7 +1185,7 @@ class OPS_prepare_2d_views_OLD(Operator):
             
         for obj in pv_scene.objects:
             if obj.mv.type == 'BPWALL':
-                wall = fd.Wall(obj_bp = obj)
+                wall = fd_types.Wall(obj_bp = obj)
                 wall.get_wall_mesh().select = True
                 
         cam_name = "Plan View Camera"
@@ -1223,7 +1211,7 @@ class OPS_prepare_2d_views_OLD(Operator):
 
         for obj in context.scene.objects:
             if obj.mv.type == 'BPWALL':
-                wall = fd.Wall(obj_bp = obj)
+                wall = fd_types.Wall(obj_bp = obj)
                 if len(wall.get_wall_groups()) > 0:
                     
                     wall_group = wall.create_wall_group()
@@ -1276,7 +1264,7 @@ class OPS_render_2d_views(Operator):
     def invoke(self, context, event):
         wm = context.window_manager
         if not bpy.data.is_saved:
-            return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))     
+            return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))     
         else:
             return self.execute(context)         
     
@@ -1402,7 +1390,7 @@ class OPS_render_all_elevation_scenes(Operator):
 #             self.render = False
 #         
 #         if not bpy.data.is_saved:
-#             return wm.invoke_props_dialog(self, width=fd.get_prop_dialog_width(400))  
+#             return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))  
 #         else:
 #             return self.execute(context)
 #      
@@ -1468,7 +1456,7 @@ class OPS_render_all_2D_views(Operator):
                 while not os.path.exists(render_image):
                     time.sleep(0.1)
                 
-                img_result = fd.render_opengl(self,context)
+                img_result = utils.render_opengl(self,context)
                 img_result.save_render(render_image)
                 
                 if os.path.exists(render_image):
@@ -1514,10 +1502,10 @@ class OPS_export_mvfd(Operator):
             return False
 
     def distance(self,distance):
-        return str(math.fabs(round(fd.meter_to_unit(distance),4)))
+        return str(math.fabs(round(unit.meter_to_active_unit(distance),4)))
     
     def location(self,location):
-        return str(round(fd.meter_to_unit(location),4))
+        return str(round(unit.meter_to_active_unit(location),4))
     
     def angle(self,angle):
         return str(round(math.degrees(angle),4))
@@ -1561,7 +1549,7 @@ class OPS_export_mvfd(Operator):
         elm_walls = self.xml.add_element(project_node,"Walls")
         
         for obj_wall in self.walls:
-            wall = fd.Wall(obj_wall)
+            wall = fd_types.Wall(obj_wall)
             elm_wall = self.xml.add_element(elm_walls,'Wall',wall.obj_bp.mv.name_object)
             self.xml.add_element_with_text(elm_wall,'LinkID',obj_wall.name)
             self.xml.add_element_with_text(elm_wall,'LinkIDLocation',obj_wall.users_scene[0].name)
@@ -1579,7 +1567,7 @@ class OPS_export_mvfd(Operator):
         item_number = 1
         for obj_product in self.products:
             spec_group = specgroups[obj_product.cabinetlib.spec_group_index]
-            product = fd.Assembly(obj_product)
+            product = fd_types.Assembly(obj_product)
             elm_product = self.xml.add_element(elm_products,'Product',product.obj_bp.mv.name_object)
             self.xml.add_element_with_text(elm_product,'LinkID',obj_product.name)
             if obj_product.parent:
@@ -1667,13 +1655,13 @@ class OPS_export_mvfd(Operator):
 
             self.xml.add_element_with_text(elm_part,'LinkID',obj.name)
             self.xml.add_element_with_text(elm_part,'Qty',"1")
-            self.xml.add_element_with_text(elm_part,'MaterialName',fd.get_material_name(obj))
-            self.xml.add_element_with_text(elm_part,'Thickness',str(fd.unit(obj.dimensions.z)))
+            self.xml.add_element_with_text(elm_part,'MaterialName',utils.get_material_name(obj))
+            self.xml.add_element_with_text(elm_part,'Thickness',str(unit.meter_to_active_unit(obj.dimensions.z)))
             self.xml.add_element_with_text(elm_part,'UseSMA','True' if obj.mv.use_sma else 'False')
             self.xml.add_element_with_text(elm_part,'LinkIDProduct',obj.name)
             self.xml.add_element_with_text(elm_part,'LinkIDParent',"None")
-            self.xml.add_element_with_text(elm_part,'PartLength',str(fd.unit(obj.dimensions.x)))
-            self.xml.add_element_with_text(elm_part,'PartWidth',str(fd.unit(obj.dimensions.y)))
+            self.xml.add_element_with_text(elm_part,'PartLength',str(unit.meter_to_active_unit(obj.dimensions.x)))
+            self.xml.add_element_with_text(elm_part,'PartWidth',str(unit.meter_to_active_unit(obj.dimensions.y)))
             self.xml.add_element_with_text(elm_part,'Comment',obj.cabinetlib.comment)
             self.xml.add_element_with_text(elm_part,'XOrigin',self.get_part_x_location(obj,obj.location.x))
             self.xml.add_element_with_text(elm_part,'YOrigin',self.get_part_y_location(obj,obj.location.y))
@@ -1681,10 +1669,10 @@ class OPS_export_mvfd(Operator):
             self.xml.add_element_with_text(elm_part,'XRotation',self.angle(obj.rotation_euler.x))
             self.xml.add_element_with_text(elm_part,'YRotation',self.angle(obj.rotation_euler.y))
             self.xml.add_element_with_text(elm_part,'ZRotation',self.angle(obj.rotation_euler.z))
-            self.xml.add_element_with_text(elm_part,'EdgeWidth1',fd.get_edgebanding_name_from_pointer_name(obj.cabinetlib.edge_w1,spec_group))
-            self.xml.add_element_with_text(elm_part,'EdgeLength1',fd.get_edgebanding_name_from_pointer_name(obj.cabinetlib.edge_l1,spec_group))
-            self.xml.add_element_with_text(elm_part,'EdgeWidth2',fd.get_edgebanding_name_from_pointer_name(obj.cabinetlib.edge_w2,spec_group))
-            self.xml.add_element_with_text(elm_part,'EdgeLength2',fd.get_edgebanding_name_from_pointer_name(obj.cabinetlib.edge_l2,spec_group))
+            self.xml.add_element_with_text(elm_part,'EdgeWidth1',utils.get_edgebanding_name_from_pointer_name(obj.cabinetlib.edge_w1,spec_group))
+            self.xml.add_element_with_text(elm_part,'EdgeLength1',utils.get_edgebanding_name_from_pointer_name(obj.cabinetlib.edge_l1,spec_group))
+            self.xml.add_element_with_text(elm_part,'EdgeWidth2',utils.get_edgebanding_name_from_pointer_name(obj.cabinetlib.edge_w2,spec_group))
+            self.xml.add_element_with_text(elm_part,'EdgeLength2',utils.get_edgebanding_name_from_pointer_name(obj.cabinetlib.edge_l2,spec_group))
             self.xml.add_element_with_text(elm_part,'DrawToken3D',"DRAW3DBOX CABINET")
             self.xml.add_element_with_text(elm_part,'ElvToken2D',"DRAW2DBOX CABINET")
             self.xml.add_element_with_text(elm_part,'BasePoint',"1")
@@ -1719,7 +1707,7 @@ class OPS_export_mvfd(Operator):
         for edgeband in bpy.context.scene.cabinetlib.edgebanding:
             elm_edge = self.xml.add_element(elm_edgebanding,'Edgeband',edgeband.name)
             self.xml.add_element_with_text(elm_edge,'Type',"3")
-            self.xml.add_element_with_text(elm_edge,'Thickness',str(fd.unit(edgeband.thickness)))
+            self.xml.add_element_with_text(elm_edge,'Thickness',str(unit.meter_to_active_unit(edgeband.thickness)))
 
     def write_buyout_materials(self,project_node):
         elm_buyouts = self.xml.add_element(project_node,"Buyouts")
@@ -1730,7 +1718,7 @@ class OPS_export_mvfd(Operator):
         elm_solid_stocks = self.xml.add_element(project_node,"SolidStocks")
         for solid_stock in self.solid_stock_materials:
             elm_solid_stock = self.xml.add_element(elm_solid_stocks,'SolidStock',solid_stock)
-            self.xml.add_element_with_text(elm_solid_stock,'Thickness',str(fd.unit(self.solid_stock_materials[solid_stock])))
+            self.xml.add_element_with_text(elm_solid_stock,'Thickness',str(unit.meter_to_active_unit(self.solid_stock_materials[solid_stock])))
         
     def write_spec_groups(self,project_node):
         elm_spec_groups = self.xml.add_element(project_node,"SpecGroups")
@@ -1740,20 +1728,20 @@ class OPS_export_mvfd(Operator):
             elm_cutparts = self.xml.add_element(elm_spec_group,'CutParts')
             for cutpart in spec_group.cutparts:
                 elm_cutpart = self.xml.add_element(elm_cutparts,'PointerName',cutpart.mv_pointer_name)
-                mat_name = fd.get_material_name_from_pointer(cutpart,spec_group)
+                mat_name = utils.get_material_name_from_pointer(cutpart,spec_group)
                 self.xml.add_element_with_text(elm_cutpart,'MaterialName',mat_name)
                  
             elm_edgeparts = self.xml.add_element(elm_spec_group,'EdgeParts')
             for edgepart in spec_group.edgeparts:
                 elm_edgepart = self.xml.add_element(elm_edgeparts,'PointerName',edgepart.mv_pointer_name)
-                mat_name = fd.get_edgebanding_name_from_pointer_name(edgepart.name,spec_group)
+                mat_name = utils.get_edgebanding_name_from_pointer_name(edgepart.name,spec_group)
                 self.xml.add_element_with_text(elm_edgepart,'MaterialName',mat_name)
                 
     def write_subassemblies_for_product(self,elm_subassembly,obj_bp,spec_group):
         for child in obj_bp.children:
             
             if child.mv.is_cabinet_door:
-                assembly = fd.Assembly(child)
+                assembly = fd_types.Assembly(child)
                 hide = assembly.get_prompt("Hide")
                 if hide and not hide.value():
                     comment = ""
@@ -1774,7 +1762,7 @@ class OPS_export_mvfd(Operator):
                     self.write_stl_files_for_product(elm_parts,assembly.obj_bp,spec_group)
             
             if child.mv.is_cabinet_drawer_box:
-                assembly = fd.Assembly(child)
+                assembly = fd_types.Assembly(child)
                 hide = assembly.get_prompt("Hide")
                 if hide and not hide.value():
                     elm_item = self.xml.add_element(elm_subassembly,'Subassembly',assembly.obj_bp.mv.name_object)
@@ -1795,11 +1783,11 @@ class OPS_export_mvfd(Operator):
         for child in obj_bp.children:
             if child.cabinetlib.type_mesh == 'HARDWARE':
                 if not child.hide:
-                    product_bp = fd.get_bp(child,'PRODUCT')
-                    
-                    diff = product_bp.matrix_world - child.matrix_world
-                    print('DIFF',diff)
-                    
+
+                    #TODO: Figure out how to locate hardware correctly
+                    #product_bp = utils.get_bp(child,'PRODUCT')
+                    #diff = product_bp.matrix_world - child.matrix_world
+
                     elm_item = self.xml.add_element(elm_hardware,'Hardware',child.mv.name_object)
                     self.xml.add_element_with_text(elm_item,'XDimension',self.distance(child.dimensions.x))
                     self.xml.add_element_with_text(elm_item,'YDimension',self.distance(child.dimensions.y))
@@ -1845,7 +1833,7 @@ class OPS_export_mvfd(Operator):
         return self.get_part_z_location(obj.parent,value)
 
     def write_stl_node(self,node,obj,spec_group):
-        assembly = fd.Assembly(obj.parent)
+        assembly = fd_types.Assembly(obj.parent)
         elm_part = self.xml.add_element(node,'Part',assembly.obj_bp.mv.name_object)
         
         if obj.cabinetlib.type_mesh == 'CUTPART':
@@ -1853,23 +1841,23 @@ class OPS_export_mvfd(Operator):
 
         if obj.cabinetlib.type_mesh == 'BUYOUT':
             self.xml.add_element_with_text(elm_part,'PartType',"4")
-            if fd.get_material_name(obj) not in self.buyout_materials:
-                self.buyout_materials.append(fd.get_material_name(obj))
+            if utils.get_material_name(obj) not in self.buyout_materials:
+                self.buyout_materials.append(utils.get_material_name(obj))
                 
         if obj.cabinetlib.type_mesh == 'SOLIDSTOCK':
             self.xml.add_element_with_text(elm_part,'PartType',"3")
-            if fd.get_material_name(obj) not in self.solid_stock_materials:
-                self.solid_stock_materials[fd.get_material_name(obj)] = fd.get_part_thickness(obj)
+            if utils.get_material_name(obj) not in self.solid_stock_materials:
+                self.solid_stock_materials[utils.get_material_name(obj)] = utils.get_part_thickness(obj)
                 
         self.xml.add_element_with_text(elm_part,'LinkID',assembly.obj_bp.name)
         self.xml.add_element_with_text(elm_part,'Qty',"1")
-        self.xml.add_element_with_text(elm_part,'MaterialName',fd.get_material_name(obj))
-        self.xml.add_element_with_text(elm_part,'Thickness',self.distance(fd.get_part_thickness(obj)))
+        self.xml.add_element_with_text(elm_part,'MaterialName',utils.get_material_name(obj))
+        self.xml.add_element_with_text(elm_part,'Thickness',self.distance(utils.get_part_thickness(obj)))
         self.xml.add_element_with_text(elm_part,'UseSMA','True' if obj.mv.use_sma else 'False')
-        self.xml.add_element_with_text(elm_part,'LinkIDProduct',fd.get_bp(obj,'PRODUCT').name)
+        self.xml.add_element_with_text(elm_part,'LinkIDProduct',utils.get_bp(obj,'PRODUCT').name)
         self.xml.add_element_with_text(elm_part,'LinkIDParent',assembly.obj_bp.parent.name)
-        self.xml.add_element_with_text(elm_part,'PartLength',str(fd.unit(obj.dimensions.x)))
-        self.xml.add_element_with_text(elm_part,'PartWidth',str(fd.unit(obj.dimensions.y)))
+        self.xml.add_element_with_text(elm_part,'PartLength',str(unit.meter_to_active_unit(obj.dimensions.x)))
+        self.xml.add_element_with_text(elm_part,'PartWidth',str(unit.meter_to_active_unit(obj.dimensions.y)))
         self.xml.add_element_with_text(elm_part,'Comment',assembly.obj_bp.cabinetlib.comment)
         self.xml.add_element_with_text(elm_part,'XOrigin',self.get_part_x_location(assembly.obj_bp,assembly.obj_bp.location.x))
         self.xml.add_element_with_text(elm_part,'YOrigin',self.get_part_y_location(assembly.obj_bp,assembly.obj_bp.location.y))
@@ -1877,10 +1865,10 @@ class OPS_export_mvfd(Operator):
         self.xml.add_element_with_text(elm_part,'XRotation',self.angle(assembly.obj_bp.rotation_euler.x))
         self.xml.add_element_with_text(elm_part,'YRotation',self.angle(assembly.obj_bp.rotation_euler.y))
         self.xml.add_element_with_text(elm_part,'ZRotation',self.angle(assembly.obj_bp.rotation_euler.z))
-        self.xml.add_element_with_text(elm_part,'EdgeWidth1',fd.get_edgebanding_name_from_pointer_name(obj.cabinetlib.edge_w1,spec_group))
-        self.xml.add_element_with_text(elm_part,'EdgeLength1',fd.get_edgebanding_name_from_pointer_name(obj.cabinetlib.edge_l1,spec_group))
-        self.xml.add_element_with_text(elm_part,'EdgeWidth2',fd.get_edgebanding_name_from_pointer_name(obj.cabinetlib.edge_w2,spec_group))
-        self.xml.add_element_with_text(elm_part,'EdgeLength2',fd.get_edgebanding_name_from_pointer_name(obj.cabinetlib.edge_l2,spec_group))
+        self.xml.add_element_with_text(elm_part,'EdgeWidth1',utils.get_edgebanding_name_from_pointer_name(obj.cabinetlib.edge_w1,spec_group))
+        self.xml.add_element_with_text(elm_part,'EdgeLength1',utils.get_edgebanding_name_from_pointer_name(obj.cabinetlib.edge_l1,spec_group))
+        self.xml.add_element_with_text(elm_part,'EdgeWidth2',utils.get_edgebanding_name_from_pointer_name(obj.cabinetlib.edge_w2,spec_group))
+        self.xml.add_element_with_text(elm_part,'EdgeLength2',utils.get_edgebanding_name_from_pointer_name(obj.cabinetlib.edge_l2,spec_group))
         self.xml.add_element_with_text(elm_part,'DrawToken3D',"DRAW3DBOX CABINET")
         self.xml.add_element_with_text(elm_part,'ElvToken2D',"DRAW2DBOX CABINET")
         self.xml.add_element_with_text(elm_part,'BasePoint',self.get_part_base_point(assembly))
@@ -1938,9 +1926,9 @@ class OPS_export_mvfd(Operator):
             self.xml.add_element_with_text(elm_normal,'Z',str(norm[2]))
             for vert in face:
                 elm_vertex = self.xml.add_element(elm_face,'Vertex',"Vertex")
-                self.xml.add_element_with_text(elm_vertex,'X',str(fd.unit(vert[0])))
-                self.xml.add_element_with_text(elm_vertex,'Y',str(fd.unit(vert[1])))
-                self.xml.add_element_with_text(elm_vertex,'Z',str(fd.unit(vert[2])))
+                self.xml.add_element_with_text(elm_vertex,'X',str(unit.meter_to_active_unit(vert[0])))
+                self.xml.add_element_with_text(elm_vertex,'Y',str(unit.meter_to_active_unit(vert[1])))
+                self.xml.add_element_with_text(elm_vertex,'Z',str(unit.meter_to_active_unit(vert[2])))
 
     def write_machine_tokens(self,elm_part,obj_part):
         elm_tokens = self.xml.add_element(elm_part,"MachineTokens")
@@ -1970,7 +1958,7 @@ class OPS_export_mvfd(Operator):
         self.clear_and_collection_data(context)
         
         # CREATE XML
-        self.xml = fd.MV_XML()
+        self.xml = fd_types.MV_XML()
         root = self.xml.create_tree()
         
         elm_project = self.xml.add_element(root,'Project',project_name)
@@ -1997,7 +1985,6 @@ classes = [
            OPS_add_thumbnail_camera_and_lighting,
            OPS_create_unity_build,
            OPS_prepare_For_sketchfab,
-           OPS_bake_lighting,
            OPS_join_meshes_by_material,
            OPS_Prepare_Plan_view,
            OPS_Prepare_2d_elevations,

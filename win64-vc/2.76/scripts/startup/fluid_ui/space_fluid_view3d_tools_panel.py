@@ -18,35 +18,7 @@
 
 import bpy
 from bpy.types import Header, Menu, Panel
-
-import fd
-
-#TODO: Finish Project Template Implementation
-class PANEL_Project_Templates(Panel):
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "TOOLS"
-    bl_context = "objectmode"
-    bl_label = "Project Templates"
-    bl_options = {'DEFAULT_CLOSED'}
-    bl_category = "Fluid Designer"
-    
-    @classmethod
-    def poll(cls, context):
-        return True
-        
-    def draw_header(self, context):
-        layout = self.layout
-        layout.label('',icon='FILE_BACKUP')
-    
-    def draw(self, context):
-        layout = self.layout
-        box = layout.box()
-        box.label("Select a Project Template",icon='LAYER_ACTIVE')
-        split = box.split(.6)
-        split.template_icon_view(context.window_manager.mv,"project_templates",show_labels=True)
-        col = split.column()
-        col.operator("fd_general.create_project",text="Create Project",icon='ZOOMIN')
-        col.operator("fd_general.create_project",text="Save To Template",icon='BACK') #TODO: Create Save as Project Template Operator
+from mv import utils
 
 class MENU_Product_Library_Options(Menu):
     bl_label = "Product Library Options"
@@ -80,7 +52,7 @@ class MENU_Current_Cabinet_Menu(Menu):
 
     def draw(self, context):
         layout = self.layout
-        product_bp = fd.get_bp(context.object,'PRODUCT')
+        product_bp = utils.get_bp(context.object,'PRODUCT')
         if product_bp:
             layout.menu('MENU_Change_Cabinet_Spec_Group',icon='SOLO_ON')
             layout.separator()
@@ -98,7 +70,7 @@ class MENU_Change_Cabinet_Spec_Group(Menu):
     def draw(self, context):
         spec_groups = context.scene.cabinetlib.spec_groups
         layout = self.layout
-        product_bp = fd.get_bp(context.object,'PRODUCT')
+        product_bp = utils.get_bp(context.object,'PRODUCT')
         for spec_group in spec_groups:
             if product_bp.cabinetlib.spec_group_name == spec_group.name:
                 props = layout.operator('fd_material.change_product_spec_group',text=spec_group.name,icon='FILE_TICK')
