@@ -18,7 +18,7 @@ class Assembly():
     
     """ Type:string - The python module the assembly is stored in """
     module_name = ""    
-
+    
     """ Type:string - The library folder name to save assembly to """
     library_name = ""
     
@@ -56,7 +56,7 @@ class Assembly():
     
     """ Type:bpy.types.Object - z dimension of the assembly """
     obj_z = None
-
+    
     """ Type:enum_string("PRODUCT",
                          "INSERT") 
                          - Determines if the library assembly is an insert or a product """
@@ -94,7 +94,7 @@ class Assembly():
     
     """ Type:float - The default z location of the assembly  """
     height_above_floor = 0
-
+    
     def __init__(self,obj_bp=None):
         """ Assembly Constructor. If you want to create an instance of
             an existing Assembly then pass in the base point of the assembly 
