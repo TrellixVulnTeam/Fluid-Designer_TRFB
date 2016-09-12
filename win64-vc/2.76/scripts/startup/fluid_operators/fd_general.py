@@ -145,6 +145,7 @@ class OPS_drop_product(Operator):
         if self.product:
             if obj_bp:
                 if self.product.obj_bp.mv.update_id != "":
+                    print("UPDATE",self.product.obj_bp.mv.update_id)
                     eval('bpy.ops.' + self.product.obj_bp.mv.update_id + '("INVOKE_DEFAULT",object_name=self.product.obj_bp.name)')
             else:
                 self.product.draw()

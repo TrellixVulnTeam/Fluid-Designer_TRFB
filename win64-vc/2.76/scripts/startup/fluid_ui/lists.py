@@ -120,17 +120,6 @@ class LIST_edgeparts(UIList):
         split.label(text=item.name,icon='EDGESEL')
         split.prop(item,'thickness',text="")
 
-class LIST_productlist(UIList):
-
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        if item.bp_name in bpy.data.objects:
-            obj_bp = bpy.data.objects[item.bp_name]
-            layout.label(text=item.name,icon='LATTICE_DATA')
-            layout.prop(obj_bp.cabinetlib,'is_custom')
-            layout.operator('cabinetlib.prompts',text="",icon='INFO',emboss=False).object_name = obj_bp.name
-        else:
-            layout.label(text=item.name + " Not Found (Refresh List)",icon='ERROR')
-        
 class LIST_lib(UIList):
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -194,7 +183,6 @@ classes = [
            LIST_material_pointers,
            LIST_cutparts,
            LIST_edgeparts,
-           LIST_productlist,
            LIST_lib,
            LIST_lib_productlist,
            LIST_lib_insertlist,

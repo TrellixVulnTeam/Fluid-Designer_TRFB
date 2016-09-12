@@ -710,7 +710,7 @@ class OPS_Prepare_2d_elevations(Operator):
                         new_scene.mv.elevation_selected = existing_scenes[new_scene.name]
                         print("NEW SCENE",new_scene.mv.elevation_selected)
                         
-                    new_scene.mv.name_scene = obj.mv.name_object + " " + str(obj.cabinetlib.item_number)
+                    new_scene.mv.name_scene = obj.mv.name_object + " " + str(obj.mv.item_number)
                     new_scene.mv.elevation_img_name = obj.name
                     new_scene.mv.elevation_scene = True
                     
@@ -856,7 +856,7 @@ class OPS_genereate_views(Operator):
         bpy.ops.scene.new('INVOKE_DEFAULT',type='EMPTY')
         new_scene = context.scene
         new_scene.name = wall.obj_bp.name
-        new_scene.mv.name_scene = wall.obj_bp.mv.name_object + " " + str(wall.obj_bp.cabinetlib.item_number)
+        new_scene.mv.name_scene = wall.obj_bp.mv.name_object + " " + str(wall.obj_bp.mv.item_number)
         new_scene.mv.elevation_img_name = wall.obj_bp.name
         new_scene.mv.plan_view_scene = False
         new_scene.mv.elevation_scene = True
@@ -1062,7 +1062,7 @@ class OPS_prepare_2d_views(Operator):
                     bpy.ops.scene.new('INVOKE_DEFAULT',type='EMPTY')
                     new_scene = context.scene
                     new_scene.name = obj.name
-                    new_scene.mv.name_scene = obj.mv.name_object + " " + str(obj.cabinetlib.item_number)
+                    new_scene.mv.name_scene = obj.mv.name_object + " " + str(obj.mv.item_number)
                     new_scene.mv.elevation_img_name = obj.name
                     new_scene.mv.plan_view_scene = False
                     new_scene.mv.elevation_scene = True
@@ -1219,7 +1219,7 @@ class OPS_prepare_2d_views_OLD(Operator):
                     bpy.ops.scene.new('INVOKE_DEFAULT',type='EMPTY')
                     new_scene = context.scene
                     new_scene.name = obj.name   
-                    new_scene.mv.name_scene = obj.mv.name_object + " " + str(obj.cabinetlib.item_number)
+                    new_scene.mv.name_scene = obj.mv.name_object + " " + str(obj.mv.item_number)
                     new_scene.mv.elevation_img_name = obj.name
                     
                     #when creating a new scene first elevation scene.mv.plan_view_scene == True
@@ -1579,11 +1579,11 @@ class OPS_export_mvfd(Operator):
             self.xml.add_element_with_text(elm_product,'IsCorner','False')
             self.xml.add_element_with_text(elm_product,'LinkIDLocation',obj_product.users_scene[0].name)
             self.xml.add_element_with_text(elm_product,'LinkIDSpecificationGroup',spec_group.name)
-            if obj_product.cabinetlib.item_number == 0:
+            if obj_product.mv.item_number == 0:
                 self.xml.add_element_with_text(elm_product,'ItemNumber',str(item_number))
                 item_number += 1
             else:
-                self.xml.add_element_with_text(elm_product,'ItemNumber',str(obj_product.cabinetlib.item_number))
+                self.xml.add_element_with_text(elm_product,'ItemNumber',str(obj_product.mv.item_number))
             self.xml.add_element_with_text(elm_product,'LinkIDLibrary',obj_product.cabinetlib.library_name)
             self.xml.add_element_with_text(elm_product,'Width',self.distance(product.obj_x.location.x))
             self.xml.add_element_with_text(elm_product,'Height',self.distance(product.obj_z.location.z))
@@ -1632,11 +1632,11 @@ class OPS_export_mvfd(Operator):
             self.xml.add_element_with_text(elm_product,'IsCorner','False')
             self.xml.add_element_with_text(elm_product,'LinkIDLocation',obj.users_scene[0].name)
             self.xml.add_element_with_text(elm_product,'LinkIDSpecificationGroup',spec_group.name)
-            if obj_product.cabinetlib.item_number == 0:
+            if obj_product.mv.item_number == 0:
                 self.xml.add_element_with_text(elm_product,'ItemNumber',str(item_number))
                 item_number += 1
             else:
-                self.xml.add_element_with_text(elm_product,'ItemNumber',str(obj.cabinetlib.item_number))
+                self.xml.add_element_with_text(elm_product,'ItemNumber',str(obj.mv.item_number))
             self.xml.add_element_with_text(elm_product,'LinkIDLibrary',obj.cabinetlib.library_name)
             self.xml.add_element_with_text(elm_product,'Width',self.distance(obj.dimensions.x))
             self.xml.add_element_with_text(elm_product,'Height',self.distance(obj.dimensions.z))

@@ -174,7 +174,7 @@ def create_vertex_group_for_hooks(obj_mesh,vert_list,vgroupname):
 def set_object_name(obj):
     """ This function sets the name of an object to make the outliner easier to navigate
     """
-    counter = str(obj.cabinetlib.item_number)
+    counter = str(obj.mv.item_number)
     if obj.mv.type in {'VPDIMX','VPDIMY','VPDIMZ'}:
         obj.name = counter + '.' + obj.mv.type + '.' + obj.parent.mv.name_object if obj.parent else obj.mv.name_object
     elif obj.mv.type == 'BPASSEMBLY':

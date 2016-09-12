@@ -225,7 +225,7 @@ class OPS_draw_walls(Operator):
         obj_mesh.draw_type = 'WIRE'
         self.wall.obj_z.location.z = bpy.context.scene.mv.default_wall_height
         self.wall.obj_y.location.y = bpy.context.scene.mv.default_wall_depth
-        self.wall.obj_bp.cabinetlib.item_number = self.get_wall_count()
+        self.wall.obj_bp.mv.item_number = self.get_wall_count()
         if con:
             utils.connect_objects_location(con,self.wall.obj_bp)
             

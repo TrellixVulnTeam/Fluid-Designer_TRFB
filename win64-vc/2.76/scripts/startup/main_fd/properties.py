@@ -759,7 +759,6 @@ class List_Library_Item(PropertyGroup):
     selected = BoolProperty(name="Selected")
     has_thumbnail = BoolProperty(name="Has Thumbnail")
     has_file = BoolProperty(name="Has File")
-    is_custom = BoolProperty(name="Is Custom")
 
 bpy.utils.register_class(List_Library_Item)
 
@@ -1296,11 +1295,11 @@ class Machine_Point(PropertyGroup):
 bpy.utils.register_class(Machine_Point)
 
 class OBJECT_PROPERTIES(PropertyGroup):
+    #MOVE
     cutpart_name = StringProperty(name="Cutpart Name")
     edgepart_name = StringProperty(name="Edgepart Name")
-    
-    item_number = IntProperty(name="Item Number")
-    
+
+    #KEEP FOR NOW
     type_mesh = EnumProperty(name="Mesh Type",
                              items=[('NONE',"None","None"),
                                     ('CUTPART',"Cut Part","Cut Part"),
@@ -1312,6 +1311,7 @@ class OBJECT_PROPERTIES(PropertyGroup):
                              description="Select the Mesh Type.",
                              default='NONE')
     
+    #MOVE
     type_group = EnumProperty(name="Group Type",
                              items=[('NONE',"None","None"),
                                     ('PRODUCT',"Product","Product"),
@@ -1321,6 +1321,7 @@ class OBJECT_PROPERTIES(PropertyGroup):
                              description="Select the Group Type.",
                              default='NONE')
     
+    #REMOVE
     product_shape = EnumProperty(name="Group Type",
                                  items=[('RECTANGLE',"Rectangle","Rectangle"),
                                         ('INSIDE_NOTCH',"Inside Notch","Inside Notch"),
@@ -1332,19 +1333,24 @@ class OBJECT_PROPERTIES(PropertyGroup):
                                  description="Stores the shape of the product. Used by automated molding placement.",
                                  default='RECTANGLE')
     
+    #MOVE
     interior_open = BoolProperty(name="Interior Open",default=True)
     
     exterior_open = BoolProperty(name="Exterior Open",default=True)
     
+    #MOVE
     library_name = StringProperty(name="Library Name",
                                   description="Name of the library that this product is assigned.")
 
+    #REMOVE
     placement_type = StringProperty(name="Placement Type",
                                     description="Type of placement for products. 'STANDARD','CORNER'")
-
+    
+    #REMOVE
     product_shape = StringProperty(name="Product Shape",
                                    description="Shape of the product. 'RECTANGLE','INSIDE_NOTCH',''")
 
+    #KEEP FOR NOW
     spec_group_name = StringProperty(name="Specification Group Name",
                                      description="Current name of the specification group that is assigned to the group.")
     
@@ -1353,29 +1359,27 @@ class OBJECT_PROPERTIES(PropertyGroup):
     material_slots = CollectionProperty(name="Material Slot Collection",
                                         description="Collection of material slots used ",
                                         type=Material_Slot)
-
+    
+    #MOVE
     comment = StringProperty(name="Comment",
                              description="Comment to store information for reporting purposes.")
 
+    #MOVE
     mp = PointerProperty(name="Machine Point",
                          description="Machining Point",
                          type=Machine_Point)
     
+    #MOVE
     edge_w1 = StringProperty(name="Edge Width 1",description="Name of the edgebanding applied to Width 1")
     edge_l1 = StringProperty(name="Edge Length 1",description="Name of the edgebanding applied to Length 1")
     edge_w2 = StringProperty(name="Edge Width 2",description="Name of the edgebanding applied to Width 2")
     edge_l2 = StringProperty(name="Edge Length 2",description="Name of the edgebanding applied to Length 2")
     solid_stock = StringProperty(name="Solid Stock",description="Name of the solid stock material applied to the obj")
     
-    product_category = StringProperty(name="Product Category")
-    
-    product_sub_category = StringProperty(name="Product Sub Category")
-    
+    #MOVE
     mirror_z = BoolProperty(name="Flip Z",default = False,description = "Used in an product assembly to determine if the z dim is mirrored")
     mirror_y = BoolProperty(name="Flip Y",default = True,description = "Used in an product assembly to determine if the y dim is mirrored")
-    
-    is_custom = BoolProperty(name="Is Custom",default = False,description="If the product is custom then Solid Analyzer will read the geometry otherwise a product match will be used.")
-    
+
 bpy.utils.register_class(OBJECT_PROPERTIES)
     
 class SCENE_PROPERTIES(PropertyGroup):
@@ -1560,6 +1564,8 @@ class fd_object(PropertyGroup):
                         items=enum_object_types,
                         description="Select the Object Type.",
                         default='NONE')
+
+    item_number = IntProperty(name="Item Number")
 
     property_id = StringProperty(name="Property ID",
                                  description="This property allows objects to display a custom property page. This is the operator bl_id.")
