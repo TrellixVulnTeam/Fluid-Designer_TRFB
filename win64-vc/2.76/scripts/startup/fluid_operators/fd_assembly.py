@@ -885,7 +885,7 @@ class OPS_delete_selected_assembly(Operator):
         insert = fd_types.Assembly(obj_bp)
         if obj_bp.parent:
             for child in obj_bp.parent.children:
-                if child.cabinetlib.type_group == 'OPENING' and insert.obj_bp.location == child.location:
+                if child.mv.type_group == 'OPENING' and insert.obj_bp.location == child.location:
                     if insert.obj_bp.cabinetlib.placement_type == 'SPLITTER':
                         child.cabinetlib.interior_open = True
                         child.cabinetlib.exterior_open = True

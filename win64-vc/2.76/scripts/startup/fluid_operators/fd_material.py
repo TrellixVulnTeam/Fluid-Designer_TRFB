@@ -696,7 +696,7 @@ class OPS_get_materials(Operator):
 #                     mat.thickness = utils.get_part_thickness(obj)
 #                     mat.name= edge_name
                     
-            if obj.mv.type == 'BPASSEMBLY' and obj.cabinetlib.type_group == 'PRODUCT':
+            if obj.mv.type == 'BPASSEMBLY' and obj.mv.type_group == 'PRODUCT':
                 product = products.add()
                 product.name = obj.mv.name_object
                 product.bp_name = obj.name

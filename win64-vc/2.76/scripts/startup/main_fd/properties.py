@@ -1295,10 +1295,6 @@ class Machine_Point(PropertyGroup):
 bpy.utils.register_class(Machine_Point)
 
 class OBJECT_PROPERTIES(PropertyGroup):
-    #MOVE
-    cutpart_name = StringProperty(name="Cutpart Name")
-    edgepart_name = StringProperty(name="Edgepart Name")
-
     #KEEP FOR NOW
     type_mesh = EnumProperty(name="Mesh Type",
                              items=[('NONE',"None","None"),
@@ -1311,17 +1307,30 @@ class OBJECT_PROPERTIES(PropertyGroup):
                              description="Select the Mesh Type.",
                              default='NONE')
     
-    #MOVE
-    type_group = EnumProperty(name="Group Type",
-                             items=[('NONE',"None","None"),
-                                    ('PRODUCT',"Product","Product"),
-                                    ('INSERT',"Insert","Insert"),
-                                    ('SPLITTER',"Splitter","Splitter"),
-                                    ('OPENING',"Opening","Opening")],
-                             description="Select the Group Type.",
-                             default='NONE')
+    spec_group_name = StringProperty(name="Specification Group Name",
+                                     description="Current name of the specification group that is assigned to the group.")
     
+    spec_group_index = IntProperty(name="Specification Group Index")
+    
+    material_slots = CollectionProperty(name="Material Slot Collection",
+                                        description="Collection of material slots used ",
+                                        type=Material_Slot)    
+    
+    #MOVE
+    cutpart_name = StringProperty(name="Cutpart Name")
+    edgepart_name = StringProperty(name="Edgepart Name")
+
+    interior_open = BoolProperty(name="Interior Open",default=True)
+    
+    exterior_open = BoolProperty(name="Exterior Open",default=True)
+
     #REMOVE
+    placement_type = StringProperty(name="Placement Type",
+                                    description="Type of placement for products. 'STANDARD','CORNER'")
+
+    product_shape = StringProperty(name="Product Shape",
+                                   description="Shape of the product. 'RECTANGLE','INSIDE_NOTCH',''")
+
     product_shape = EnumProperty(name="Group Type",
                                  items=[('RECTANGLE',"Rectangle","Rectangle"),
                                         ('INSIDE_NOTCH',"Inside Notch","Inside Notch"),
@@ -1332,29 +1341,6 @@ class OBJECT_PROPERTIES(PropertyGroup):
                                         ('CUSTOM',"Custom","Custom")],
                                  description="Stores the shape of the product. Used by automated molding placement.",
                                  default='RECTANGLE')
-    
-    #MOVE
-    interior_open = BoolProperty(name="Interior Open",default=True)
-    
-    exterior_open = BoolProperty(name="Exterior Open",default=True)
-
-    #REMOVE
-    placement_type = StringProperty(name="Placement Type",
-                                    description="Type of placement for products. 'STANDARD','CORNER'")
-    
-    #REMOVE
-    product_shape = StringProperty(name="Product Shape",
-                                   description="Shape of the product. 'RECTANGLE','INSIDE_NOTCH',''")
-
-    #KEEP FOR NOW
-    spec_group_name = StringProperty(name="Specification Group Name",
-                                     description="Current name of the specification group that is assigned to the group.")
-    
-    spec_group_index = IntProperty(name="Specification Group Index")
-    
-    material_slots = CollectionProperty(name="Material Slot Collection",
-                                        description="Collection of material slots used ",
-                                        type=Material_Slot)
 
 bpy.utils.register_class(OBJECT_PROPERTIES)
     
@@ -1373,16 +1359,10 @@ class SCENE_PROPERTIES(PropertyGroup):
 
     sheets = CollectionProperty(name="Materials",
                                 type=Sheet_Stock)
-     
-#     sheet_index = IntProperty(name="Material Index",
-#                               update=select_material)
-     
+
     edgebanding = CollectionProperty(name="Edgebanding",
                                      type=Cutpart)
      
-#     edgeband_index = IntProperty(name="Edgebanding Index",
-#                                  update=select_edgebanding)
-    
     spec_groups = CollectionProperty(name="Spec Groups",
                                      type=Specification_Group)
     
@@ -1393,12 +1373,7 @@ class SCENE_PROPERTIES(PropertyGroup):
                                   type=List_Library_Item)
     
     product_index = IntProperty(name="Product Index",
-                                default=0) 
-    
-    #THIS VALUE IS USED TO NAME OBJECTS IT IS ONLY CALLED IN properties.Product().set_properties
-    product_counter = IntProperty(name="Product Counter",
-                                  default=1,
-                                  description="Used to count how many products are in the scene to assign item numbers")
+                                default=0)
     
     insert_tabs = EnumProperty(name="Insert Tabs",
                                items=[('INFO',"Main","Show the Part Info Page"),
@@ -1455,12 +1430,7 @@ class WM_PROPERTIES(PropertyGroup):
     
     total_items = IntProperty(name="Total Items",
                               default = 0)
-    
-    #USED FOR PROCESSING GET FROM WIN REG
-    path_to_mv_data = StringProperty(name="Path To Microvellum Data",
-                                     default="",
-                                     subtype='DIR_PATH')   
-    
+
     #TEXT EDITOR
     module_members = bpy.props.CollectionProperty(name="Module Members", 
                                                   type=List_Module_Members)    
@@ -1474,13 +1444,7 @@ class WM_PROPERTIES(PropertyGroup):
                                                     ('FIND',"Find","Find"),
                                                     ('PROPERTIES',"Properties","Properties")],
                                              default='LIBRARY_DEVELOPMENT')
-    
-#     completion_providers = PointerProperty(type = CompletionProviders)
-#     
-#     text_context_box = PointerProperty(type = ContextBoxProperties)
-#     
-#     text_description_box = PointerProperty(type = DescriptionBoxProperties)
-    
+
     def draw_inserts(self,layout):
         pass
     
@@ -1540,6 +1504,15 @@ class fd_object(PropertyGroup):
                         items=enum_object_types,
                         description="Select the Object Type.",
                         default='NONE')
+
+    type_group = EnumProperty(name="Group Type",
+                             items=[('NONE',"None","None"),
+                                    ('PRODUCT',"Product","Product"),
+                                    ('INSERT',"Insert","Insert"),
+                                    ('SPLITTER',"Splitter","Splitter"),
+                                    ('OPENING',"Opening","Opening")],
+                             description="Stores the Group Type.",
+                             default='NONE')
 
     item_number = IntProperty(name="Item Number")
 

@@ -206,7 +206,7 @@ class Assembly():
         opening = Assembly()
         opening.create_assembly()
         opening.obj_bp.parent = self.obj_bp
-        opening.obj_bp.cabinetlib.type_group = 'OPENING'
+        opening.obj_bp.mv.type_group = 'OPENING'
         opening.obj_bp.mv.name_object = "Opening"
         return opening
 
@@ -1125,7 +1125,7 @@ class Assembly():
         default_spec_group = bpy.context.scene.cabinetlib.spec_groups[bpy.context.scene.cabinetlib.spec_group_index]
         bpy.ops.fd_material.change_product_spec_group(object_name=self.obj_bp.name,spec_group_name=default_spec_group.name)
         
-        self.obj_bp.cabinetlib.type_group = self.type_assembly
+        self.obj_bp.mv.type_group = self.type_assembly
         self.obj_bp.cabinetlib.placement_type = self.placement_type
         self.obj_bp.cabinetlib.product_shape = self.product_shape
         self.obj_bp.mv.mirror_z = self.mirror_z

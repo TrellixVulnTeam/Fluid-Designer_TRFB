@@ -178,8 +178,8 @@ def set_object_name(obj):
     if obj.mv.type in {'VPDIMX','VPDIMY','VPDIMZ'}:
         obj.name = counter + '.' + obj.mv.type + '.' + obj.parent.mv.name_object if obj.parent else obj.mv.name_object
     elif obj.mv.type == 'BPASSEMBLY':
-        if obj.cabinetlib.type_group in {'PRODUCT','INSERT','OPENING'}:
-            obj.name = counter + '.' + obj.cabinetlib.type_group + '.' + obj.mv.name_object   
+        if obj.mv.type_group in {'PRODUCT','INSERT','OPENING'}:
+            obj.name = counter + '.' + obj.mv.type_group + '.' + obj.mv.name_object   
         else:
             obj.name = counter + '.BPASSEMBLY.' + obj.mv.name_object   
     elif obj.cabinetlib.type_mesh != 'NONE':
@@ -679,7 +679,7 @@ def get_folder_enum_previews(path,key):
 
 def get_bp(obj,group_type):
     if obj:
-        if obj.cabinetlib.type_group == group_type and obj.mv.type == 'BPASSEMBLY':
+        if obj.mv.type_group == group_type and obj.mv.type == 'BPASSEMBLY':
             return obj
         else:
             if obj.parent:
@@ -729,7 +729,7 @@ def set_property_id(obj,property_id):
 
 def get_insert_bp_list(obj_bp,insert_list):
     for child in obj_bp.children:
-        if child.mv.type == 'BPASSEMBLY' and child.cabinetlib.type_group == 'INSERT':
+        if child.mv.type == 'BPASSEMBLY' and child.mv.type_group == 'INSERT':
             insert_list.append(child)
             get_insert_bp_list(child,insert_list)
 

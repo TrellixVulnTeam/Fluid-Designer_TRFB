@@ -47,7 +47,7 @@ class Parametric_Wall_Appliance(fd_types.Assembly):
 #                         
 #             ctop = LM_countertops.Straight_Countertop()
 #             ctop.draw()
-#             ctop.obj_bp.cabinetlib.type_group = 'INSERT'
+#             ctop.obj_bp.mv.type_group = 'INSERT'
 #             ctop.obj_bp.parent = self.obj_bp
 #             ctop.x_loc('-Countertop_Overhang_Left',[Countertop_Overhang_Left])
 #             ctop.y_loc('Countertop_Overhang_Back',[Countertop_Overhang_Back])

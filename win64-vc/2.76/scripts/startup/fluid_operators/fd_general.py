@@ -411,7 +411,7 @@ class OPS_drop_insert(Operator):
         insert_type = self.insert.obj_bp.cabinetlib.placement_type
         for obj in  bpy.context.scene.objects:
             opening = None
-            if obj.cabinetlib.type_group == 'OPENING':
+            if obj.mv.type_group == 'OPENING':
                 if insert_type in {'INTERIOR','SPLITTER'}:
                     opening = fd_types.Assembly(obj) if obj.cabinetlib.interior_open else None
                 if insert_type == 'EXTERIOR':

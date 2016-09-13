@@ -1524,7 +1524,7 @@ class OPS_export_mvfd(Operator):
                     if obj.mv.type == 'BPWALL':
                         self.walls.append(obj)
                     if obj.mv.type == 'BPASSEMBLY':
-                        if obj.cabinetlib.type_group == 'PRODUCT':
+                        if obj.mv.type_group == 'PRODUCT':
                             self.products.append(obj)
                     if obj.cabinetlib.type_mesh == 'BUYOUT' and obj.parent is None:
                         self.buyout_products.append(obj)
@@ -1815,19 +1815,19 @@ class OPS_export_mvfd(Operator):
             self.write_stl_files_for_product(elm_parts, child, spec_group)
     
     def get_part_x_location(self,obj,value):
-        if obj.parent is None or obj.parent.cabinetlib.type_group == 'PRODUCT':
+        if obj.parent is None or obj.parent.mv.type_group == 'PRODUCT':
             return self.location(value)
         value += obj.parent.location.x
         return self.get_part_x_location(obj.parent,value)
 
     def get_part_y_location(self,obj,value):
-        if obj.parent is None or obj.parent.cabinetlib.type_group == 'PRODUCT':
+        if obj.parent is None or obj.parent.mv.type_group == 'PRODUCT':
             return self.location(value)
         value += obj.parent.location.y
         return self.get_part_y_location(obj.parent,value)
 
     def get_part_z_location(self,obj,value):
-        if obj.parent is None or obj.parent.cabinetlib.type_group == 'PRODUCT':
+        if obj.parent is None or obj.parent.mv.type_group == 'PRODUCT':
             return self.location(value)
         value += obj.parent.location.z
         return self.get_part_z_location(obj.parent,value)
