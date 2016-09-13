@@ -559,7 +559,7 @@ class OPS_add_machine_token(Operator):
         return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
 
     def execute(self, context):
-        token = context.object.cabinetlib.mp.machine_tokens.add()      
+        token = context.object.mv.mp.machine_tokens.add()      
         token.name = self.token_name
         token.type_token = self.token_type
         return {'FINISHED'}
@@ -582,7 +582,7 @@ class OPS_delete_machine_token(Operator):
         return False
     
     def execute(self, context):
-        tokens = context.object.cabinetlib.mp.machine_tokens
+        tokens = context.object.mv.mp.machine_tokens
         if self.token_name in tokens:
             for index, token in enumerate(tokens):
                 if token.name == self.token_name:

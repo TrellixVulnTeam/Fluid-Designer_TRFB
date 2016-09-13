@@ -1258,7 +1258,7 @@ class Machine_Token(PropertyGroup):
                 box.prop(self,'associative_depth')
                 
     def add_driver(self,obj,token_property,expression,driver_vars,index=None):
-        data_path = 'cabinetlib.mp.machine_tokens.["' + self.name + '"].' + token_property
+        data_path = 'mv.mp.machine_tokens.["' + self.name + '"].' + token_property
         
         if data_path != "":
             if index:
@@ -1355,11 +1355,6 @@ class OBJECT_PROPERTIES(PropertyGroup):
     material_slots = CollectionProperty(name="Material Slot Collection",
                                         description="Collection of material slots used ",
                                         type=Material_Slot)
-
-    #MOVE
-    mp = PointerProperty(name="Machine Point",
-                         description="Machining Point",
-                         type=Machine_Point)
 
 bpy.utils.register_class(OBJECT_PROPERTIES)
     
@@ -1600,6 +1595,10 @@ class fd_object(PropertyGroup):
     edge_w2 = StringProperty(name="Edge Width 2",description="Name of the edgebanding applied to Width 2")
     edge_l2 = StringProperty(name="Edge Length 2",description="Name of the edgebanding applied to Length 2")
     solid_stock = StringProperty(name="Solid Stock",description="Name of the solid stock material applied to the obj")    
+    
+    mp = PointerProperty(name="Machine Point",
+                         description="Machining Point",
+                         type=Machine_Point)    
     
     library_name = StringProperty(name="Library Name",
                                   description="Name of the library that this product is assigned.")    

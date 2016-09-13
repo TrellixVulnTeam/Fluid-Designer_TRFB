@@ -1263,7 +1263,7 @@ class Part(Assembly):
         """
         for child in self.obj_bp.children:
             if child.cabinetlib.type_mesh == 'CUTPART':
-                token = child.cabinetlib.mp.add_machine_token(machining_name ,machining_type,machining_face,machining_edge)
+                token = child.mv.mp.add_machine_token(machining_name ,machining_type,machining_face,machining_edge)
                 return child, token
                  
     def get_cutparts(self):
@@ -1279,12 +1279,12 @@ class Part(Assembly):
         """ Returns:None - sets a driver for a machine token that is passed in.
         """
         data_path = ""
-        for m_token in obj.cabinetlib.mp.machine_tokens:
+        for m_token in obj.mv.mp.machine_tokens:
             if m_token == token:
                 if index:
-                    data_path = 'cabinetlib.mp.machine_tokens.["' + token.name + '"].' + token_property + '[' + str(index) + ']'
+                    data_path = 'mv.mp.machine_tokens.["' + token.name + '"].' + token_property + '[' + str(index) + ']'
                 else:
-                    data_path = 'cabinetlib.mp.machine_tokens.["' + token.name + '"].' + token_property
+                    data_path = 'mv.mp.machine_tokens.["' + token.name + '"].' + token_property
                 obj.driver_add(data_path)
                  
         if data_path != "":

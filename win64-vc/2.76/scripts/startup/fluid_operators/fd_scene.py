@@ -1932,7 +1932,7 @@ class OPS_export_mvfd(Operator):
 
     def write_machine_tokens(self,elm_part,obj_part):
         elm_tokens = self.xml.add_element(elm_part,"MachineTokens")
-        for token in obj_part.cabinetlib.mp.machine_tokens:
+        for token in obj_part.mv.mp.machine_tokens:
             elm_token = self.xml.add_element(elm_tokens,'MachineToken',token.name)
             param_dict = token.create_parameter_dictionary()
             if token.type_token == 'CORNERNOTCH':
