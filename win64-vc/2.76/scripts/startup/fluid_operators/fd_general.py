@@ -1387,7 +1387,6 @@ class OPS_brd_library_items(Operator):
         filepath = get_thumbnail_path()
         script = os.path.join(bpy.app.tempdir,'thumbnail.py')
         script_file = open(script,'w')
-        script_file.write("import fd\n")
         script_file.write("import bpy\n")
         script_file.write("import os\n")
         script_file.write("bpy.ops.fd_material.reload_spec_group_from_library_modules()\n")
