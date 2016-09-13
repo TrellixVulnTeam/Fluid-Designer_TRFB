@@ -1355,10 +1355,6 @@ class OBJECT_PROPERTIES(PropertyGroup):
     material_slots = CollectionProperty(name="Material Slot Collection",
                                         description="Collection of material slots used ",
                                         type=Material_Slot)
-    
-    #MOVE
-    comment = StringProperty(name="Comment",
-                             description="Comment to store information for reporting purposes.")
 
     #MOVE
     mp = PointerProperty(name="Machine Point",
@@ -1618,6 +1614,9 @@ class fd_object(PropertyGroup):
     
     class_name = StringProperty(name="Class Name",
                                 description="This is the python class name the assembly is from")    
+    
+    comment = StringProperty(name="Comment",
+                             description="Comment to store information for reporting purposes.")    
     
     opengl_dim = PointerProperty(type=opengl_dim)
 

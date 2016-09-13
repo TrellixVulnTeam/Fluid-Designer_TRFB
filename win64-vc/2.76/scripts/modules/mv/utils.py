@@ -1026,7 +1026,7 @@ def draw_object_info(layout,obj):
                 row.prop(obj,"rotation_euler",index=2,text="Z")
                 
     row = box.row()
-    row.prop(obj.cabinetlib,'comment')
+    row.prop(obj.mv,'comment')
 
 def draw_object_data(layout,obj):
     

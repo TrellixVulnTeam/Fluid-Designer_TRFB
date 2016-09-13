@@ -1662,7 +1662,7 @@ class OPS_export_mvfd(Operator):
             self.xml.add_element_with_text(elm_part,'LinkIDParent',"None")
             self.xml.add_element_with_text(elm_part,'PartLength',str(unit.meter_to_active_unit(obj.dimensions.x)))
             self.xml.add_element_with_text(elm_part,'PartWidth',str(unit.meter_to_active_unit(obj.dimensions.y)))
-            self.xml.add_element_with_text(elm_part,'Comment',obj.cabinetlib.comment)
+            self.xml.add_element_with_text(elm_part,'Comment',obj.mv.comment)
             self.xml.add_element_with_text(elm_part,'XOrigin',self.get_part_x_location(obj,obj.location.x))
             self.xml.add_element_with_text(elm_part,'YOrigin',self.get_part_y_location(obj,obj.location.y))
             self.xml.add_element_with_text(elm_part,'ZOrigin',self.get_part_z_location(obj,obj.location.z))
@@ -1746,8 +1746,8 @@ class OPS_export_mvfd(Operator):
                 if hide and not hide.value():
                     comment = ""
                     for achild in assembly.obj_bp.children:
-                        if achild.cabinetlib.comment != "":
-                            comment = achild.cabinetlib.comment
+                        if achild.mv.comment != "":
+                            comment = achild.mv.comment
                             break
                     elm_item = self.xml.add_element(elm_subassembly,'Subassembly',assembly.obj_bp.mv.name_object)
                     self.xml.add_element_with_text(elm_item,'LinkID',assembly.obj_bp.name)
@@ -1773,7 +1773,7 @@ class OPS_export_mvfd(Operator):
                     self.xml.add_element_with_text(elm_item,'XDimension',self.distance(assembly.obj_x.location.x))
                     self.xml.add_element_with_text(elm_item,'YDimension',self.distance(assembly.obj_y.location.y))
                     self.xml.add_element_with_text(elm_item,'ZDimension',self.distance(assembly.obj_z.location.z))                
-                    self.xml.add_element_with_text(elm_item,'Comment',assembly.obj_bp.cabinetlib.comment)
+                    self.xml.add_element_with_text(elm_item,'Comment',assembly.obj_bp.mv.comment)
                     elm_parts = self.xml.add_element(elm_item,"Parts")
                     self.write_stl_files_for_product(elm_parts,assembly.obj_bp,spec_group)
                     
@@ -1795,7 +1795,7 @@ class OPS_export_mvfd(Operator):
                     self.xml.add_element_with_text(elm_item,'XOrigin',self.get_part_x_location(child,child.location.x))
                     self.xml.add_element_with_text(elm_item,'YOrigin',self.get_part_y_location(child,child.location.y))
                     self.xml.add_element_with_text(elm_item,'ZOrigin',self.get_part_z_location(child,child.location.z))                    
-                    self.xml.add_element_with_text(elm_item,'Comment',child.cabinetlib.comment)
+                    self.xml.add_element_with_text(elm_item,'Comment',child.mv.comment)
                     self.write_machine_tokens(elm_item,child)
             self.write_hardware_for_product(elm_hardware, child)
 
@@ -1804,7 +1804,7 @@ class OPS_export_mvfd(Operator):
             if child.cabinetlib.type_mesh == 'BUYOUT':
                 if not child.hide:
                     elm_item = self.xml.add_element(elm_buyout,'Buyout',child.mv.name_object)
-                    self.xml.add_element_with_text(elm_item,'Comment',child.cabinetlib.comment)
+                    self.xml.add_element_with_text(elm_item,'Comment',child.mv.comment)
             self.write_buyout_for_product(elm_buyout, child)
             
     def write_stl_files_for_product(self,elm_parts,obj_bp,spec_group):
@@ -1858,7 +1858,7 @@ class OPS_export_mvfd(Operator):
         self.xml.add_element_with_text(elm_part,'LinkIDParent',assembly.obj_bp.parent.name)
         self.xml.add_element_with_text(elm_part,'PartLength',str(unit.meter_to_active_unit(obj.dimensions.x)))
         self.xml.add_element_with_text(elm_part,'PartWidth',str(unit.meter_to_active_unit(obj.dimensions.y)))
-        self.xml.add_element_with_text(elm_part,'Comment',assembly.obj_bp.cabinetlib.comment)
+        self.xml.add_element_with_text(elm_part,'Comment',assembly.obj_bp.mv.comment)
         self.xml.add_element_with_text(elm_part,'XOrigin',self.get_part_x_location(assembly.obj_bp,assembly.obj_bp.location.x))
         self.xml.add_element_with_text(elm_part,'YOrigin',self.get_part_y_location(assembly.obj_bp,assembly.obj_bp.location.y))
         self.xml.add_element_with_text(elm_part,'ZOrigin',self.get_part_z_location(assembly.obj_bp,assembly.obj_bp.location.z))
