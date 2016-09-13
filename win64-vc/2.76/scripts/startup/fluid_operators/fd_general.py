@@ -233,7 +233,7 @@ class OPS_drop_product(Operator):
             if placement == 'LEFT':
                 add_x_loc = 0
                 add_y_loc = 0
-                if sel_product.obj_bp.cabinetlib.placement_type == 'Corner':
+                if sel_product.obj_bp.mv.placement_type == 'Corner':
                     rot += math.radians(90)
                     add_x_loc = math.cos(rot) * sel_product.obj_y.location.y
                     add_y_loc = math.sin(rot) * sel_product.obj_y.location.y
@@ -283,7 +283,7 @@ class OPS_drop_product(Operator):
             self.product.obj_bp.location.y = selected_point[1]
             
         if event.type == 'LEFTMOUSE':
-            if sel_product and sel_product.obj_bp.cabinetlib.placement_type == 'Corner':
+            if sel_product and sel_product.obj_bp.mv.placement_type == 'Corner':
                 next_wall = sel_product.get_next_wall(placement)
                 if next_wall:
                     obj_wall_bp = next_wall.obj_bp
@@ -408,7 +408,7 @@ class OPS_drop_insert(Operator):
         return {'FINISHED'}
 
     def show_openings(self):
-        insert_type = self.insert.obj_bp.cabinetlib.placement_type
+        insert_type = self.insert.obj_bp.mv.placement_type
         for obj in  bpy.context.scene.objects:
             opening = None
             if obj.mv.type_group == 'OPENING':
@@ -438,11 +438,11 @@ class OPS_drop_insert(Operator):
             return opening
             
     def place_insert(self,opening):
-        if self.insert.obj_bp.cabinetlib.placement_type == 'INTERIOR':
+        if self.insert.obj_bp.mv.placement_type == 'INTERIOR':
             opening.obj_bp.mv.interior_open = False
-        if self.insert.obj_bp.cabinetlib.placement_type == 'EXTERIOR':
+        if self.insert.obj_bp.mv.placement_type == 'EXTERIOR':
             opening.obj_bp.mv.exterior_open = False
-        if self.insert.obj_bp.cabinetlib.placement_type == 'SPLITTER':
+        if self.insert.obj_bp.mv.placement_type == 'SPLITTER':
             opening.obj_bp.mv.interior_open = False
             opening.obj_bp.mv.exterior_open = False
 
@@ -842,7 +842,7 @@ class OPS_place_product(bpy.types.Operator):
             self.product.obj_bp.location.x = left_x + self.left_offset
             self.product.obj_x.location.x = (self.default_width + (self.selected_location - left_x) - offsets) / self.quantity
         if self.placement_on_wall == 'LEFT':
-            if self.product.obj_bp.cabinetlib.placement_type == 'Corner':
+            if self.product.obj_bp.mv.placement_type == 'Corner':
                 self.product.obj_bp.rotation_euler.z = math.radians(0)
             self.product.obj_bp.location.x = left_x + self.left_offset
             self.product.obj_x.location.x = self.product_width
@@ -850,7 +850,7 @@ class OPS_place_product(bpy.types.Operator):
             self.product.obj_x.location.x = self.product_width
             self.product.obj_bp.location.x = left_x + (right_x - left_x)/2 - ((self.product.calc_width()/2) * self.quantity)
         if self.placement_on_wall == 'RIGHT':
-            if self.product.obj_bp.cabinetlib.placement_type == 'Corner':
+            if self.product.obj_bp.mv.placement_type == 'Corner':
                 self.product.obj_bp.rotation_euler.z = math.radians(-90)
             self.product.obj_x.location.x = self.product_width
             self.product.obj_bp.location.x = (right_x - self.product.calc_width()) - self.right_offset
@@ -945,7 +945,7 @@ class OPS_place_product(bpy.types.Operator):
     
     def draw(self, context):
         layout = self.layout
-        if self.product.obj_bp.cabinetlib.placement_type == 'Corner':
+        if self.product.obj_bp.mv.placement_type == 'Corner':
             self.allow_fills = False
             self.allow_quantites = False
         

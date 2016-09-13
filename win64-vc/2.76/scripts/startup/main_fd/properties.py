@@ -1321,9 +1321,6 @@ class OBJECT_PROPERTIES(PropertyGroup):
     edgepart_name = StringProperty(name="Edgepart Name")
 
     #REMOVE
-    placement_type = StringProperty(name="Placement Type",
-                                    description="Type of placement for products. 'STANDARD','CORNER'")
-
     product_shape = StringProperty(name="Product Shape",
                                    description="Shape of the product. 'RECTANGLE','INSIDE_NOTCH',''")
 
@@ -1569,9 +1566,12 @@ class fd_object(PropertyGroup):
                          description="Machining Point",
                          type=Machine_Point)    
     
-    interior_open = BoolProperty(name="Interior Open",default=True)
+    placement_type = StringProperty(name="Placement Type",
+                                    description="Type of placement for products and inserts 'STANDARD','CORNER','INTERIOR','EXTERIOR','SPLITTER'")    
     
-    exterior_open = BoolProperty(name="Exterior Open",default=True)    
+    interior_open = BoolProperty(name="Interior Open",description="Used for inserts to determine if an opening has an interior assembly",default=True)
+    
+    exterior_open = BoolProperty(name="Exterior Open",description="Used for inserts to determine if an opening has an exterior assembly",default=True)    
     
     library_name = StringProperty(name="Library Name",
                                   description="Name of the library that this product is assigned.")    
