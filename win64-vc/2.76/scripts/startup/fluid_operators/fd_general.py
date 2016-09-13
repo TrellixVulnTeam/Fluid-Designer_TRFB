@@ -413,9 +413,9 @@ class OPS_drop_insert(Operator):
             opening = None
             if obj.mv.type_group == 'OPENING':
                 if insert_type in {'INTERIOR','SPLITTER'}:
-                    opening = fd_types.Assembly(obj) if obj.cabinetlib.interior_open else None
+                    opening = fd_types.Assembly(obj) if obj.mv.interior_open else None
                 if insert_type == 'EXTERIOR':
-                    opening = fd_types.Assembly(obj) if obj.cabinetlib.exterior_open else None
+                    opening = fd_types.Assembly(obj) if obj.mv.exterior_open else None
                 if opening:
                     cage = opening.get_cage()
                     opening.obj_x.hide = True
@@ -439,12 +439,12 @@ class OPS_drop_insert(Operator):
             
     def place_insert(self,opening):
         if self.insert.obj_bp.cabinetlib.placement_type == 'INTERIOR':
-            opening.obj_bp.cabinetlib.interior_open = False
+            opening.obj_bp.mv.interior_open = False
         if self.insert.obj_bp.cabinetlib.placement_type == 'EXTERIOR':
-            opening.obj_bp.cabinetlib.exterior_open = False
+            opening.obj_bp.mv.exterior_open = False
         if self.insert.obj_bp.cabinetlib.placement_type == 'SPLITTER':
-            opening.obj_bp.cabinetlib.interior_open = False
-            opening.obj_bp.cabinetlib.exterior_open = False
+            opening.obj_bp.mv.interior_open = False
+            opening.obj_bp.mv.exterior_open = False
 
         utils.copy_assembly_drivers(opening,self.insert)
         #DONT ASSIGN PROPERTIES ID's SO USERS CAN ACCESS PROPERTIES FOR INSERTS USED IN CLOSET LIBRARY

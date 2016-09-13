@@ -151,10 +151,10 @@ class Vertical_Splitters(fd_types.Assembly):
         interior = eval('self.interior_' + str(index))
         
         if interior:
-            opening.obj_bp.cabinetlib.interior_open = False
+            opening.obj_bp.mv.interior_open = False
         
         if exterior:
-            opening.obj_bp.cabinetlib.exterior_open = False
+            opening.obj_bp.mv.exterior_open = False
             
         return opening
         
@@ -340,10 +340,10 @@ class Horizontal_Splitters(fd_types.Assembly):
         interior = eval('self.interior_' + str(index))
         
         if interior:
-            opening.obj_bp.cabinetlib.interior_open = False
+            opening.obj_bp.mv.interior_open = False
         
         if exterior:
-            opening.obj_bp.cabinetlib.exterior_open = False
+            opening.obj_bp.mv.exterior_open = False
             
         return opening
         
@@ -554,10 +554,10 @@ class Vertical_FF_Splitters(fd_types.Assembly):
         interior = eval('self.interior_' + str(index))
         
         if interior:
-            opening.obj_bp.cabinetlib.interior_open = False
+            opening.obj_bp.mv.interior_open = False
         
         if exterior:
-            opening.obj_bp.cabinetlib.interior_open = False
+            opening.obj_bp.mv.exterior_open = False
             
         return opening
         
@@ -780,10 +780,10 @@ class Vertical_FF_Notched_Splitters(fd_types.Assembly):
         interior = eval('self.interior_' + str(index))
         
         if interior:
-            opening.obj_bp.cabinetlib.interior_open = False
+            opening.obj_bp.mv.interior_open = False
         
         if exterior:
-            opening.obj_bp.cabinetlib.interior_open = False
+            opening.obj_bp.mv.exterior_open = False
             
         return opening
         
@@ -1049,10 +1049,10 @@ class Horizontal_FF_Splitters(fd_types.Assembly):
         interior = eval('self.interior_' + str(index))
         
         if interior:
-            opening.obj_bp.cabinetlib.interior_open = False
+            opening.obj_bp.mv.interior_open = False
         
         if exterior:
-            opening.obj_bp.cabinetlib.interior_open = False
+            opening.obj_bp.mv.exterior_open = False
             
         return opening
         

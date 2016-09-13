@@ -1320,10 +1320,6 @@ class OBJECT_PROPERTIES(PropertyGroup):
     cutpart_name = StringProperty(name="Cutpart Name")
     edgepart_name = StringProperty(name="Edgepart Name")
 
-    interior_open = BoolProperty(name="Interior Open",default=True)
-    
-    exterior_open = BoolProperty(name="Exterior Open",default=True)
-
     #REMOVE
     placement_type = StringProperty(name="Placement Type",
                                     description="Type of placement for products. 'STANDARD','CORNER'")
@@ -1572,6 +1568,10 @@ class fd_object(PropertyGroup):
     mp = PointerProperty(name="Machine Point",
                          description="Machining Point",
                          type=Machine_Point)    
+    
+    interior_open = BoolProperty(name="Interior Open",default=True)
+    
+    exterior_open = BoolProperty(name="Exterior Open",default=True)    
     
     library_name = StringProperty(name="Library Name",
                                   description="Name of the library that this product is assigned.")    

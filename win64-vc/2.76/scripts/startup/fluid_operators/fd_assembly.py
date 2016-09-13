@@ -887,14 +887,14 @@ class OPS_delete_selected_assembly(Operator):
             for child in obj_bp.parent.children:
                 if child.mv.type_group == 'OPENING' and insert.obj_bp.location == child.location:
                     if insert.obj_bp.cabinetlib.placement_type == 'SPLITTER':
-                        child.cabinetlib.interior_open = True
-                        child.cabinetlib.exterior_open = True
+                        child.mv.interior_open = True
+                        child.mv.exterior_open = True
                         break
                     if insert.obj_bp.cabinetlib.placement_type == 'INTERIOR':
-                        child.cabinetlib.interior_open = True
+                        child.mv.interior_open = True
                         break
                     if insert.obj_bp.cabinetlib.placement_type == 'EXTERIOR':
-                        child.cabinetlib.exterior_open = True
+                        child.mv.exterior_open = True
                         break
 
     def invoke(self,context,event):
