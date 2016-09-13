@@ -369,7 +369,7 @@ def get_material_name(obj):
     
     if obj.cabinetlib.type_mesh == 'SOLIDSTOCK':
         thickness = str(round(unit.meter_to_active_unit(get_part_thickness(obj)),4))
-        return thickness + " " + obj.cabinetlib.solid_stock
+        return thickness + " " + obj.mv.solid_stock
 
 def get_part_thickness(obj):
     if obj.cabinetlib.type_mesh == 'CUTPART':

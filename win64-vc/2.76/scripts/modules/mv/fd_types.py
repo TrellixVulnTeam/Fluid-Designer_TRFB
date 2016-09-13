@@ -1218,7 +1218,7 @@ class Part(Assembly):
         """
         for child in self.obj_bp.children:
             if child.type == 'MESH' and child.cabinetlib.type_mesh == 'SOLIDSTOCK':
-                child.cabinetlib.solid_stock = solid_stock_name
+                child.mv.solid_stock = solid_stock_name
 
     def edgebanding(self,edgebanding_name,w1=False,l1=False,w2=False,l2=False):
         """ Returns:None - assigns every mesh cut part 
@@ -1241,13 +1241,13 @@ class Part(Assembly):
             if child.type == 'MESH' and child.cabinetlib.type_mesh == 'CUTPART':
                 child.cabinetlib.edgepart_name = edgebanding_name
                 if w1:
-                    child.cabinetlib.edge_w1 = edgebanding_name
+                    child.mv.edge_w1 = edgebanding_name
                 if l1:
-                    child.cabinetlib.edge_l1 = edgebanding_name
+                    child.mv.edge_l1 = edgebanding_name
                 if w2:
-                    child.cabinetlib.edge_w2 = edgebanding_name
+                    child.mv.edge_w2 = edgebanding_name
                 if l2:
-                    child.cabinetlib.edge_l2 = edgebanding_name
+                    child.mv.edge_l2 = edgebanding_name
                  
     def add_machine_token(self,machining_name,machining_type,machining_face,machining_edge="1"):
         """ Returns:tuple(bpy.types.Object,properties.Machining_Token) - adds a machine token

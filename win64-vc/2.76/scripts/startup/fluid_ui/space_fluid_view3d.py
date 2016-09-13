@@ -1103,7 +1103,7 @@ def draw_object_materials(layout,obj):
             
         if obj.cabinetlib.type_mesh == 'SOLIDSTOCK':
             row = layout.row(align=True)
-            row.prop(obj.cabinetlib,"solid_stock")
+            row.prop(obj.mv,"solid_stock")
 
         row = layout.row()
         row.label('Material Slots:')

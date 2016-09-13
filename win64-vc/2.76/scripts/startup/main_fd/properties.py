@@ -1361,12 +1361,7 @@ class OBJECT_PROPERTIES(PropertyGroup):
                          description="Machining Point",
                          type=Machine_Point)
     
-    #MOVE
-    edge_w1 = StringProperty(name="Edge Width 1",description="Name of the edgebanding applied to Width 1")
-    edge_l1 = StringProperty(name="Edge Length 1",description="Name of the edgebanding applied to Length 1")
-    edge_w2 = StringProperty(name="Edge Width 2",description="Name of the edgebanding applied to Width 2")
-    edge_l2 = StringProperty(name="Edge Length 2",description="Name of the edgebanding applied to Length 2")
-    solid_stock = StringProperty(name="Solid Stock",description="Name of the solid stock material applied to the obj")
+
     
     #MOVE
     mirror_z = BoolProperty(name="Flip Z",default = False,description = "Used in an product assembly to determine if the z dim is mirrored")
@@ -1602,6 +1597,13 @@ class fd_object(PropertyGroup):
     is_cabinet_pull = BoolProperty(name="Is Cabinet Pull",
                                    description="Determines if the object is a cabinet pull.",
                                    default=False)
+    
+    #MOVE
+    edge_w1 = StringProperty(name="Edge Width 1",description="Name of the edgebanding applied to Width 1")
+    edge_l1 = StringProperty(name="Edge Length 1",description="Name of the edgebanding applied to Length 1")
+    edge_w2 = StringProperty(name="Edge Width 2",description="Name of the edgebanding applied to Width 2")
+    edge_l2 = StringProperty(name="Edge Length 2",description="Name of the edgebanding applied to Length 2")
+    solid_stock = StringProperty(name="Solid Stock",description="Name of the solid stock material applied to the obj")    
     
     library_name = StringProperty(name="Library Name",
                                   description="Name of the library that this product is assigned.")    
