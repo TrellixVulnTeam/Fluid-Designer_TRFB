@@ -1337,10 +1337,6 @@ class OBJECT_PROPERTIES(PropertyGroup):
     interior_open = BoolProperty(name="Interior Open",default=True)
     
     exterior_open = BoolProperty(name="Exterior Open",default=True)
-    
-    #MOVE
-    library_name = StringProperty(name="Library Name",
-                                  description="Name of the library that this product is assigned.")
 
     #REMOVE
     placement_type = StringProperty(name="Placement Type",
@@ -1610,6 +1606,9 @@ class fd_object(PropertyGroup):
     is_cabinet_pull = BoolProperty(name="Is Cabinet Pull",
                                    description="Determines if the object is a cabinet pull.",
                                    default=False)
+    
+    library_name = StringProperty(name="Library Name",
+                                  description="Name of the library that this product is assigned.")    
     
     package_name = StringProperty(name="Package Name",
                                   description="This is the python package the assembly is from")

@@ -1584,7 +1584,7 @@ class OPS_export_mvfd(Operator):
                 item_number += 1
             else:
                 self.xml.add_element_with_text(elm_product,'ItemNumber',str(obj_product.mv.item_number))
-            self.xml.add_element_with_text(elm_product,'LinkIDLibrary',obj_product.cabinetlib.library_name)
+            self.xml.add_element_with_text(elm_product,'LinkIDLibrary',obj_product.mv.library_name)
             self.xml.add_element_with_text(elm_product,'Width',self.distance(product.obj_x.location.x))
             self.xml.add_element_with_text(elm_product,'Height',self.distance(product.obj_z.location.z))
             self.xml.add_element_with_text(elm_product,'Depth',self.distance(product.obj_y.location.y))
@@ -1637,7 +1637,7 @@ class OPS_export_mvfd(Operator):
                 item_number += 1
             else:
                 self.xml.add_element_with_text(elm_product,'ItemNumber',str(obj.mv.item_number))
-            self.xml.add_element_with_text(elm_product,'LinkIDLibrary',obj.cabinetlib.library_name)
+            self.xml.add_element_with_text(elm_product,'LinkIDLibrary',obj.mv.library_name)
             self.xml.add_element_with_text(elm_product,'Width',self.distance(obj.dimensions.x))
             self.xml.add_element_with_text(elm_product,'Height',self.distance(obj.dimensions.z))
             self.xml.add_element_with_text(elm_product,'Depth',self.distance(obj.dimensions.y))
