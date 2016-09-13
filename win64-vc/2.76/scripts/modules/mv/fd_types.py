@@ -1128,8 +1128,8 @@ class Assembly():
         self.obj_bp.cabinetlib.type_group = self.type_assembly
         self.obj_bp.cabinetlib.placement_type = self.placement_type
         self.obj_bp.cabinetlib.product_shape = self.product_shape
-        self.obj_bp.cabinetlib.mirror_z = self.mirror_z
-        self.obj_bp.cabinetlib.mirror_y = self.mirror_y
+        self.obj_bp.mv.mirror_z = self.mirror_z
+        self.obj_bp.mv.mirror_y = self.mirror_y
         self.obj_bp.mv.package_name = self.package_name
         self.obj_bp.mv.module_name = self.module_name
         self.obj_bp.mv.class_name = self.__class__.__name__

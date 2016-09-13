@@ -1966,12 +1966,12 @@ class PROMPTS_Basic_Cabinet_Prompts(bpy.types.Operator):
     def check(self, context):
         self.product.obj_x.location.x = self.width
         
-        if self.product.obj_bp.cabinetlib.mirror_y:
+        if self.product.obj_bp.mv.mirror_y:
             self.product.obj_y.location.y = -self.depth
         else:
             self.product.obj_y.location.y = self.depth
         
-        if self.product.obj_bp.cabinetlib.mirror_z:
+        if self.product.obj_bp.mv.mirror_z:
             self.product.obj_z.location.z = -self.height
         else:
             self.product.obj_z.location.z = self.height

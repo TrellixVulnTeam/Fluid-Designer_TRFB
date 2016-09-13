@@ -1360,12 +1360,6 @@ class OBJECT_PROPERTIES(PropertyGroup):
     mp = PointerProperty(name="Machine Point",
                          description="Machining Point",
                          type=Machine_Point)
-    
-
-    
-    #MOVE
-    mirror_z = BoolProperty(name="Flip Z",default = False,description = "Used in an product assembly to determine if the z dim is mirrored")
-    mirror_y = BoolProperty(name="Flip Y",default = True,description = "Used in an product assembly to determine if the y dim is mirrored")
 
 bpy.utils.register_class(OBJECT_PROPERTIES)
     
@@ -1597,8 +1591,10 @@ class fd_object(PropertyGroup):
     is_cabinet_pull = BoolProperty(name="Is Cabinet Pull",
                                    description="Determines if the object is a cabinet pull.",
                                    default=False)
-    
-    #MOVE
+
+    mirror_z = BoolProperty(name="Flip Z",default = False,description = "Used in an product assembly to determine if the z dim is mirrored")
+    mirror_y = BoolProperty(name="Flip Y",default = True,description = "Used in an product assembly to determine if the y dim is mirrored")
+
     edge_w1 = StringProperty(name="Edge Width 1",description="Name of the edgebanding applied to Width 1")
     edge_l1 = StringProperty(name="Edge Length 1",description="Name of the edgebanding applied to Length 1")
     edge_w2 = StringProperty(name="Edge Width 2",description="Name of the edgebanding applied to Width 2")
