@@ -62,16 +62,6 @@ class Assembly():
                          - Determines if the library assembly is an insert or a product """
     type_assembly = "PRODUCT"
     
-    """ Type:enum_string("RECTANGLE",
-                         "INSIDE_NOTCH",
-                         "INSIDE_DIAGONAL",
-                         "OUTSIDE_NOTCH",
-                         "OUTSIDE_DIAGONAL",
-                         "TRANSITION",
-                         "CUSTOM") 
-                         - Used for molding placement THIS SHOULD BE REMOVED ARE REPLACED WITH A CUSTOM PRODUCT FUNCTION """
-    product_shape = "RECTANGLE"
-    
     """ Type:enum_string("","Corner") - Used for drag and drop from placement """
     placement_type = ""    
     
@@ -1103,7 +1093,6 @@ class Assembly():
     def update(self,obj_bp=None):
         """ Returns:None - sets the specification group, 
                                     placement_type, 
-                                    product_shape,
                                     mirror_z,
                                     mirror_y,
                                     name,
@@ -1127,7 +1116,6 @@ class Assembly():
         
         self.obj_bp.mv.type_group = self.type_assembly
         self.obj_bp.mv.placement_type = self.placement_type
-        self.obj_bp.cabinetlib.product_shape = self.product_shape
         self.obj_bp.mv.mirror_z = self.mirror_z
         self.obj_bp.mv.mirror_y = self.mirror_y
         self.obj_bp.mv.package_name = self.package_name

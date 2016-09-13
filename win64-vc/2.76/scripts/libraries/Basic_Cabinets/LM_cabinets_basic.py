@@ -308,12 +308,10 @@ class Inside_Corner(fd_types.Assembly):
         self.carcass.material("Basic_Cabinet_Material")
         
         if self.carcass_shape == 'Notched':
-            self.product_shape = 'INSIDE_NOTCH'
             if self.exterior:
                 self.add_pie_cut_doors()
           
         if self.carcass_shape == 'Diagonal':
-            self.product_shape = 'INSIDE_DIAGONAL'
             if self.exterior:
                 self.add_diagonal_doors()
 
@@ -362,17 +360,14 @@ class Outside_Corner(fd_types.Assembly):
         self.carcass.z_dim('Product_Height',[Product_Height])
         
         if self.carcass_shape == 'Notched':
-            self.product_shape = 'OUTSIDE_NOTCH'
             if self.exterior:
                 pass #TODO
         
         if self.carcass_shape == 'Diagonal':
-            self.product_shape = 'OUTSIDE_DIAGONAL'
             if self.exterior:
                 pass #TODO
             
         if self.carcass_shape == 'Radius':
-            self.product_shape = 'OUTSIDE_RADIUS'
             if self.exterior:
                 pass #TODO            
         
@@ -382,7 +377,6 @@ class Blind_Corner(fd_types.Assembly):
     
     property_id = "basic_cabinets.basic_cabinet_prompts"
     type_assembly = "PRODUCT"
-    product_shape = "RECTANGLE"
     
     blind_side = "Left" # {Left, Right}
     

@@ -1320,21 +1320,6 @@ class OBJECT_PROPERTIES(PropertyGroup):
     cutpart_name = StringProperty(name="Cutpart Name")
     edgepart_name = StringProperty(name="Edgepart Name")
 
-    #REMOVE
-    product_shape = StringProperty(name="Product Shape",
-                                   description="Shape of the product. 'RECTANGLE','INSIDE_NOTCH',''")
-
-    product_shape = EnumProperty(name="Group Type",
-                                 items=[('RECTANGLE',"Rectangle","Rectangle"),
-                                        ('INSIDE_NOTCH',"Inside Notch","Inside Notch"),
-                                        ('INSIDE_DIAGONAL',"Inside Diagonal","Inside Diagonal"),
-                                        ('OUTSIDE_DIAGONAL',"Outside Diagonal","Outside Diagonal"),
-                                        ('OUTSIDE_RADIUS',"Outside Radius","Outside Radius"),
-                                        ('TRANSITION',"Transition","Transition"),
-                                        ('CUSTOM',"Custom","Custom")],
-                                 description="Stores the shape of the product. Used by automated molding placement.",
-                                 default='RECTANGLE')
-
 bpy.utils.register_class(OBJECT_PROPERTIES)
     
 class SCENE_PROPERTIES(PropertyGroup):
