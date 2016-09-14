@@ -189,6 +189,16 @@ class Assembly():
             obj_cage.cycles_visibility.shadow = False
             return obj_cage
 
+    def add_empty(self):
+        """ Returns:Assembly_Object - creates an empty and returns
+                                      it as an Assembly_Object
+        """
+        bpy.ops.object.empty_add()
+        obj_empty = bpy.context.active_object
+        obj_empty.parent = self.obj_bp
+        empty = Assembly_Object(obj_empty)
+        return empty
+
     def add_opening(self):
         """ Returns:Assembly - creates an empty opening to this assembly
                                and returns it as an Assembly
@@ -1145,7 +1155,7 @@ class Assembly():
 class Part(Assembly):
     
     def assign_material(self,slot_name,material_path,material_name):
-        """ Returns:None - sets the every material slot for every mesh
+        """ Returns:None - sets the every material slot for every mesh that matches the slot_name
                            to the material_pointer_name
 
             slot_name:string - name of the mv.material_slot to assign material to
