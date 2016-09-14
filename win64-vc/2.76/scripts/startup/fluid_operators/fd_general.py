@@ -1322,10 +1322,6 @@ class OPS_brd_library_items(Operator):
     
     placement = 0
     
-    @classmethod
-    def poll(cls, context):
-        return True
-    
     def __del__(self):
         bpy.context.window.cursor_set('DEFAULT')
         bpy.context.area.header_text_set()
@@ -1394,9 +1390,9 @@ class OPS_brd_library_items(Operator):
         script_file.write("pkg = __import__('" + self.package_name + "')\n")
         script_file.write("item = eval('pkg." + self.module_name + "." + class_name + "()')" + "\n")
         script_file.write("item.draw()\n")
+        script_file.write("item.update()\n")
         script_file.write("tn_path = os.path.join(r'" + self.library_path + "',item.category_name,item.assembly_name)\n")
         script_file.write('utils.render_assembly(item,tn_path)\n')
-        
         script_file.close()
         subprocess.call(bpy.app.binary_path + ' "' + filepath + '" -b --python "' + script + '"')    
 

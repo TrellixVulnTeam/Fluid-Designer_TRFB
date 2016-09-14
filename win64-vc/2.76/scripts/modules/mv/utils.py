@@ -451,6 +451,13 @@ def get_material_name_from_pointer(pointer,spec_group):
         bottom_material = "NA"
     return format_material_name(thickness,core_material,top_material,bottom_material)
 
+def object_has_driver(obj):
+    """ If the object has driver this function will return True otherwise False
+    """
+    if obj.animation_data:
+        if len(obj.animation_data.drivers) > 0:
+            return True
+
 #-------LIBRARY FUNCTIONS
 
 def get_library_dir(lib_type = ""):

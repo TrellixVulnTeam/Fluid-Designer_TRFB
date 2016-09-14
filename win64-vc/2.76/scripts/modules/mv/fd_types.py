@@ -297,6 +297,26 @@ class Assembly():
                 if prompt.Type == 'PRICE':
                     return 'mv.PromptPage.COL_Prompt["' + prompt_name + '"].PriceValue'
         
+    def set_material_pointers(self,material_pointer_name,slot_name=""):
+        """ Returns:None - sets the every material slot for every mesh
+                           to the material_pointer_name
+                           
+            material_pointer_name:string - name of the material pointer 
+                                           to assign
+        """
+        for slot in self.obj_bp.cabinetlib.material_slots:
+            if slot_name == "":
+                slot.pointer_name = material_pointer_name
+            elif slot_name == slot.name:
+                slot.pointer_name = material_pointer_name
+        for child in self.obj_bp.children:
+            if child.type == 'MESH':
+                for slot in child.cabinetlib.material_slots:
+                    if slot_name == "":
+                        slot.pointer_name = material_pointer_name
+                    elif slot_name == slot.name:
+                        slot.pointer_name = material_pointer_name     
+        
     def delete_cage(self):
         list_obj_cage = []
         for child in self.obj_bp.children:
@@ -1731,3 +1751,70 @@ class MV_XML():
             self.tree.write(file,encoding='unicode')
             
         self.format_xml_file(path)
+
+class Prompts_Interface(bpy.types.Operator):
+    
+    def get_product(self):
+        obj = bpy.data.objects[self.object_name]
+        obj_product_bp = utils.get_bp(obj,'PRODUCT')
+        product = Assembly(obj_product_bp)
+        self.depth = math.fabs(product.obj_y.location.y)
+        self.height = math.fabs(product.obj_z.location.z)
+        self.width = math.fabs(product.obj_x.location.x)   
+        return product
+    
+    def draw_product_size(self,layout):
+        box = layout.box()
+        row = box.row()
+        
+        col = row.column(align=True)
+        row1 = col.row(align=True)
+        if utils.object_has_driver(self.product.obj_x):
+            row1.label('Width: ' + str(unit.meter_to_active_unit(math.fabs(self.product.obj_x.location.x))))
+        else:
+            row1.label('Width:')
+            row1.prop(self,'width',text="")
+            row1.prop(self.product.obj_x,'hide',text="")
+        
+        row1 = col.row(align=True)
+        if utils.object_has_driver(self.product.obj_z):
+            row1.label('Height: ' + str(unit.meter_to_active_unit(math.fabs(self.product.obj_z.location.z))))
+        else:
+            row1.label('Height:')
+            row1.prop(self,'height',text="")
+            row1.prop(self.product.obj_z,'hide',text="")
+        
+        row1 = col.row(align=True)
+        if utils.object_has_driver(self.product.obj_y):
+            row1.label('Depth: ' + str(unit.meter_to_active_unit(math.fabs(self.product.obj_y.location.y))))
+        else:
+            row1.label('Depth:')
+            row1.prop(self,'depth',text="")
+            row1.prop(self.product.obj_y,'hide',text="")
+            
+        col = row.column(align=True)
+        col.label("Location X:")
+        col.label("Location Y:")
+        col.label("Location Z:")
+        
+        col = row.column(align=True)
+        col.prop(self.product.obj_bp,'location',text="")
+        
+        row = box.row()
+        row.label('Rotation Z:')
+        row.prop(self.product.obj_bp,'rotation_euler',index=2,text="")    
+    
+    def update_product_size(self):
+        self.product.obj_x.location.x = self.width
+        
+        if self.product.obj_bp.mv.mirror_y:
+            self.product.obj_y.location.y = -self.depth
+        else:
+            self.product.obj_y.location.y = self.depth
+        
+        if self.product.obj_bp.mv.mirror_z:
+            self.product.obj_z.location.z = -self.height
+        else:
+            self.product.obj_z.location.z = self.height
+            
+        utils.run_calculators(self.product.obj_bp)
