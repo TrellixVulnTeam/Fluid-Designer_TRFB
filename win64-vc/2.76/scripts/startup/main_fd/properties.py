@@ -150,7 +150,7 @@ def update_text_editor_outline_index(self,context):
     bpy.ops.text.find()
     
 def assign_default_libraries(self,context):
-    library_tabs = context.scene.mv.ui.library_tabs
+    library_tabs = self.id_data.mv.ui.library_tabs
     lib_name = "" 
 
     if library_tabs == 'PRODUCT':
@@ -505,6 +505,38 @@ class mvPrompt(bpy.types.PropertyGroup):
         
         if self.Type == 'TEXT':
             self.TextValue = value
+        
+    @property
+    def prompt_type(self):
+        if self.Type == 'NUMBER':
+            return "NumberValue"
+            
+        if self.Type == 'ANGLE':
+            return "AngleValue"
+            
+        if self.Type == 'DISTANCE':
+            return "DistanceValue"
+            
+        if self.Type == 'PERCENTAGE':
+            return "PercentageValue"
+            
+        if self.Type == 'PRICE':
+            return "PriceValue"
+            
+        if self.Type == 'QUANTITY':
+            return "QuantityValue"
+            
+        if self.Type == 'COMBOBOX':
+            return "EnumIndex"
+
+        if self.Type == 'CHECKBOX':
+            return "CheckBoxValue"
+            
+        if self.Type == 'SLIDER':
+            return "NumberValue"
+        
+        if self.Type == 'TEXT':
+            return "TextValue"
         
     def get_type_as_string(self, type):
         return self.TypeName[type]
