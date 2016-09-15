@@ -1144,6 +1144,7 @@ class Assembly():
         default_spec_group = bpy.context.scene.cabinetlib.spec_groups[bpy.context.scene.cabinetlib.spec_group_index]
         bpy.ops.fd_material.change_product_spec_group(object_name=self.obj_bp.name,spec_group_name=default_spec_group.name)
         
+        self.set_name(self.assembly_name)
         self.obj_bp.mv.type_group = self.type_assembly
         self.obj_bp.mv.placement_type = self.placement_type
         self.obj_bp.mv.mirror_z = self.mirror_z
@@ -1153,7 +1154,6 @@ class Assembly():
         self.obj_bp.mv.class_name = self.__class__.__name__
         self.obj_bp.mv.plan_draw_id = self.plan_draw_id
         self.obj_bp.mv.update_id = self.update_id
-        self.set_name(self.assembly_name)
         utils.set_property_id(self.obj_bp,self.property_id)
         self.x_dim(value = self.width)
         if self.mirror_y:
