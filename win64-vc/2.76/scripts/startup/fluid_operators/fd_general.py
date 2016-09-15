@@ -1403,6 +1403,7 @@ class OPS_brd_library_items(Operator):
         script_file.write("pkg = __import__('" + self.package_name + "')\n")
         script_file.write("item = eval('pkg." + self.module_name + "." + class_name + "()')" + "\n")
         script_file.write("item.draw()\n")
+        script_file.write("item.update()\n")
         script_file.write('utils.save_assembly(item,r"' + self.library_path + '"' + ')\n')
         script_file.close()
         subprocess.call(bpy.app.binary_path + ' -b --python "' + script + '"')    
