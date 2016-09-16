@@ -272,7 +272,7 @@ def get_child_objects(obj,obj_list=None):
         get_child_objects(child,obj_list)
     return obj_list
 
-def get_selection_point(context, event, ray_max=10000.0,objects=None):
+def get_selection_point(context, event, ray_max=10000.0,objects=None,floor=None):
     """Gets the point to place an object based on selection"""
     # get the context arguments
     scene = context.scene
@@ -295,6 +295,9 @@ def get_selection_point(context, event, ray_max=10000.0,objects=None):
                     yield (obj, obj.matrix_world.copy())
             
             else:
+                if floor is not None and obj == floor:
+                    yield (obj, obj.matrix_world.copy())
+                    
                 if obj.draw_type != 'WIRE':
                     if obj.type == 'MESH':
                         if obj.mv.type not in {'BPASSEMBLY','BPWALL'}:

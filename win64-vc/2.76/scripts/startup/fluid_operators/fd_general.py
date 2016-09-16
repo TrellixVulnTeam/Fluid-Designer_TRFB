@@ -113,6 +113,8 @@ class OPS_drop_product(Operator):
     default_height = 0.0
     default_depth = 0.0
     
+    floor = None
+    
     header_text = "Place Product   (Esc, Right Click) = Cancel Command  : (Left Click) = Place Product : (Right Click) = Show Wall Placement Options"
 
     def execute(self, context):
@@ -128,6 +130,7 @@ class OPS_drop_product(Operator):
                     mod.operation = 'DIFFERENCE'
 
     def __del__(self):
+        utils.delete_obj_list([self.floor])
         bpy.context.area.header_text_set()
 
     def get_product(self,context):
@@ -157,9 +160,17 @@ class OPS_drop_product(Operator):
             set_wire_and_xray(self.product.obj_bp,True)
             print(self.product.obj_bp.mv.name_object + ": Draw Time --- %s seconds ---" % (time.time() - start_time))
 
+    def draw_floor(self,context):
+        bpy.ops.mesh.primitive_plane_add()
+        self.floor = context.active_object
+        self.floor.location = (0,0,0)
+        self.floor.draw_type = 'WIRE'
+        self.floor.dimensions = (100,100,1)
+
     def invoke(self,context,event):
         context.window.cursor_set('WAIT')
-        selected_point, selected_obj = utils.get_selection_point(context,event)
+        self.draw_floor(context)
+#         selected_point, selected_obj = utils.get_selection_point(context,event)
         self.get_product(context)
         if self.product is None:
             bpy.ops.fd_general.error('INVOKE_DEFAULT',message="Could Not Find Product Class: " + "\\" + self.library_name + "\\" + self.category_name + "\\" + self.product_name)
@@ -216,7 +227,7 @@ class OPS_drop_product(Operator):
             return 'CENTER'
 
     def product_drop(self,context,event):
-        selected_point, selected_obj = utils.get_selection_point(context,event)
+        selected_point, selected_obj = utils.get_selection_point(context,event,floor=self.floor)
         self.mouse_loc = (event.mouse_region_x,event.mouse_region_y)
         obj_wall_bp = utils.get_wall_bp(selected_obj)
         wall = fd_types.Wall(obj_wall_bp)
