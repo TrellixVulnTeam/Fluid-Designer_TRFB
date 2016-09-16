@@ -1163,7 +1163,7 @@ def draw_object_drivers(layout,obj):
                 if type(value).__name__ == 'str':
                     row.label(DriverName + " = " + str(value),icon='AUTO')
                 elif type(value).__name__ == 'float':
-                    row.label(DriverName + " = " + str(unit(value)),icon='AUTO')
+                    row.label(DriverName + " = " + str(unit.meter_to_active_unit(value)),icon='AUTO')
                 elif type(value).__name__ == 'int':
                     row.label(DriverName + " = " + str(value),icon='AUTO')
                 elif type(value).__name__ == 'bool':
@@ -1171,9 +1171,9 @@ def draw_object_drivers(layout,obj):
                 elif type(value).__name__ == 'bpy_prop_array':
                     row.label(DriverName + " = " + str(value[DR.array_index]),icon='AUTO')
                 elif type(value).__name__ == 'Vector':
-                    row.label(DriverName + " = " + str(unit(value[DR.array_index])),icon='AUTO')
+                    row.label(DriverName + " = " + str(unit.meter_to_active_unit(value[DR.array_index])),icon='AUTO')
                 elif type(value).__name__ == 'Euler':
-                    row.label(DriverName + " = " + str(unit(value[DR.array_index])),icon='AUTO')
+                    row.label(DriverName + " = " + str(unit.meter_to_active_unit(value[DR.array_index])),icon='AUTO')
                 else:
                     row.label(DriverName + " = " + str(type(value)),icon='AUTO')
 
