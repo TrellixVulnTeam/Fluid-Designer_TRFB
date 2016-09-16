@@ -145,7 +145,6 @@ class OPS_drop_product(Operator):
         if self.product:
             if obj_bp:
                 if self.product.obj_bp.mv.update_id != "":
-                    print("UPDATE",self.product.obj_bp.mv.update_id)
                     eval('bpy.ops.' + self.product.obj_bp.mv.update_id + '("INVOKE_DEFAULT",object_name=self.product.obj_bp.name)')
             else:
                 self.product.draw()
@@ -1256,6 +1255,8 @@ class OPS_load_library_modules(Operator):
                 for name, obj in inspect.getmembers(mod):
                     if inspect.isclass(obj) and "PRODUCT_" in name:
                         product = obj()
+                        if product.assembly_name == "":
+                            product.assembly_name = name.replace("PRODUCT_","").replace("_"," ")
                         path = os.path.join(os.path.dirname(pkg.__file__),"products",product.library_name)
                         lib = self.get_library(wm.lib_products,product.library_name,mod_name,package,path)
                         item = lib.items.add()
@@ -1385,16 +1386,18 @@ class OPS_brd_library_items(Operator):
         script_file = open(script,'w')
         script_file.write("import bpy\n")
         script_file.write("import os\n")
+        script_file.write("from mv import utils\n")
         script_file.write("bpy.ops.fd_material.reload_spec_group_from_library_modules()\n")
         script_file.write("from mv import utils\n")
         script_file.write("pkg = __import__('" + self.package_name + "')\n")
         script_file.write("item = eval('pkg." + self.module_name + "." + class_name + "()')" + "\n")
         script_file.write("item.draw()\n")
         script_file.write("item.update()\n")
-        script_file.write("tn_path = os.path.join(r'" + self.library_path + "',item.category_name,item.assembly_name)\n")
+        script_file.write("file_name = item.assembly_name if item.assembly_name != '' else utils.get_product_class_name('" + class_name + "')\n")
+        script_file.write("tn_path = os.path.join(r'" + self.library_path + "',item.category_name,file_name)\n")
         script_file.write('utils.render_assembly(item,tn_path)\n')
         script_file.close()
-        subprocess.call(bpy.app.binary_path + ' "' + filepath + '" -b --python "' + script + '"')    
+        subprocess.call(bpy.app.binary_path + ' "' + filepath + '" -b --python "' + script + '"')
 
     def build_product(self,class_name):
         script = os.path.join(bpy.app.tempdir,'building.py')
@@ -1404,6 +1407,8 @@ class OPS_brd_library_items(Operator):
         script_file.write("item = eval('pkg." + self.module_name + "." + class_name + "()')" + "\n")
         script_file.write("item.draw()\n")
         script_file.write("item.update()\n")
+        script_file.write("if item.assembly_name == '':\n")
+        script_file.write("    item.assembly_name = utils.get_product_class_name('" + class_name + "')\n")
         script_file.write('utils.save_assembly(item,r"' + self.library_path + '"' + ')\n')
         script_file.close()
         subprocess.call(bpy.app.binary_path + ' -b --python "' + script + '"')    

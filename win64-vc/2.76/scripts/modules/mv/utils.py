@@ -565,6 +565,8 @@ def get_product_class(context,library_name,category_name,product_name):
         for name, obj in inspect.getmembers(modobj):
             if "PRODUCT_" in name:
                 product = obj()
+                if product.assembly_name == "":
+                    product.assembly_name = get_product_class_name(name)
                 if product.library_name == library_name and product.category_name == category_name and product.assembly_name == product_name:
                     product.package_name = lib.package_name
                     product.module_name = modname
@@ -617,6 +619,10 @@ def get_wall_bp(obj):
         else:
             if obj.parent:
                 return get_wall_bp(obj.parent)
+
+def get_product_class_name(class_name):
+    name = class_name.replace("PRODUCT_","")
+    return name.replace("_"," ")
 
 #-------MATH FUNCTIONS
 def calc_distance(point1,point2):
@@ -793,14 +799,15 @@ def save_assembly(assembly,path):
     for mat in bpy.data.materials:
         mat.user_clear()
         bpy.data.materials.remove(mat)
-          
+        
     for image in bpy.data.images:
         image.user_clear()
         bpy.data.images.remove(image)    
-          
+
     bpy.ops.fd_material.clear_spec_group()
     path = os.path.join(path,assembly.category_name)
     if not os.path.exists(path): os.makedirs(path)
+    assembly.set_name(assembly.assembly_name)
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(path,assembly.assembly_name + ".blend"))
 
 def render_assembly(assembly,path):
