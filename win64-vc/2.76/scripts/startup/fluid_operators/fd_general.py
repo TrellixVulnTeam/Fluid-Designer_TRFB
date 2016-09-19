@@ -995,6 +995,22 @@ class OPS_place_product(bpy.types.Operator):
         col.prop(self,"right_offset",text="Right")
         col.prop(self.product.obj_bp,"location",index=2,text="Z Location")
 
+class OPS_change_file_browser_path(Operator):
+    bl_idname = "fd_general.change_file_browser_path"
+    bl_label = "Change Library"
+
+    path = StringProperty(name="Path")
+    
+    def execute(self, context):
+        utils.update_file_browser_space(context,self.path)
+        for area in context.screen.areas:
+            if area.type == 'FILE_BROWSER':
+                for space in area.spaces:
+                    if space.type == 'FILE_BROWSER':
+                        params = space.params
+                        params.use_filter = False
+        return {'FINISHED'}
+    
 class OPS_change_library(Operator):
     bl_idname = "fd_general.change_library"
     bl_label = "Change Library"
@@ -2670,6 +2686,7 @@ classes = [
            OPS_load_library_modules,
            OPS_brd_library_items,
            OPS_place_product,
+           OPS_change_file_browser_path,
            OPS_change_library,
            OPS_change_category,
            OPS_add_floor_plan,

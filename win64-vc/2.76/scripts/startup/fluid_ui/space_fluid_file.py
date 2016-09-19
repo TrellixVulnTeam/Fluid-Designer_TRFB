@@ -374,17 +374,39 @@ class PANEL_fluid_libraries(Panel):
         col.prop_enum(ui, "library_tabs", 'MATERIAL', icon='MATERIAL', text="  Materials") 
         col.prop_enum(ui, "library_tabs", 'WORLD', icon='WORLD', text="  Worlds") 
 
+class PANEL_open_scripting_libraries(Panel):
+    bl_space_type = "FILE_BROWSER"
+    bl_region_type = "TOOLS"
+    bl_label = "Open Python Libraries"
+
+    @classmethod
+    def poll(cls, context):
+        return context.screen.show_fullscreen
+
+    def draw_header(self, context):
+        layout = self.layout
+        layout.label(" ",icon='EXTERNAL_DATA')
+
+    def draw(self, context):
+        layout = self.layout
+        col = layout.column(align=True)
+        paths = utils.get_library_scripts_dir(context)
+        
+        for path in paths:
+            dirs = os.listdir(path)
+            for folder in dirs:
+                if os.path.isdir(os.path.join(path,folder)) and not folder.startswith("X_"):
+                    files = os.listdir(os.path.join(path,folder))
+                    for file in files:
+                        if file == '__init__.py':
+                            col.operator('fd_general.change_file_browser_path',text=folder,icon='FILE_FOLDER').path = os.path.join(path,folder)
+
 class MENU_File_Browser_Options(Menu):
     bl_label = "File Browser Options"
 
     def draw(self, context):
         layout = self.layout
-        st = context.space_data
-        #TODO file browser options
-        layout.operator("fd_general.open_browser_window",text="Open Location in Browser",icon='FILE_FOLDER').path = utils.get_file_browser_path(context)
-        layout.separator()
-        layout.operator("fd_general.create_thumbnails",text="Create Thumbnails",icon='EXTERNAL_DATA')
-        layout.operator("fd_general.append_items",text="Append Items",icon='EXTERNAL_DATA')
+        layout.operator("fd_general.change_file_browser_path",text="Open Location in Browser",icon='FILE_FOLDER').path = utils.get_file_browser_path(context)
         
 class INFO_MT_addons(Menu):
     bl_idname = "INFO_MT_addons"
@@ -430,6 +452,7 @@ classes = [
            MENU_File_Browser_Options,
            INFO_MT_addons,
            PANEL_fluid_libraries,
+           PANEL_open_scripting_libraries,
            FILEBROWSER_MT_fd_tools
            ]
 
