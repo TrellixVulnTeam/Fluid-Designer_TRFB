@@ -406,7 +406,7 @@ class MENU_File_Browser_Options(Menu):
 
     def draw(self, context):
         layout = self.layout
-        layout.operator("fd_general.change_file_browser_path",text="Open Location in Browser",icon='FILE_FOLDER').path = utils.get_file_browser_path(context)
+        layout.operator("fd_general.open_browser_window",text="Open Location in Browser",icon='FILE_FOLDER').path = utils.get_file_browser_path(context)
         
 class INFO_MT_addons(Menu):
     bl_idname = "INFO_MT_addons"
