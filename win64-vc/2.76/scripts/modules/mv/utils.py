@@ -190,8 +190,8 @@ def set_object_name(obj):
         obj.name = counter + '.' + obj.type + '.' + obj.mv.name_object
 
 def assign_materials_from_pointers(obj):
-    library = bpy.context.scene.cabinetlib
-    spec_group = library.spec_groups[obj.cabinetlib.spec_group_index]
+    library = bpy.context.scene.mv
+    spec_group = library.spec_groups[obj.mv.spec_group_index]
     #ASSIGN POINTERS TO MESH BASED ON MESH TYPE
     if obj.cabinetlib.type_mesh == 'CUTPART':
         
@@ -376,7 +376,7 @@ def get_material_name(obj):
 
 def get_part_thickness(obj):
     if obj.cabinetlib.type_mesh == 'CUTPART':
-        spec_group = bpy.context.scene.cabinetlib.spec_groups[obj.cabinetlib.spec_group_index]
+        spec_group = bpy.context.scene.mv.spec_groups[obj.mv.spec_group_index]
         if obj.cabinetlib.cutpart_name in spec_group.cutparts:
             return spec_group.cutparts[obj.cabinetlib.cutpart_name].thickness
         else:

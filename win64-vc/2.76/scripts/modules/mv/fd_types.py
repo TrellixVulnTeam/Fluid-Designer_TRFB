@@ -1141,7 +1141,7 @@ class Assembly():
             if child.mv.type == 'VPDIMZ':
                 self.obj_z = child
                 
-        default_spec_group = bpy.context.scene.cabinetlib.spec_groups[bpy.context.scene.cabinetlib.spec_group_index]
+        default_spec_group = bpy.context.scene.mv.spec_groups[bpy.context.scene.mv.spec_group_index]
         bpy.ops.fd_material.change_product_spec_group(object_name=self.obj_bp.name,spec_group_name=default_spec_group.name)
 
         self.set_name(self.assembly_name)

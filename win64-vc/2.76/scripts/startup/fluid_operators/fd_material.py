@@ -354,7 +354,7 @@ class OPS_change_product_spec_group(Operator):
     spec_group_name = StringProperty(name="Spec Group Name")
 
     def change_spec_group_for_children(self,obj_bp,spec_group_name):
-        for index, spec_group in enumerate(bpy.context.scene.cabinetlib.spec_groups):
+        for index, spec_group in enumerate(bpy.context.scene.mv.spec_groups):
             if spec_group.name == spec_group_name:
                 spec_group_index = index
         
@@ -383,7 +383,7 @@ class OPS_change_active_spec_group(Operator):
     spec_group_name = StringProperty(name="Spec Group Name")
 
     def execute(self, context):
-        spec_groups = context.scene.cabinetlib.spec_groups
+        spec_groups = context.scene.mv.spec_groups
         for index, spec_group in enumerate(spec_groups):
             if spec_group.name == self.spec_group_name:
                 context.scene.cabinetlib.spec_group_index = index
@@ -398,7 +398,7 @@ class OPS_clear_spec_group(Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        spec_groups = context.scene.cabinetlib.spec_groups
+        spec_groups = context.scene.mv.spec_groups
         for i in spec_groups:
             spec_groups.remove(0)
         return {'FINISHED'}
@@ -423,8 +423,8 @@ class OPS_copy_selected_spec_group(Operator):
                               default="New Specification Group")
 
     def execute(self, context):
-        spec_groups = context.scene.cabinetlib.spec_groups
-        selected_spec_group = spec_groups[context.scene.cabinetlib.spec_group_index]
+        spec_groups = context.scene.mv.spec_groups
+        selected_spec_group = spec_groups[context.scene.mv.spec_group_index]
         if self.new_name not in spec_groups:
             new_spec_group = spec_groups.add()
             new_spec_group.name = self.new_name
@@ -478,14 +478,14 @@ class OPS_delete_spec_group(Operator):
 
     @classmethod
     def poll(cls, context):
-        spec_groups = context.scene.cabinetlib.spec_groups
+        spec_groups = context.scene.mv.spec_groups
         if len(spec_groups) > 1:
             return True
         else:
             return False
 
     def execute(self, context):
-        spec_groups = context.scene.cabinetlib.spec_groups
+        spec_groups = context.scene.mv.spec_groups
         if self.spec_group_name in spec_groups:
             for index, spec_group in enumerate(spec_groups):
                 if spec_group.name == self.spec_group_name:
@@ -517,7 +517,7 @@ class OPS_rename_spec_group(Operator):
     old_spec_group_name = ""
     
     def execute(self, context):
-        spec_group = context.scene.cabinetlib.spec_groups[context.scene.cabinetlib.spec_group_index]
+        spec_group = context.scene.mv.spec_groups[context.scene.mv.spec_group_index]
         spec_group.name = self.new_spec_group_name
         for obj in bpy.data.objects:
             if obj.cabinetlib.spec_group_name == self.old_spec_group_name:
@@ -526,7 +526,7 @@ class OPS_rename_spec_group(Operator):
         return {'FINISHED'}
 
     def invoke(self,context,event):
-        spec_group = context.scene.cabinetlib.spec_groups[context.scene.cabinetlib.spec_group_index]
+        spec_group = context.scene.mv.spec_groups[context.scene.mv.spec_group_index]
         self.new_spec_group_name = spec_group.name
         self.old_spec_group_name = spec_group.name
         wm = context.window_manager
@@ -544,10 +544,10 @@ class OPS_reload_spec_group_from_library_modules(Operator):
 
     def execute(self, context):
         from importlib import import_module
-        for specgroup in context.scene.cabinetlib.spec_groups:
-            context.scene.cabinetlib.spec_groups.remove(0)
+        for specgroup in context.scene.mv.spec_groups:
+            context.scene.mv.spec_groups.remove(0)
             
-        spec_group = context.scene.cabinetlib.spec_groups.add()
+        spec_group = context.scene.mv.spec_groups.add()
         spec_group.name = "Default Specification Group"
         
         packages = utils.get_library_packages(context)
@@ -714,7 +714,7 @@ class OPS_sync_material_slots(Operator):
     def execute(self, context):
         obj = bpy.data.objects[self.object_name]
         scene = context.scene
-        spec_group = scene.cabinetlib.spec_groups[obj.cabinetlib.spec_group_index]
+        spec_group = scene.mv.spec_groups[obj.mv.spec_group_index]
         
         for slot in obj.cabinetlib.material_slots:
             obj.cabinetlib.material_slots.remove(0)
@@ -780,7 +780,7 @@ class OPS_assign_material_interface(bpy.types.Operator):
         return True
 
     def invoke(self, context, event):
-        library = context.scene.cabinetlib
+        library = context.scene.mv
         active_spec_group = library.spec_groups[library.spec_group_index]
         for material in active_spec_group.materials:
             material.assign_material = False
@@ -793,7 +793,7 @@ class OPS_assign_material_interface(bpy.types.Operator):
         file_dir = os.path.basename(path)
         material = utils.get_material(file_dir,file)
 
-        library = context.scene.cabinetlib
+        library = context.scene.mv
         active_spec_group = library.spec_groups[library.spec_group_index]
         for material in active_spec_group.materials:
             if material.assign_material:
@@ -806,7 +806,7 @@ class OPS_assign_material_interface(bpy.types.Operator):
         return {'FINISHED'}
     
     def draw(self, context):
-        library = context.scene.cabinetlib
+        library = context.scene.mv
         layout = self.layout
         active_spec_group = library.spec_groups[library.spec_group_index]
         layout.menu('MENU_Available_Spec_Groups',text=active_spec_group.name,icon='SOLO_ON')

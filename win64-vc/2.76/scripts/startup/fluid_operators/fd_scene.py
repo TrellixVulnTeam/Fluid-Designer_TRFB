@@ -1562,7 +1562,7 @@ class OPS_export_mvfd(Operator):
             self.xml.add_element_with_text(elm_wall,'Angle',self.angle(obj_wall.rotation_euler.z))
 
     def write_products(self,project_node):
-        specgroups = bpy.context.scene.cabinetlib.spec_groups
+        specgroups = bpy.context.scene.mv.spec_groups
         elm_products = self.xml.add_element(project_node,"Products")
         item_number = 1
         for obj_product in self.products:
@@ -1723,7 +1723,7 @@ class OPS_export_mvfd(Operator):
     def write_spec_groups(self,project_node):
         elm_spec_groups = self.xml.add_element(project_node,"SpecGroups")
         
-        for spec_group in bpy.context.scene.cabinetlib.spec_groups:
+        for spec_group in bpy.context.scene.mv.spec_groups:
             elm_spec_group = self.xml.add_element(elm_spec_groups,'SpecGroup',spec_group.name)
             elm_cutparts = self.xml.add_element(elm_spec_group,'CutParts')
             for cutpart in spec_group.cutparts:

@@ -85,7 +85,7 @@ def PERCENTAGE(value,min,max):
     return (value - min)/(max - min)
     
 def THICKNESS(sgi,pointer_name):
-    spec_group = bpy.context.scene.cabinetlib.spec_groups[int(sgi)]
+    spec_group = bpy.context.scene.mv.spec_groups[int(sgi)]
     if pointer_name in spec_group.cutparts:
         return spec_group.cutparts[pointer_name].thickness
     else:
@@ -93,7 +93,7 @@ def THICKNESS(sgi,pointer_name):
         return 0
 
 def EDGE_THICKNESS(sgi,pointer_name):
-    spec_group = bpy.context.scene.cabinetlib.spec_groups[int(sgi)]
+    spec_group = bpy.context.scene.mv.spec_groups[int(sgi)]
     if pointer_name in spec_group.edgeparts:
         return spec_group.edgeparts[pointer_name].thickness
     else:

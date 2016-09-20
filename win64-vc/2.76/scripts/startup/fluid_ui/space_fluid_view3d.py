@@ -1089,7 +1089,7 @@ def draw_object_info(layout,obj):
 def draw_object_materials(layout,obj):
     
     if obj.type in {'MESH','CURVE'}:
-        spec_group = bpy.context.scene.cabinetlib.spec_groups[obj.cabinetlib.spec_group_index]
+        spec_group = bpy.context.scene.mv.spec_groups[obj.cabinetlib.spec_group_index]
         layout.prop(obj.cabinetlib,'type_mesh')
         if obj.cabinetlib.type_mesh == 'CUTPART':
             row = layout.row(align=True)

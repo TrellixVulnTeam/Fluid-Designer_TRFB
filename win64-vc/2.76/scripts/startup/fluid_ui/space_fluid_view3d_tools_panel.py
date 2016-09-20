@@ -68,7 +68,7 @@ class MENU_Change_Cabinet_Spec_Group(Menu):
     bl_label = "Specification Groups"
 
     def draw(self, context):
-        spec_groups = context.scene.cabinetlib.spec_groups
+        spec_groups = context.scene.mv.spec_groups
         layout = self.layout
         product_bp = utils.get_bp(context.object,'PRODUCT')
         for spec_group in spec_groups:
@@ -85,8 +85,8 @@ class MENU_Available_Spec_Groups(Menu):
     bl_label = "Specification Groups"
 
     def draw(self, context):
-        spec_groups = context.scene.cabinetlib.spec_groups
-        spec_group_index = context.scene.cabinetlib.spec_group_index
+        spec_groups = context.scene.mv.spec_groups
+        spec_group_index = context.scene.mv.spec_group_index
         layout = self.layout
         for index, spec_group in enumerate(spec_groups):
             if index == spec_group_index:

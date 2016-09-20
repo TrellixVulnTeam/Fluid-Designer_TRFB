@@ -1355,51 +1355,20 @@ class OBJECT_PROPERTIES(PropertyGroup):
 bpy.utils.register_class(OBJECT_PROPERTIES)
     
 class SCENE_PROPERTIES(PropertyGroup):
-    libraries = CollectionProperty(name="Libraries",
-                                   type=Library)
+#     libraries = CollectionProperty(name="Libraries",
+#                                    type=Library)
     
-    active_library_name = StringProperty(name="Active Library Name")
-    
-    spec_group_tabs = EnumProperty(name="Library Tabs",
-                                   items=[('GLOBALS',"Globals","Global Variable Options"),
-                                          ('MATERIALS',"Materials","Rendering Materials"),
-                                          ('CUTPARTS',"Cut Parts","Cut Parts for cabinets"),
-                                          ('EDGEPARTS',"Library Builder","Edge banding for cabinets")],
-                                   default = 'MATERIALS')
-
     sheets = CollectionProperty(name="Materials",
                                 type=Sheet_Stock)
 
     edgebanding = CollectionProperty(name="Edgebanding",
                                      type=Cutpart)
-     
-    spec_groups = CollectionProperty(name="Spec Groups",
-                                     type=Specification_Group)
     
-    spec_group_index = IntProperty(name="Spec Group Index",
-                                   default=0)
-    
-    products = CollectionProperty(name="Products",
-                                  type=List_Library_Item)
-    
-    product_index = IntProperty(name="Product Index",
-                                default=0)
-    
-    insert_tabs = EnumProperty(name="Insert Tabs",
-                               items=[('INFO',"Main","Show the Part Info Page"),
-                                      ('PROMPTS',"Prompts","Show the Prompts Page"),
-                                      ('OBJECTS',"Objects","Show Objects"),
-                                      ('DRIVERS',"Drivers","Show the Driver Formulas")],
-                               description="Insert Tabs",
-                               default='INFO')
-
-    product_tabs = EnumProperty(name="Product Tabs",
-                                items=[('INFO',"Main","Show the Part Info Page"),
-                                       ('PROMPTS',"Prompts","Show the Prompts Page"),
-                                       ('OBJECTS',"Objects","Show Objects"),
-                                       ('DRIVERS',"Drivers","Show the Driver Formulas")],
-                                description="Product Tabs",
-                                default='INFO')
+#     products = CollectionProperty(name="Products",
+#                                   type=List_Library_Item)
+#     
+#     product_index = IntProperty(name="Product Index",
+#                                 default=0)
     
 bpy.utils.register_class(SCENE_PROPERTIES)
 
@@ -1709,6 +1678,19 @@ class fd_scene(PropertyGroup):
     active_addon_name = StringProperty(name="Active Addon Name",description="Used to determine what the addon is active.")
     
     ui = PointerProperty(name="Interface",type= fd_interface)
+
+    spec_group_tabs = EnumProperty(name="Library Tabs",
+                                   items=[('GLOBALS',"Globals","Global Variable Options"),
+                                          ('MATERIALS',"Materials","Rendering Materials"),
+                                          ('CUTPARTS',"Cut Parts","Cut Parts for cabinets"),
+                                          ('EDGEPARTS',"Library Builder","Edge banding for cabinets")],
+                                   default = 'MATERIALS')
+
+    spec_groups = CollectionProperty(name="Spec Groups",
+                                     type=Specification_Group)
+    
+    spec_group_index = IntProperty(name="Spec Group Index",
+                                   default=0)
 
     #These properties are used to view the children objects in a group
     active_object_name = StringProperty(name="Active Object Name",
