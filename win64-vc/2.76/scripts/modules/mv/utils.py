@@ -191,7 +191,7 @@ def set_object_name(obj):
 
 def assign_materials_from_pointers(obj):
     library = bpy.context.scene.mv
-    spec_group = library.spec_groups[obj.mv.spec_group_index]
+    spec_group = library.spec_groups[obj.cabinetlib.spec_group_index]
     #ASSIGN POINTERS TO MESH BASED ON MESH TYPE
     if obj.cabinetlib.type_mesh == 'CUTPART':
         
