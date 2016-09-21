@@ -1157,7 +1157,7 @@ class Assembly():
         utils.set_property_id(self.obj_bp,self.property_id)
         self.x_dim(value = self.width)
         self.y_dim(value = -self.depth if self.mirror_y else self.depth)
-        self.y_dim(value = -self.height if self.mirror_y else self.height)
+        self.z_dim(value = -self.height if self.mirror_z else self.height)
         self.z_loc(value = self.height_above_floor)
         utils.run_calculators(self.obj_bp)
         self.set_prompts(self.prompts)
