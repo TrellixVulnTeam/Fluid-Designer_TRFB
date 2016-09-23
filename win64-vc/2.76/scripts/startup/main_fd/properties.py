@@ -538,8 +538,8 @@ class mvPrompt(bpy.types.PropertyGroup):
         if self.Type == 'TEXT':
             return "TextValue"
         
-    def get_type_as_string(self, type):
-        return self.TypeName[type]
+    def get_type_as_string(self, prompt_type):
+        return self.TypeName[prompt_type]
         
 bpy.utils.register_class(mvPrompt)
 
