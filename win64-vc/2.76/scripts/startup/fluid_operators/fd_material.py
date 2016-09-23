@@ -714,7 +714,7 @@ class OPS_sync_material_slots(Operator):
     def execute(self, context):
         obj = bpy.data.objects[self.object_name]
         scene = context.scene
-        spec_group = scene.mv.spec_groups[obj.mv.spec_group_index]
+        spec_group = scene.mv.spec_groups[obj.cabinetlib.spec_group_index]
         
         for slot in obj.cabinetlib.material_slots:
             obj.cabinetlib.material_slots.remove(0)
