@@ -48,7 +48,7 @@ class PANEL_Specification_Groups(bpy.types.Panel):
     
     def draw(self, context):
         layout = self.layout
-        library = context.scene.cabinetlib
+        library = context.scene.mv
 
         if len(library.spec_groups) == 0:
             layout.operator('cabinetlib.reload_spec_group_from_template',icon='FILE_REFRESH')
@@ -67,7 +67,7 @@ class PANEL_Specification_Groups(bpy.types.Panel):
             row.prop_enum(library, "spec_group_tabs", 'MATERIALS', icon='MATERIAL', text="Materials")
             row.prop_enum(library, "spec_group_tabs", 'CUTPARTS', icon='MOD_UVPROJECT', text="Cutparts")
             row.prop_enum(library, "spec_group_tabs", 'EDGEPARTS', icon='EDGESEL', text="Edgeparts")
-
+            
             if library.spec_group_tabs == 'MATERIALS':
                 active_spec_group.draw_materials(col)
             if library.spec_group_tabs == 'CUTPARTS':
