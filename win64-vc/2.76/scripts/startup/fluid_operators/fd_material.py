@@ -665,7 +665,7 @@ class OPS_get_materials(Operator):
     def execute(self, context):
         sheets = context.scene.cabinetlib.sheets
         edgebanding = context.scene.cabinetlib.edgebanding
-        products = context.scene.cabinetlib.products
+#         products = context.scene.cabinetlib.products
         
         for sheet in sheets:
             sheets.remove(0)
@@ -673,8 +673,8 @@ class OPS_get_materials(Operator):
         for edgeband in edgebanding:
             edgebanding.remove(0)
             
-        for product in products:
-            products.remove(0)
+#         for product in products:
+#             products.remove(0)
         
         for obj in context.visible_objects:
             if obj.cabinetlib.type_mesh == 'CUTPART':
@@ -696,10 +696,10 @@ class OPS_get_materials(Operator):
 #                     mat.thickness = utils.get_part_thickness(obj)
 #                     mat.name= edge_name
                     
-            if obj.mv.type == 'BPASSEMBLY' and obj.mv.type_group == 'PRODUCT':
-                product = products.add()
-                product.name = obj.mv.name_object
-                product.bp_name = obj.name
+#             if obj.mv.type == 'BPASSEMBLY' and obj.mv.type_group == 'PRODUCT':
+#                 product = products.add()
+#                 product.name = obj.mv.name_object
+#                 product.bp_name = obj.name
         
         return {'FINISHED'}
     

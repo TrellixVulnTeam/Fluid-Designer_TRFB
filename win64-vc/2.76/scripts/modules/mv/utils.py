@@ -376,7 +376,7 @@ def get_material_name(obj):
 
 def get_part_thickness(obj):
     if obj.cabinetlib.type_mesh == 'CUTPART':
-        spec_group = bpy.context.scene.mv.spec_groups[obj.mv.spec_group_index]
+        spec_group = bpy.context.scene.mv.spec_groups[obj.cabinetlib.spec_group_index]
         if obj.cabinetlib.cutpart_name in spec_group.cutparts:
             return spec_group.cutparts[obj.cabinetlib.cutpart_name].thickness
         else:
