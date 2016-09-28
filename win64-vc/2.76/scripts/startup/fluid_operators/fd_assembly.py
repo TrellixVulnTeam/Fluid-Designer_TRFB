@@ -868,6 +868,7 @@ class OPS_delete_selected_assembly(Operator):
         obj_list = []
         obj_list = utils.get_child_objects(obj_bp,obj_list)
         utils.delete_obj_list(obj_list)
+        self.object_name = ""
         return {'FINISHED'}
 
     def remove_referenced_modifiers(self,context,obj_ref):
