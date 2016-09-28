@@ -1197,6 +1197,9 @@ class OPERATOR_Collect_Walls(Operator):
         props = context.scene.fd_roombuilder
         mv = context.scene.mv
         
+        for old_wall in props.walls:
+            props.walls.remove(0)
+        
         bpy.ops.fd_object.draw_floor_plane()
         obj_floor = context.active_object
         obj_floor.name = "Floor"
@@ -1215,9 +1218,6 @@ class OPERATOR_Collect_Walls(Operator):
         
         bpy.ops.fd_object.add_room_lamp()
         
-        for old_wall in props.walls:
-            props.walls.remove(0)
-        
         for obj in context.scene.objects:
             if obj.mv.type == 'BPWALL':
                 wall = fd_types.Wall(obj)
@@ -1233,9 +1233,7 @@ class OPERATOR_Collect_Walls(Operator):
                 ceiling = props.walls.add()
                 ceiling.name = obj.mv.name_object
                 ceiling.bp_name = obj.name
-                
-        
-                
+
         return {'FINISHED'}
         
 class OPERATOR_Delete_Obstacle(Operator):
