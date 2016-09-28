@@ -232,7 +232,8 @@ class INFO_MT_fluidhelp(Menu):
 
     def draw(self, context):
         layout = self.layout
-
+        layout.menu("INFO_MT_fluid_tutorials",icon='SEQUENCE',text="Tutorial Videos")
+        layout.separator()
         layout.operator("wm.url_open", text="Microvellum e-Support", icon='HELP').url = "http://support.microvellum.com"
         layout.operator("wm.url_open", text="Microvellum Website", icon='URL').url = "http://www.microvellum.com"
         layout.separator()
@@ -246,6 +247,28 @@ class INFO_MT_fluidhelp(Menu):
         layout.separator()
         layout.operator("wm.splash", icon='BLENDER')
 
+class INFO_MT_fluid_tutorials(Menu):
+    bl_label = "Tutorial Videos"
+
+    def draw(self, context):
+        layout = self.layout
+        layout.label("Getting Started Videos")
+        layout.operator("wm.url_open", text="01 - Understanding the User Interface", icon='SEQUENCE').url = "http://www.microvellum.com/Download/Video/FluidDesignerVideo/Getting_Started_Videos/01-Understanding_the_User_Interface.mp4"
+        layout.operator("wm.url_open", text="02 - Navigating the 3D Viewport", icon='SEQUENCE').url = "http://www.microvellum.com/Download/Video/FluidDesignerVideo/Getting_Started_Videos/02-Navigating_the_3D_Viewport.mp4"
+        layout.operator("wm.url_open", text="03 - Creating Rooms", icon='SEQUENCE').url = "http://www.microvellum.com/Download/Video/FluidDesignerVideo/Getting_Started_Videos/03-Creating_Rooms.mp4"
+        layout.operator("wm.url_open", text="04 - Working with Products", icon='SEQUENCE').url = "http://www.microvellum.com/Download/Video/FluidDesignerVideo/Getting_Started_Videos/04-Working_with_Products.mp4"
+        layout.operator("wm.url_open", text="05 - Creating Renderings", icon='SEQUENCE').url = "http://www.microvellum.com/Download/Video/FluidDesignerVideo/Getting_Started_Videos/05-Creating_Renderings.mp4"
+        layout.separator()
+        layout.label("Design Tutorials")
+        layout.operator("wm.url_open", text="Creating a Reach In Closet", icon='SEQUENCE').url = "http://www.microvellum.com/Download/Video/FluidDesignerVideo/Reach_In_Closet_Training.mp4"
+        layout.operator("wm.url_open", text="Creating a Walk In Closet", icon='SEQUENCE').url = "http://www.microvellum.com/Download/Video/FluidDesignerVideo/Walk_in_Closet_Training.mp4"
+        layout.operator("wm.url_open", text="Creating a Face Frame Kitchen", icon='SEQUENCE').url = "http://www.microvellum.com/Download/Video/FluidDesignerVideo/Designing_A_Face_Frame_Kitchen.mp4"
+        layout.separator()
+        layout.label("Quick Tip Videos")
+        layout.operator("wm.url_open", text="Speed Up Renderings", icon='SEQUENCE').url = "http://www.microvellum.com/Download/Video/FluidDesignerVideo/Quick_Tip_Videos/Speed_Up_Renderings.mp4"
+        layout.operator("wm.url_open", text="Working with Number Controls", icon='SEQUENCE').url = "http://www.microvellum.com/Download/Video/FluidDesignerVideo/Quick_Tip_Videos/Working_with_Number_Controls.mp4"
+        layout.operator("wm.url_open", text="Changing Wall Shapes", icon='SEQUENCE').url = "http://www.microvellum.com/Download/Video/FluidDesignerVideo/Quick_Tip_Videos/Changing_the_Wall_Shape.mp4"
+        
 class INFO_MT_create_rendering(Menu):
     bl_label = "Rendering"
 
@@ -307,6 +330,7 @@ classes = [
 		   INFO_HT_fluidheader,
            INFO_MT_units,
            INFO_MT_fluidhelp,
+           INFO_MT_fluid_tutorials,
            INFO_MT_interface,
            INFO_MT_create_rendering,
            INFO_MT_edit,
