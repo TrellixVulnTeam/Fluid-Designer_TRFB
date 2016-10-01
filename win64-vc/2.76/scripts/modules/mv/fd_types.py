@@ -65,8 +65,7 @@ class Assembly():
     """ Type:enum_string("","Corner") - Used for drag and drop from placement """
     placement_type = ""    
     
-    """ Type:bool - Determines if the z dimension is mirrored. 
-                    Typically used for upper/suspended cabinets  """
+    """ Type:bool - Determines if the z dimension is mirrored. """
     mirror_z = False
     
     """ Type:bool - Determines if the y dimension is mirrored. 
@@ -325,11 +324,11 @@ class Assembly():
                 
         utils.delete_obj_list(list_obj_cage)
 
-    def replace(self,smart_group):
-        utils.copy_drivers(self.obj_bp,smart_group.obj_bp)
-        utils.copy_drivers(self.obj_x,smart_group.obj_x)
-        utils.copy_drivers(self.obj_y,smart_group.obj_y)
-        utils.copy_drivers(self.obj_z,smart_group.obj_z)
+    def replace(self,assembly):
+        utils.copy_drivers(self.obj_bp,assembly.obj_bp)
+        utils.copy_drivers(self.obj_x,assembly.obj_x)
+        utils.copy_drivers(self.obj_y,assembly.obj_y)
+        utils.copy_drivers(self.obj_z,assembly.obj_z)
         obj_list = []
         obj_list.append(self.obj_bp)
         for child in self.obj_bp.children:

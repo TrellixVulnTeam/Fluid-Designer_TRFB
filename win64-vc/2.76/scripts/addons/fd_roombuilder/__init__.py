@@ -347,10 +347,14 @@ class FD_UL_walls(UIList):
                 layout.label(text=item.name + "   " + count_text)
                 layout.label("Length: " + str(unit.meter_to_active_unit(wall.obj_x.location.x)))
                 if wall.obj_bp.hide:
-                    layout.operator('fd_assembly.show_wall',text="",icon='RESTRICT_VIEW_ON',emboss=False).wall_bp_name = wall_bp.name
+                    props = layout.operator('fd_roombuilder.hide_show_wall',text="",icon='RESTRICT_VIEW_ON',emboss=False)
+                    props.wall_bp_name = wall_bp.name
+                    props.hide = False
                 else:
-                    layout.operator('fd_assembly.hide_wall',text="",icon='RESTRICT_VIEW_OFF',emboss=False).wall_bp_name = wall_bp.name
-
+                    props = layout.operator('fd_roombuilder.hide_show_wall',text="",icon='RESTRICT_VIEW_OFF',emboss=False)
+                    props.wall_bp_name = wall_bp.name
+                    props.hide = True
+                    
 class FD_UL_obstacles(UIList):
     
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -1279,6 +1283,43 @@ class OPERATOR_Hide_Plane(Operator):
         
         return {'FINISHED'}
 
+class OPERATOR_Hide_Show_Wall(Operator):
+    bl_idname = "fd_roombuilder.hide_show_wall"
+    bl_label = "Hide Wall"
+    
+    wall_bp_name = StringProperty("Wall BP Name",default="")
+    
+    hide = BoolProperty("Hide",default=False)
+    
+    def execute(self, context):
+        # This assumes that layer 1 is the layer you have everything on
+        # Layer 2 is the layer we are placing the hidden objects on
+        # This is kind of a hack there might be a better way to do this.
+        # But we cannot hide objects on a wall becuase many hide properties
+        # are driven my python drivers and after the scene recalcs hidden objects
+        # are shown again.
+        hide_layers = (False,True,False,False,False,False,False,False,False,False,
+                       False,False,False,False,False,False,False,False,False,False)
+        
+        visible_layers = (True,False,False,False,False,False,False,False,False,False,
+                          False,False,False,False,False,False,False,False,False,False)        
+        
+        obj = context.scene.objects[self.wall_bp_name]
+        
+        wall_bp = utils.get_wall_bp(obj)
+        
+        children = utils.get_child_objects(wall_bp)
+        
+        for child in children:
+            if self.hide:
+                child.layers = hide_layers
+            else:
+                child.layers = visible_layers
+            
+        wall_bp.hide = self.hide
+        
+        return {'FINISHED'}
+
 class OPERATOR_Show_Plane(Operator):
     bl_idname = "fd_roombuilder.show_plane"
     bl_label = "Show Plane"
@@ -1382,6 +1423,7 @@ def register():
     bpy.utils.register_class(FD_UL_walls)
     bpy.utils.register_class(FD_UL_obstacles)
     
+    bpy.utils.register_class(OPERATOR_Hide_Show_Wall)
     bpy.utils.register_class(OPERATOR_Add_Obstacle)
     bpy.utils.register_class(OPERATOR_Add_Floor_Obstacle)
     bpy.utils.register_class(OPERATOR_Build_Room)
@@ -1422,6 +1464,7 @@ def unregister():
     bpy.utils.unregister_class(FD_UL_walls)
     bpy.utils.unregister_class(FD_UL_obstacles)
     
+    bpy.utils.unregister_class(OPERATOR_Hide_Wall)
     bpy.utils.unregister_class(OPERATOR_Add_Obstacle)
     bpy.utils.unregister_class(OPERATOR_Add_Floor_Obstacle)
     bpy.utils.unregister_class(OPERATOR_Build_Room)
