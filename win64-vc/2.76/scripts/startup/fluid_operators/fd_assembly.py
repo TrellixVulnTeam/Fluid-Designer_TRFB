@@ -934,12 +934,16 @@ class OPS_copy_selected_assembly(Operator):
             
             bpy.ops.object.duplicate()
             
+            for obj in context.selected_objects:
+                if obj.type == 'EMPTY':
+                    obj.hide = True
+            
             for obj in obj_list:
                 if obj.type == 'EMPTY':
                     obj.hide = True
                 obj.location = obj.location
             bpy.ops.object.select_all(action='DESELECT')
-
+            
             obj_bp.select = True
             context.scene.objects.active = obj_bp
             
