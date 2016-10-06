@@ -915,6 +915,44 @@ class OPS_copy_selected_assembly(Operator):
     @classmethod
     def poll(cls, context):
         obj = context.active_object
+        obj_bp = utils.get_assembly_bp(obj)
+        if obj_bp:
+            return True
+        else:
+            return False
+    
+    def execute(self, context):
+        obj = context.object
+        obj_bp = utils.get_assembly_bp(obj)
+        if obj_bp:
+            obj_list = []
+            obj_list = utils.get_child_objects(obj_bp,obj_list)
+            bpy.ops.object.select_all(action='DESELECT')
+            for obj in obj_list:
+                obj.hide = False
+                obj.select = True
+            
+            bpy.ops.object.duplicate()
+            
+            for obj in obj_list:
+                if obj.type == 'EMPTY':
+                    obj.hide = True
+                obj.location = obj.location
+            bpy.ops.object.select_all(action='DESELECT')
+
+            obj_bp.select = True
+            context.scene.objects.active = obj_bp
+            
+        return {'FINISHED'}
+
+class OPS_copy_parent_assembly(Operator):
+    bl_idname = "fd_assembly.copy_parent_assembly"
+    bl_label = "Copy Parent Assembly"
+    bl_options = {'UNDO'}
+    
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
         obj_bp = utils.get_parent_assembly_bp(obj)
         if obj_bp:
             return True
@@ -1162,6 +1200,7 @@ classes = [
            OPS_rename_assembly,
            OPS_delete_selected_assembly,
            OPS_copy_selected_assembly,
+           OPS_copy_parent_assembly,
            OPS_connect_mesh_to_hooks_in_assembly,
            OPS_make_static_product,
            OPS_select_product,
