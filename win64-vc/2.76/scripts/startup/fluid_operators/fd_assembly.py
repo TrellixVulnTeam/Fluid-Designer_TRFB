@@ -730,6 +730,31 @@ class OPS_select_selected_assembly_base_point(Operator):
     @classmethod
     def poll(cls, context):
         obj = context.active_object
+        obj_bp = utils.get_assembly_bp(obj)
+        if obj_bp:
+            return True
+        else:
+            return False
+
+    def execute(self, context):
+        obj = context.active_object
+        obj_bp = utils.get_assembly_bp(obj)
+        if obj_bp:
+            bpy.ops.object.select_all(action='DESELECT')
+            obj_bp.hide = False
+            obj_bp.hide_select = False
+            obj_bp.select = True
+            context.scene.objects.active = obj_bp
+        return {'FINISHED'}
+
+class OPS_select_parent_assembly_base_point(Operator):
+    bl_idname = "fd_assembly.select_parent_assemby_base_point"
+    bl_label = "Select Assembly Base Point"
+    bl_options = {'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
         obj_bp = utils.get_parent_assembly_bp(obj)
         if obj_bp:
             return True
@@ -1199,6 +1224,7 @@ classes = [
            OPS_add_text_to_assembly,
            OPS_make_group_from_selected_assembly,
            OPS_select_selected_assembly_base_point,
+           OPS_select_parent_assembly_base_point,
            OPS_delete_object_in_assembly,
            OPS_load_active_assembly_objects,
            OPS_rename_assembly,
