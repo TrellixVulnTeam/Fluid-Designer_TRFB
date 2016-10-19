@@ -2252,7 +2252,18 @@ class OPS_create_screen_shot(Operator):
         save_path = os.path.join(path,file)
         if not os.path.exists(save_path):
             os.mkdir(save_path)
-        bpy.ops.screen.screenshot(filepath=os.path.join(save_path,file+".png"),full=False)
+            
+        if os.path.exists(os.path.join(save_path,file+".png")):
+            counter = 1
+            while True:
+                if os.path.exists(os.path.join(save_path,file+ " " + str(counter) + ".png")):
+                    counter += 1
+                else:
+                    bpy.ops.screen.screenshot(filepath=os.path.join(save_path,file+ " " + str(counter) + ".png"),full=False)
+                    break
+        else:
+            bpy.ops.screen.screenshot(filepath=os.path.join(save_path,file+".png"),full=False)
+            
         return{'FINISHED'}
 
 class OPS_project_info(Operator):
