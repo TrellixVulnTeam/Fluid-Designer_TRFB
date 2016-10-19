@@ -1777,7 +1777,7 @@ class OPS_toggle_dimension_handles(Operator):
                 obj.hide = False if self.turn_on else True
             elif obj.mv.type == 'VISDIM_B':
                 obj.rotation_euler.z = math.radians(-90)
-                obj.empty_draw_type = 'CONE'
+                obj.empty_draw_type = 'PLAIN_AXES'
                 obj.empty_draw_size = unit.inch(2)
                 obj.hide = False if self.turn_on else True
         return {'FINISHED'}
