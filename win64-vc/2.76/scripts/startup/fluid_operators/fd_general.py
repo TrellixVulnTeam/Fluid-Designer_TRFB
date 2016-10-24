@@ -447,6 +447,11 @@ class OPS_drop_insert(Operator):
             utils.run_calculators(self.insert.obj_bp)
             return opening
             
+    def set_opening_name(self,obj,name):
+        obj.mv.opening_name = name
+        for child in obj.children:
+            self.set_opening_name(child, name)
+        
     def place_insert(self,opening):
         if self.insert.obj_bp.mv.placement_type == 'INTERIOR':
             opening.obj_bp.mv.interior_open = False
@@ -459,6 +464,8 @@ class OPS_drop_insert(Operator):
         utils.copy_assembly_drivers(opening,self.insert)
         #DONT ASSIGN PROPERTIES ID's SO USERS CAN ACCESS PROPERTIES FOR INSERTS USED IN CLOSET LIBRARY
 #         cabinet_utils.set_property_id(self.insert.obj_bp,opening.obj_bp.mv.property_id)
+        self.set_opening_name(self.insert.obj_bp, opening.obj_bp.mv.opening_name)
+        
         for obj in self.objects:
             obj.hide = True
             obj.hide_render = True

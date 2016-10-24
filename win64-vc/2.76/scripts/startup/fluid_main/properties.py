@@ -1548,6 +1548,8 @@ class fd_object(PropertyGroup):
     edge_l2 = StringProperty(name="Edge Length 2",description="Name of the edgebanding applied to Length 2")
     solid_stock = StringProperty(name="Solid Stock",description="Name of the solid stock material applied to the obj")    
     
+    opening_name = StringProperty(name="Opening Name",description="Name of the opening")   
+    
     mp = PointerProperty(name="Machine Point",
                          description="Machining Point",
                          type=Machine_Point)    
