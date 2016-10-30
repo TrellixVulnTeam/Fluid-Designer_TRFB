@@ -863,7 +863,7 @@ class OPS_assign_material(Operator):
             if mat_slot.name == "":
                 row.label('No Material')
             else:
-                row.prop(mat_slot,"name",text="")
+                row.prop(mat_slot,"name",text=self.obj.cabinetlib.material_slots[index].name if len(self.obj.cabinetlib.material_slots) >= index+1 else "")
             props = row.operator('fd_material.assign_material_to_slot',text="Assign",icon='BACK')
             props.object_name = self.obj.name
             props.material_name = self.material.name
