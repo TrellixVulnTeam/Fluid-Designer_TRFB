@@ -91,7 +91,7 @@ class FILEBROWSER_HT_fluidheader(Header):
             if context.scene.mv.world_library_name == "":
                 layout.operator("fd_general.reload_library",'Click Here to Load Library',icon='FILE_REFRESH')
             else:
-                layout.menu('FILEBROWSER_MT_active_world_libraries',icon='MATERIAL',text="  " + context.scene.mv.world_library_name)
+                layout.menu('FILEBROWSER_MT_active_world_libraries',icon='WORLD',text="  " + context.scene.mv.world_library_name)
                 if context.scene.mv.world_category_name != "":
                     layout.menu('FILEBROWSER_MT_active_world_categories',icon='FILESEL',text="  " + context.scene.mv.world_category_name)
         
@@ -406,8 +406,27 @@ class MENU_File_Browser_Options(Menu):
 
     def draw(self, context):
         layout = self.layout
+        ui = context.scene.mv.ui
         layout.operator("fd_general.open_browser_window",text="Open Location in Browser",icon='FILE_FOLDER').path = utils.get_file_browser_path(context)
         
+        layout.separator()
+        
+        if ui.library_tabs == 'ASSEMBLY':
+            layout.operator("fd_general.create_thumbnails",text="Create Assembly Thumbnails",icon='RENDER_RESULT')
+            layout.operator("fd_general.append_items",text="Append Assemblies",icon='APPEND_BLEND')
+            
+        if ui.library_tabs == 'OBJECT':
+            layout.operator("fd_general.create_thumbnails",text="Create Object Thumbnails",icon='RENDER_RESULT')
+            layout.operator("fd_general.append_items",text="Append Objects",icon='APPEND_BLEND')
+            
+        if ui.library_tabs == 'MATERIAL':
+            layout.operator("fd_general.create_thumbnails",text="Create Material Thumbnails",icon='RENDER_RESULT')
+            layout.operator("fd_general.append_items",text="Append Materials",icon='APPEND_BLEND')
+            
+        if ui.library_tabs == 'WORLD':
+            layout.operator("fd_general.create_thumbnails",text="Create World Thumbnails",icon='RENDER_RESULT')
+            layout.operator("fd_general.append_items",text="Append Worlds",icon='APPEND_BLEND')
+
 class INFO_MT_addons(Menu):
     bl_idname = "INFO_MT_addons"
     bl_label = "Microvellum Add-ons"

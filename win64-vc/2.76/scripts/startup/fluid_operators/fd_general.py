@@ -2355,15 +2355,7 @@ class OPS_append_items(Operator):
             for item in file.items:
                 if item.is_selected:     
                     file_path = os.path.join(self.path,file.name)
-                    
-#Need to add this in                 
-#                     if self.library_tabs == 'SCENE':
-#                             with bpy.data.libraries.load(file_path, False, False) as (data_from, data_to):
-#                                 for scene in data_from.scenes:
-#                                     if scene == item.name:
-#                                         data_to.scenes = [scene]
-#                                         break                      
-                 
+
                     if self.library_tabs == 'ASSEMBLY':
                             with bpy.data.libraries.load(file_path, False, False) as (data_from, data_to):
                                 for grp in data_from.groups:
@@ -2475,7 +2467,8 @@ class OPS_append_items(Operator):
         for blend_file in self.blend_files:
             col = layout.column(align=True)
             box = col.box()
-            row = box.row()
+            col = box.column(align=True)
+            row = col.row()
             row.prop(blend_file,"show_expanded",
                      text="",
                      icon='TRIA_DOWN' if blend_file.show_expanded else 'TRIA_RIGHT',
@@ -2485,7 +2478,7 @@ class OPS_append_items(Operator):
             
             for item in blend_file.items:
                 if blend_file.show_expanded:
-                    row = box.row()
+                    row = col.row()
                     row.label(text="",icon='BLANK1')
                     row.label(text="",icon='BLANK1')
                     row.label(text=item.name,icon=self.item_icon)
@@ -2618,16 +2611,16 @@ class OPS_create_thumbnails(Operator):
                         script = self.create_world_thumbnail_script(self.path,file_path,item.name)
                     
                     subprocess.call(bpy.app.binary_path + ' "' + get_thumbnail_path() + '" -b --python "' + script + '"')                          
-        
-        for file in self.blend_files:
-            self.blend_files.remove(0)
-
-        os.remove(script)
+                    
+                    os.remove(script)
                                      
         return{'FINISHED'}
 
     def invoke(self,context,event):
         self.blend_files = context.window_manager.mv.data_from_libs
+        for file in self.blend_files:
+            self.blend_files.remove(0)
+                
         self.path = utils.get_file_browser_path(context)
         self.library_tabs = context.scene.mv.ui.library_tabs
         files = os.listdir(self.path)
@@ -2690,7 +2683,8 @@ class OPS_create_thumbnails(Operator):
         for blend_file in self.blend_files:
             col = layout.column(align=True)
             box = col.box()
-            row = box.row()
+            col = box.column(align=True)
+            row = col.row()
             row.prop(blend_file,"show_expanded",
                      text="",
                      icon='TRIA_DOWN' if blend_file.show_expanded else 'TRIA_RIGHT',
@@ -2700,7 +2694,7 @@ class OPS_create_thumbnails(Operator):
             
             for item in blend_file.items:
                 if blend_file.show_expanded:
-                    row = box.row()
+                    row = col.row()
                     row.label(text="",icon='BLANK1')
                     row.label(text="",icon='BLANK1')
                     row.label(text=item.name,icon=self.item_icon)
