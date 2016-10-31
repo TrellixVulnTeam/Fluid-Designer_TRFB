@@ -604,10 +604,23 @@ def get_group(path):
         return obj_bp
 
 def get_object(path):
-    with bpy.data.libraries.load(path, False, False) as (data_from, data_to):
-        for obj in data_from.objects:
-            data_to.objects = [obj]
-            break
+    if os.path.exists(path): # LOOK FOR FILE NAME AND GET OBJECT
+        with bpy.data.libraries.load(path, False, False) as (data_from, data_to):
+            for obj in data_from.objects:
+                data_to.objects = [obj]
+                break
+    else: # LOOK IN EVERY BLEND FILE IN THE SAME DIRECTORY FOR AN OBJECT NAME == FILE NAME
+        directory_path = os.path.dirname(path)
+        object_name, ext = os.path.splitext(os.path.basename(path))
+        for file in os.listdir(directory_path):
+            file_name, file_ext = os.path.splitext(file)
+            if file_ext == '.blend':
+                print("Searching: " + os.path.join(directory_path,file)) #PRINT STATEMENT FOR DEBUG. THIS COULD BE SLOWER IF SEARCHING MANY FILES!
+                with bpy.data.libraries.load(os.path.join(directory_path,file), False, False) as (data_from, data_to):
+                    for obj in data_from.objects:
+                        if obj == object_name:
+                            data_to.objects = [obj]
+                            break
     
     for obj in data_to.objects:
         link_objects_to_scene(obj,bpy.context.scene)
