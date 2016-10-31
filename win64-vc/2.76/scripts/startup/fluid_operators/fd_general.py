@@ -1252,6 +1252,22 @@ class OPS_properties(Operator):
             if obj.type == 'LAMP':
                 utils.draw_object_data(layout,obj)
 
+class OPS_register_library_package(Operator):
+    """ This will load all of the products from the products module.
+    """
+    bl_idname = "fd_general.register_library_package"
+    bl_label = "Register Library Package"
+    bl_description = "This will add a library package to Fluid Designer"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        from importlib import import_module
+        wm = context.window_manager.cabinetlib
+        
+        
+        
+        return {'FINISHED'}
+
 class OPS_load_library_modules(Operator):
     """ This will load all of the products from the products module.
     """

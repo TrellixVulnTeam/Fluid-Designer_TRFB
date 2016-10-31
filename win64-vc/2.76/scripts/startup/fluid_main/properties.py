@@ -205,22 +205,22 @@ def update_library_paths(self,context):
         xml.add_element_with_text(paths,'Modules',self.library_module_path)
     else:
         xml.add_element_with_text(paths,'Modules',"")
-    
+     
     if os.path.exists(self.assembly_library_path):
         xml.add_element_with_text(paths,'Assemblies',self.assembly_library_path)
     else:
         xml.add_element_with_text(paths,'Assemblies',"")
-        
+         
     if os.path.exists(self.object_library_path):
         xml.add_element_with_text(paths,'Objects',self.object_library_path)
     else:
         xml.add_element_with_text(paths,'Objects',"")
-        
+         
     if os.path.exists(self.material_library_path):
         xml.add_element_with_text(paths,'Materials',self.material_library_path)
     else:
         xml.add_element_with_text(paths,'Materials',"")
-        
+         
     if os.path.exists(self.world_library_path):
         xml.add_element_with_text(paths,'Worlds',self.world_library_path)
     else:
@@ -1757,12 +1757,6 @@ class fd_scene(PropertyGroup):
 bpy.utils.register_class(fd_scene)
 
 class fd_window_manager(PropertyGroup):
-    show_standalone_ui = BoolProperty(name="Show Standalone UI",
-                                      default = True,
-                                      description="This shows all of the standalone UI elements. This property is only set to False when Fluid Designer is opened from a separate application.")
-    
-    wall_rotation = FloatProperty(name="Wall Rotation",description="Used to store the walls rotation")
-    
     use_opengl_dimensions = BoolProperty(name="Use OpenGL Dimensions",
                                          description="Use OpenGL Dimensions",
                                          default=False)  

@@ -88,24 +88,21 @@ class INFO_MT_fluidfile(Menu):
 
     def draw(self, context):
         layout = self.layout
-        show_standalone_ui = context.window_manager.mv.show_standalone_ui
-        
-        if show_standalone_ui:
-            layout.operator_context = 'INVOKE_AREA'
-            layout.operator("wm.read_homefile", text="New", icon='NEW')
-            layout.operator("wm.open_mainfile", text="Open...", icon='FILE_FOLDER').load_ui = False
-            layout.menu("INFO_MT_file_open_recent", icon='OPEN_RECENT')
-            layout.operator("wm.recover_last_session", icon='RECOVER_LAST')
-            layout.operator("wm.recover_auto_save", text="Recover Auto Save...", icon='RECOVER_AUTO')
 
-            layout.separator()
+        layout.operator_context = 'INVOKE_AREA'
+        layout.operator("wm.read_homefile", text="New", icon='NEW')
+        layout.operator("wm.open_mainfile", text="Open...", icon='FILE_FOLDER').load_ui = False
+        layout.menu("INFO_MT_file_open_recent", icon='OPEN_RECENT')
+        layout.operator("wm.recover_last_session", icon='RECOVER_LAST')
+        layout.operator("wm.recover_auto_save", text="Recover Auto Save...", icon='RECOVER_AUTO')
+
+        layout.separator()
 
         layout.operator_context = 'EXEC_AREA' if context.blend_data.is_saved else 'INVOKE_AREA'
         layout.operator("wm.save_mainfile", text="Save", icon='FILE_TICK')
-        
-        if show_standalone_ui:
-            layout.operator_context = 'INVOKE_AREA'
-            layout.operator("wm.save_as_mainfile", text="Save As...", icon='SAVE_AS')
+
+        layout.operator_context = 'INVOKE_AREA'
+        layout.operator("wm.save_as_mainfile", text="Save As...", icon='SAVE_AS')
         
         layout.separator()
 
@@ -118,18 +115,17 @@ class INFO_MT_fluidfile(Menu):
         layout.operator("screen.userpref_show", text="User Preferences...", icon='PREFERENCES')
         layout.menu("INFO_MT_units",icon='LINENUMBERS_ON',text="Units")
         layout.separator()
-        if show_standalone_ui:
-            layout.operator_context = 'INVOKE_AREA'
-            layout.operator("fd_general.save_startup_file", icon='SAVE_PREFS')
-        
-            layout.separator()
-            
-            layout.operator_context = 'INVOKE_AREA'
-            
-            layout.operator("fd_general.load_fluid_designer_defaults", icon='LOAD_FACTORY')
-            layout.operator("fd_general.load_blender_defaults", icon='BLENDER')
+        layout.operator_context = 'INVOKE_AREA'
+        layout.operator("fd_general.save_startup_file", icon='SAVE_PREFS')
     
-            layout.separator()
+        layout.separator()
+        
+        layout.operator_context = 'INVOKE_AREA'
+        
+        layout.operator("fd_general.load_fluid_designer_defaults", icon='LOAD_FACTORY')
+        layout.operator("fd_general.load_blender_defaults", icon='BLENDER')
+
+        layout.separator()
 
         layout.menu("INFO_MT_file_import", icon='IMPORT')
         layout.menu("INFO_MT_file_export", icon='EXPORT')
