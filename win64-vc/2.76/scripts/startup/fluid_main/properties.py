@@ -1374,17 +1374,6 @@ bpy.utils.register_class(SCENE_PROPERTIES)
 
 class WM_PROPERTIES(PropertyGroup):
 
-    export_info = EnumProperty(name="Export Info",items=[('PROJECT_INFO',"Project Info","Project Info"),
-                                                         ('CUTPARTS',"Cutparts","Cutparts"),
-                                                         ('EDGEBANDING',"Edgebanding","Edgebanding"),
-                                                         ('PRODUCTS',"Products","Products")],
-                                                  default = 'PROJECT_INFO')  
-    
-    placement_on_product = EnumProperty(name="Placement on Product",items=[('LEFT',"Left","left"),
-                                                                           ('RIGHT',"Right","Right"),
-                                                                           ('CENTER',"Center","center")],
-                                                                    default = 'RIGHT')  
-    
     library_types = EnumProperty(name="Library Types",items=[('PRODUCT',"Product","Product"),
                                                              ('INSERT',"Insert","Insert")],
                                                             default = 'PRODUCT')  
