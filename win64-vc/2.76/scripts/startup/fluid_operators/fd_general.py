@@ -1252,20 +1252,32 @@ class OPS_properties(Operator):
             if obj.type == 'LAMP':
                 utils.draw_object_data(layout,obj)
 
-class OPS_register_library_package(Operator):
+class OPS_add_library_package(Operator):
     """ This will load all of the products from the products module.
     """
-    bl_idname = "fd_general.register_library_package"
-    bl_label = "Register Library Package"
+    bl_idname = "fd_general.add_library_package"
+    bl_label = "Add Library Package"
     bl_description = "This will add a library package to Fluid Designer"
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        from importlib import import_module
-        wm = context.window_manager.cabinetlib
-        
-        
-        
+        wm = context.window_manager.mv
+        wm.library_packages.add()
+        return {'FINISHED'}
+
+class OPS_delete_library_package(Operator):
+    """ This will load all of the products from the products module.
+    """
+    bl_idname = "fd_general.delete_library_package"
+    bl_label = "Add Library Package"
+    bl_description = "This will add a library package to Fluid Designer"
+    bl_options = {'UNDO'}
+    
+    library_index = IntProperty(name="Library Index")
+    
+    def execute(self, context):
+        wm = context.window_manager.mv
+        wm.library_packages.remove(self.library_index)
         return {'FINISHED'}
 
 class OPS_load_library_modules(Operator):
@@ -2714,6 +2726,8 @@ classes = [
            OPS_drop_world,
            OPS_properties,
            OPS_change_mode,
+           OPS_add_library_package,
+           OPS_delete_library_package,
            OPS_load_library_modules,
            OPS_brd_library_items,
            OPS_place_product,

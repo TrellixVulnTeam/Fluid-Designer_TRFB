@@ -890,6 +890,18 @@ class USERPREF_PT_file(Panel):
         wm = context.window_manager
         
         box = layout.box()
+        row = box.row()
+        row.label("External Libraries:")
+        row.split(percentage=.2)
+        row.operator("fd_general.add_library_package",text="Add Library Package",icon='ZOOMIN')        
+        
+        for index, package in enumerate(wm.mv.library_packages):
+            row = box.row()
+            row.prop(package,"enabled",text="")
+            row.prop(package,"lib_path",text="")
+            row.operator("fd_general.delete_library_package",text="",icon='X',emboss=False).library_index = index
+            
+        box = layout.box()
         
         col = box.column()
         row = col.row()
@@ -897,10 +909,9 @@ class USERPREF_PT_file(Panel):
         row.operator("fd_general.open_browser_window",
                      text="Open Configurations Location",
                      icon='FILE_FOLDER').path = os.path.dirname(utils.get_library_path_file())
+
         col.prop(wm.mv, "library_module_path", text="Library Modules Path",icon='FILE_TEXT')
         col.separator()
-#         col.prop(wm.mv, "product_library_path", text="Product Library Path",icon='OUTLINER_OB_LATTICE')
-#         col.prop(wm.mv, "insert_library_path", text="Insert Library Path",icon='STICKY_UVS_LOC')
         col.prop(wm.mv, "assembly_library_path", text="Assembly Library Path",icon='OUTLINER_DATA_LATTICE')
         col.prop(wm.mv, "object_library_path", text="Object Library Path",icon='OBJECT_DATA')
         col.prop(wm.mv, "material_library_path", text="Material Library Path",icon='MATERIAL')

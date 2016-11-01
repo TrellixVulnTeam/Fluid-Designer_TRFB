@@ -201,6 +201,11 @@ def update_library_paths(self,context):
     root = xml.create_tree()
     paths = xml.add_element(root,'LibraryPaths')
     
+    packages = xml.add_element(paths,'Packages')
+    for package in self.library_packages:
+        if os.path.exists(package.lib_path):
+            xml.add_element_with_text(packages,'Package',os.path.basename(package.lib_path))
+    
     if os.path.exists(self.library_module_path):
         xml.add_element_with_text(paths,'Modules',self.library_module_path)
     else:
@@ -807,6 +812,12 @@ class List_Module_Members(bpy.types.PropertyGroup):
     index = bpy.props.IntProperty(name="Index")      
     
 bpy.utils.register_class(List_Module_Members)       
+    
+class Library_Package(bpy.types.PropertyGroup):
+    lib_path = StringProperty(name="Library Path",subtype='DIR_PATH',update=update_library_paths)
+    enabled = BoolProperty(name="Enabled",default=True,update=update_library_paths)
+    
+bpy.utils.register_class(Library_Package)       
     
 class Category(PropertyGroup):
     path = StringProperty(name="Path")
@@ -1755,6 +1766,8 @@ class fd_window_manager(PropertyGroup):
                                         update=update_scene_index)    
     
     data_from_libs = CollectionProperty(name="Blend Files",type=blend_file)
+    
+    library_packages = CollectionProperty(name="Library Packages",type=Library_Package)
     
     library_module_path = StringProperty(name="Library Module Path",default="",subtype='DIR_PATH',update=update_library_paths)
     assembly_library_path = StringProperty(name="Assembly Library Path",default="",subtype='DIR_PATH',update=update_library_paths)
