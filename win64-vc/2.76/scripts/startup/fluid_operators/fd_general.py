@@ -1278,6 +1278,56 @@ class OPS_delete_library_package(Operator):
     def execute(self, context):
         wm = context.window_manager.mv
         wm.library_packages.remove(self.library_index)
+        bpy.ops.fd_general.update_library_xml()
+        return {'FINISHED'}
+
+class OPS_update_library_xml(Operator):
+    """ This will load all of the products from the products module.
+    """
+    bl_idname = "fd_general.update_library_xml"
+    bl_label = "Update Library XML"
+    bl_description = "This will Update the Library XML file that stores the library paths"
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        xml = fd_types.MV_XML()
+        root = xml.create_tree()
+        paths = xml.add_element(root,'LibraryPaths')
+        
+        wm = context.window_manager
+        packages = xml.add_element(paths,'Packages')
+        for package in wm.mv.library_packages:
+            if os.path.exists(package.lib_path):
+                lib_package = xml.add_element(packages,'Package',package.lib_path)
+                xml.add_element_with_text(lib_package,'Enabled',str(package.enabled))
+        
+        if os.path.exists(wm.mv.library_module_path):
+            xml.add_element_with_text(paths,'Modules',wm.mv.library_module_path)
+        else:
+            xml.add_element_with_text(paths,'Modules',"")
+         
+        if os.path.exists(wm.mv.assembly_library_path):
+            xml.add_element_with_text(paths,'Assemblies',wm.mv.assembly_library_path)
+        else:
+            xml.add_element_with_text(paths,'Assemblies',"")
+             
+        if os.path.exists(wm.mv.object_library_path):
+            xml.add_element_with_text(paths,'Objects',wm.mv.object_library_path)
+        else:
+            xml.add_element_with_text(paths,'Objects',"")
+             
+        if os.path.exists(wm.mv.material_library_path):
+            xml.add_element_with_text(paths,'Materials',wm.mv.material_library_path)
+        else:
+            xml.add_element_with_text(paths,'Materials',"")
+             
+        if os.path.exists(wm.mv.world_library_path):
+            xml.add_element_with_text(paths,'Worlds',wm.mv.world_library_path)
+        else:
+            xml.add_element_with_text(paths,'Worlds',"")
+    
+        xml.write(utils.get_library_path_file())
+    
         return {'FINISHED'}
 
 class OPS_load_library_modules(Operator):
@@ -2728,6 +2778,7 @@ classes = [
            OPS_change_mode,
            OPS_add_library_package,
            OPS_delete_library_package,
+           OPS_update_library_xml,
            OPS_load_library_modules,
            OPS_brd_library_items,
            OPS_place_product,

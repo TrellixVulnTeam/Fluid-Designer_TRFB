@@ -197,41 +197,7 @@ def update_library_paths(self,context):
     """ EVENT: saves an XML file to disk to store the path
                of the library data.
     """
-    xml = fd_types.MV_XML()
-    root = xml.create_tree()
-    paths = xml.add_element(root,'LibraryPaths')
-    
-    packages = xml.add_element(paths,'Packages')
-    for package in self.library_packages:
-        if os.path.exists(package.lib_path):
-            xml.add_element_with_text(packages,'Package',os.path.basename(package.lib_path))
-    
-    if os.path.exists(self.library_module_path):
-        xml.add_element_with_text(paths,'Modules',self.library_module_path)
-    else:
-        xml.add_element_with_text(paths,'Modules',"")
-     
-    if os.path.exists(self.assembly_library_path):
-        xml.add_element_with_text(paths,'Assemblies',self.assembly_library_path)
-    else:
-        xml.add_element_with_text(paths,'Assemblies',"")
-         
-    if os.path.exists(self.object_library_path):
-        xml.add_element_with_text(paths,'Objects',self.object_library_path)
-    else:
-        xml.add_element_with_text(paths,'Objects',"")
-         
-    if os.path.exists(self.material_library_path):
-        xml.add_element_with_text(paths,'Materials',self.material_library_path)
-    else:
-        xml.add_element_with_text(paths,'Materials',"")
-         
-    if os.path.exists(self.world_library_path):
-        xml.add_element_with_text(paths,'Worlds',self.world_library_path)
-    else:
-        xml.add_element_with_text(paths,'Worlds',"")
-
-    xml.write(utils.get_library_path_file())
+    bpy.ops.fd_general.update_library_xml()
 
 class library_items(PropertyGroup):
     is_selected = BoolProperty(name="Is Selected")

@@ -534,6 +534,19 @@ def get_library_packages(context):
     
     paths = get_library_scripts_dir(context)
         
+    #LOAD EXTERIAL LIBRARIES
+    for package in context.window_manager.mv.library_packages:
+        if os.path.exists(package.lib_path) and package.enabled:
+            files = os.listdir(package.lib_path)
+            for file in files:
+                if file == '__init__.py':
+                    path, folder_name = os.path.split(os.path.normpath(package.lib_path))
+                    sys.path.append(path)
+                    mod = __import__(folder_name)
+                    packages.append(folder_name)
+                    break
+                        
+    #LOAD LIBRARIES FROM MODULE PATH                        
     for path in paths:
         dirs = os.listdir(path)
         for folder in dirs:
@@ -544,6 +557,7 @@ def get_library_packages(context):
                         sys.path.append(path)
                         mod = __import__(folder)
                         packages.append(folder)
+                        break
 
     return packages
 

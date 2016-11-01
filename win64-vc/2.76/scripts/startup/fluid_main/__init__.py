@@ -37,6 +37,16 @@ def update_library_paths(scene=None):
         for elm in root.findall("LibraryPaths"):
             items = elm.getchildren()
             for item in items:
+                if item.tag == "Packages":
+                    elm_packages = item.getchildren()
+                    for elm_package in elm_packages:
+                        if os.path.exists(elm_package.attrib["Name"]):
+                            package = wm.library_packages.add()
+                            package.lib_path = elm_package.attrib["Name"]
+                            package_items = elm_package.getchildren()
+                            for pkg_item in package_items:
+                                if pkg_item.tag == "Enabled":
+                                    package.enabled = True if pkg_item.text == "True" else False
                 if item.tag == "Modules":
                     if os.path.exists(str(item.text)):
                         wm.library_module_path = item.text

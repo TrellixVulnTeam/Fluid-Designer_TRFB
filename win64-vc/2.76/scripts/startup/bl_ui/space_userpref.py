@@ -898,7 +898,14 @@ class USERPREF_PT_file(Panel):
         for index, package in enumerate(wm.mv.library_packages):
             row = box.row()
             row.prop(package,"enabled",text="")
-            row.prop(package,"lib_path",text="")
+            icon = 'ERROR'
+            if os.path.exists(package.lib_path):
+                files = os.listdir(package.lib_path)
+                for file in files:
+                    if file == '__init__.py':
+                        icon = 'FILE_TICK'
+                        break
+            row.prop(package,"lib_path",text="",icon=icon)
             row.operator("fd_general.delete_library_package",text="",icon='X',emboss=False).library_index = index
             
         box = layout.box()
@@ -906,12 +913,12 @@ class USERPREF_PT_file(Panel):
         col = box.column()
         row = col.row()
         row.label(text="Library Paths:")
+        row.split(percentage=.2)
         row.operator("fd_general.open_browser_window",
-                     text="Open Configurations Location",
+                     text="Open File Location",
                      icon='FILE_FOLDER').path = os.path.dirname(utils.get_library_path_file())
 
         col.prop(wm.mv, "library_module_path", text="Library Modules Path",icon='FILE_TEXT')
-        col.separator()
         col.prop(wm.mv, "assembly_library_path", text="Assembly Library Path",icon='OUTLINER_DATA_LATTICE')
         col.prop(wm.mv, "object_library_path", text="Object Library Path",icon='OBJECT_DATA')
         col.prop(wm.mv, "material_library_path", text="Material Library Path",icon='MATERIAL')
