@@ -863,7 +863,7 @@ class Assembly():
                 row.menu('MENU_active_group_options',text="",icon='SETTINGS')
 
         row = layout.row(align=True)
-        row.label('Dimension X:')
+        row.label('Width:')
         row.prop(self.obj_x,"lock_location",index=0,text='')
         if self.obj_x.lock_location[0]:
             row.label(str(round(unit.meter_to_active_unit(self.obj_x.location.x),4)))
@@ -872,7 +872,7 @@ class Assembly():
             row.prop(self.obj_x,'hide',text="")
         
         row = layout.row(align=True)
-        row.label('Dimension Y:')
+        row.label('Depth:')
         row.prop(self.obj_y,"lock_location",index=1,text='')
         if self.obj_y.lock_location[1]:
             row.label(str(round(unit.meter_to_active_unit(self.obj_y.location.y),4)))
@@ -881,7 +881,7 @@ class Assembly():
             row.prop(self.obj_y,'hide',text="")
         
         row = layout.row(align=True)
-        row.label('Dimension Z:')
+        row.label('Height:')
         row.prop(self.obj_z,"lock_location",index=2,text='')
         if self.obj_z.lock_location[2]:
             row.label(str(round(unit.meter_to_active_unit(self.obj_z.location.z),4)))
