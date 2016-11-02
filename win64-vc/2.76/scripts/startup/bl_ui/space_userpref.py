@@ -898,13 +898,17 @@ class USERPREF_PT_file(Panel):
         for index, package in enumerate(wm.mv.library_packages):
             row = box.row()
             row.prop(package,"enabled",text="")
+            row.label(os.path.basename(os.path.normpath(package.lib_path)))
             icon = 'ERROR'
-            if os.path.exists(package.lib_path):
-                files = os.listdir(package.lib_path)
-                for file in files:
-                    if file == '__init__.py':
-                        icon = 'FILE_TICK'
-                        break
+            try: # THIS IS NEEDED IF A USER SELECTS A DIRECTORY THAT THEY DONT HAVE ACCESS TO os.listdir CANNOT BE USED ON RESTRICTED DIRECTORIES
+                if os.path.exists(package.lib_path):
+                    files = os.listdir(package.lib_path)
+                    for file in files:
+                        if file == '__init__.py':
+                            icon = 'FILE_TICK'
+                            break
+            except:
+                pass
             row.prop(package,"lib_path",text="",icon=icon)
             row.operator("fd_general.delete_library_package",text="",icon='X',emboss=False).library_index = index
             
