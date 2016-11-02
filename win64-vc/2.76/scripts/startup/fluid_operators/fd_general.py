@@ -990,17 +990,17 @@ class OPS_place_product(bpy.types.Operator):
         col = split.column(align=True)
         col.label("Dimensions:")
         if self.placement_on_wall in {'LEFT','RIGHT','CENTER'}:
-            col.prop(self,"product_width",text="X Dimension")
+            col.prop(self,"product_width",text="Width")
         else:
-            col.label('X Dimension: ' + str(round(unit.meter_to_active_unit(self.product.obj_x.location.x),4)))
-        col.prop(self.product.obj_y,"location",index=1,text="Y Dimension")
-        col.prop(self.product.obj_z,"location",index=2,text="Z Dimension")
+            col.label('Width: ' + str(round(unit.meter_to_active_unit(self.product.obj_x.location.x),4)))
+        col.prop(self.product.obj_y,"location",index=1,text="Depth")
+        col.prop(self.product.obj_z,"location",index=2,text="Height")
 
         col = split.column(align=True)
         col.label("Offset:")
         col.prop(self,"left_offset",text="Left")
         col.prop(self,"right_offset",text="Right")
-        col.prop(self.product.obj_bp,"location",index=2,text="Z Location")
+        col.prop(self.product.obj_bp,"location",index=2,text="Height From Floor")
 
 class OPS_change_file_browser_path(Operator):
     bl_idname = "fd_general.change_file_browser_path"
