@@ -143,7 +143,7 @@ def register():
         kmi = edit_curve_km.keymap_items.new('wm.call_menu', 'RIGHTMOUSE', 'PRESS')
         kmi.properties.name = 'MENU_right_click_menu_edit_curve'
     
-    # Look for eclipse bugging tools
+    # Look for eclipse debugging tools
     if os.path.exists(r'C:\Program Files\eclipse\plugins\org.python.pydev_2.8.2.2013090511\pysrc'):
         PYDEV_SOURCE_DIR = r'C:\Program Files\eclipse\plugins\org.python.pydev_2.8.2.2013090511\pysrc'
         if sys.path.count(PYDEV_SOURCE_DIR) < 1:
