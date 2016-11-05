@@ -514,6 +514,41 @@ def add_blind_exterior(product,side="Left",cabinet_type="Base"):
         product.exterior.z_dim('fabs(Product_Height)-Material_Thickness*2',
                                [Product_Height,Toe_Kick_Height,Material_Thickness])
     
+def add_inside_diagonal_exterior(product,carcass_type="Base"):
+    Product_Width = product.get_var('dim_x','Product_Width')
+    Product_Height = product.get_var('dim_z','Product_Height')
+    Product_Depth = product.get_var('dim_y','Product_Depth')
+    Toe_Kick_Height = product.get_var('Toe Kick Height')
+    Material_Thickness = product.get_var('Material_Thickness')
+    Left_Cabinet_Depth = product.get_var('Left Cabinet Depth')  
+    Right_Cabinet_Depth = product.get_var('Right Cabinet Depth') 
+    
+    product.exterior.draw()
+    product.exterior.obj_bp.parent = product.obj_bp
+    product.exterior.x_loc('Left_Cabinet_Depth',[Left_Cabinet_Depth])
+    product.exterior.y_loc('Product_Depth',[Product_Depth])
+    if carcass_type == "Base":
+        product.exterior.z_loc('Toe_Kick_Height+Material_Thickness',[Toe_Kick_Height,Material_Thickness])
+    if carcass_type == "Upper":
+        product.exterior.z_loc('Product_Height+Material_Thickness',[Product_Height,Material_Thickness])
+    product.exterior.x_rot(value = 0)
+    product.exterior.y_rot(value = 0)
+
+    product.exterior.z_rot('atan((fabs(Product_Depth)-Material_Thickness-Right_Cabinet_Depth)/(fabs(Product_Width)-Material_Thickness-Left_Cabinet_Depth))',
+                           [Product_Depth,Material_Thickness,Right_Cabinet_Depth,Product_Width,Left_Cabinet_Depth])
+#         product.exterior.x_dim('sqrt(((fabs(Product_Depth)-Material_Thickness-Right_Cabinet_Depth)**2)+((fabs(Product_Width)-Material_Thickness-Left_Cabinet_Depth)**2))',
+#                                [Product_Depth,Material_Thickness,Right_Cabinet_Depth,Product_Width,Left_Cabinet_Depth])
+    left_side = "(fabs(Product_Depth)-Right_Cabinet_Depth-Material_Thickness)**2"
+    right_side = "(fabs(Product_Width)-Left_Cabinet_Depth-Material_Thickness)**2"
+    product.exterior.x_dim('sqrt((' + left_side + ')+(' + right_side + '))',
+                           [Product_Depth,Material_Thickness,Right_Cabinet_Depth,Product_Width,Left_Cabinet_Depth])
+            
+    product.exterior.y_dim('Product_Depth+Right_Cabinet_Depth+Material_Thickness',[Product_Depth,Right_Cabinet_Depth,Material_Thickness])
+    if carcass_type == "Base":
+        product.exterior.z_dim('fabs(Product_Height)-Toe_Kick_Height-(Material_Thickness*2)',[Product_Height,Toe_Kick_Height,Material_Thickness])
+    if carcass_type == "Upper":
+        product.exterior.z_dim('fabs(Product_Height)-(Material_Thickness*2)',[Product_Height,Material_Thickness])  
+    
 def add_inside_corner_exterior(product,carcass_type="Base"):
     Product_Width = product.get_var('dim_x','Product_Width')
     Product_Height = product.get_var('dim_z','Product_Height')
@@ -533,7 +568,7 @@ def add_inside_corner_exterior(product,carcass_type="Base"):
         product.exterior.z_loc('Product_Height+Material_Thickness',[Product_Height,Material_Thickness])
     product.exterior.x_rot(value = 0)
     product.exterior.y_rot(value = 0)
-    product.exterior.z_rot(value = 0)
+    product.exterior.z_rot(value = 0)    
     product.exterior.x_dim('Product_Width-Left_Cabinet_Depth-Material_Thickness',[Product_Width,Left_Cabinet_Depth,Material_Thickness])
     product.exterior.y_dim('Product_Depth+Right_Cabinet_Depth+Material_Thickness',[Product_Depth,Right_Cabinet_Depth,Material_Thickness])
     if carcass_type == "Base":
@@ -784,7 +819,10 @@ class Base_Inside_Corner(fd_types.Assembly):
         add_corner_fillers(self)
         add_corner_countertop(self,self.pie_cut)
         if self.exterior:
-            add_inside_corner_exterior(self,"Base")
+            if self.pie_cut:
+                add_inside_corner_exterior(self,"Base")
+            else:
+                add_inside_diagonal_exterior(self,"Base")
         
 class Upper_Inside_Corner(fd_types.Assembly):
     """ Base Cabinet Standard

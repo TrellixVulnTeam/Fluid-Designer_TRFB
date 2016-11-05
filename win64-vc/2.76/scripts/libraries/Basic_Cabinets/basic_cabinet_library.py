@@ -282,23 +282,24 @@ class PRODUCT_Upper_Pie_Cut_Corner(basic_cabinets.Upper_Inside_Corner):
         self.exterior = basic_cabinet_exteriors.Pie_Cut_Doors()
         self.exterior.door_type = 'UPPER'
 
-class PRODUCT_Base_Diagonal_Corner(basic_cabinets.Base_Inside_Corner):
-    
-    def __init__(self):
-        super().__init__()
-        self.library_name = LIBRARY_NAME
-        self.category_name = INSIDE_CORNER_CATEGORY_NAME
-        self.pie_cut = False
-#         self.exterior = basic_cabinet_exteriors.Diagonal_Single_Door()
+#TODO: Create Diagonal Inserts. Need ro researh how door overlays work
+# class PRODUCT_Base_Diagonal_Corner(basic_cabinets.Base_Inside_Corner):
+#     
+#     def __init__(self):
+#         super().__init__()
+#         self.library_name = LIBRARY_NAME
+#         self.category_name = INSIDE_CORNER_CATEGORY_NAME
+#         self.pie_cut = False
+#         self.exterior = basic_cabinet_exteriors.Double_Door()
 #         self.exterior.door_type = 'BASE'
-
-class PRODUCT_Upper_Diagonal_Corner(basic_cabinets.Upper_Inside_Corner):
-    
-    def __init__(self):
-        super().__init__()
-        self.library_name = LIBRARY_NAME
-        self.category_name = INSIDE_CORNER_CATEGORY_NAME
-        self.pie_cut = False
+# 
+# class PRODUCT_Upper_Diagonal_Corner(basic_cabinets.Upper_Inside_Corner):
+#     
+#     def __init__(self):
+#         super().__init__()
+#         self.library_name = LIBRARY_NAME
+#         self.category_name = INSIDE_CORNER_CATEGORY_NAME
+#         self.pie_cut = False
 #         self.exterior = basic_cabinet_exteriors.Diagonal_Single_Door()
 #         self.exterior.door_type = 'UPPER'
 

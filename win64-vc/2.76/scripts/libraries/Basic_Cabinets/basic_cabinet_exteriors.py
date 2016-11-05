@@ -871,20 +871,23 @@ class Diagonal_Single_Door(fd_types.Assembly):
         Door_Thickness = self.get_var("Door Thickness")
         Pull_From_Edge = self.get_var("Pull From Edge")
 
+        # Z ROT atan((fabs(Depth)-Left_Side_Thickness-Cabinet_Depth_Right)/(fabs(Width)-Right_Side_Thickness-Cabinet_Depth_Left))
+        # X DIM sqrt(((fabs(Depth)-Left_Side_Thickness-Cabinet_Depth_Right)**2)+((fabs(Width)-Right_Side_Thickness-Cabinet_Depth_Left)**2))
+        
         left_door = add_door(self)
         left_door.set_name("Cabinet Door")        
-        left_door.z_rot(value=-45)
+        left_door.z_rot('atan(Width/Depth)',[Depth,Width])
         left_door.x_loc('Door_Thickness+Door_to_Cabinet_Gap',[Door_Thickness,Door_to_Cabinet_Gap])
         left_door.y_loc('Depth-Left_Overlay',[Depth,Left_Overlay])
         left_door.x_dim('Height+Top_Overlay+Bottom_Overlay',[Height,Top_Overlay,Bottom_Overlay])
-        left_door.y_dim('fabs(Depth)+Left_Overlay-Door_to_Cabinet_Gap',[Depth,Left_Overlay,Door_to_Cabinet_Gap])
+        left_door.y_dim('sqrt((fabs(Depth)**2)+(fabs(Width)**2))',[Depth,Width])
         
-        right_door = add_door(self)
-        right_door.set_name("Cabinet Door")
-        right_door.z_rot(value=-45)
-        right_door.x_loc('Door_to_Cabinet_Gap',[Door_to_Cabinet_Gap])
-        right_door.x_dim('Height+Top_Overlay+Bottom_Overlay',[Height,Top_Overlay,Bottom_Overlay])
-        right_door.y_dim('Width+Right_Overlay-Door_to_Cabinet_Gap',[Width,Right_Overlay,Door_to_Cabinet_Gap])     
+#         right_door = add_door(self)
+#         right_door.set_name("Cabinet Door")
+#         right_door.z_rot(value=-45)
+#         right_door.x_loc('Door_to_Cabinet_Gap',[Door_to_Cabinet_Gap])
+#         right_door.x_dim('Height+Top_Overlay+Bottom_Overlay',[Height,Top_Overlay,Bottom_Overlay])
+#         right_door.y_dim('Width+Right_Overlay-Door_to_Cabinet_Gap',[Width,Right_Overlay,Door_to_Cabinet_Gap])     
         
         pull = add_pull(self)
         pull.x_loc('IF(Door_Swing==0,Door_Thickness+Door_to_Cabinet_Gap,Width+Left_Overlay-Pull_From_Edge)',
