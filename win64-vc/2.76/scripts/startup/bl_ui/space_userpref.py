@@ -898,7 +898,7 @@ class USERPREF_PT_file(Panel):
         for index, package in enumerate(wm.mv.library_packages):
             row = box.row()
             row.prop(package,"enabled",text="")
-            row.label(os.path.basename(os.path.normpath(package.lib_path)))
+            row.label(package.name)
             icon = 'ERROR'
             try: # THIS IS NEEDED IF A USER SELECTS A DIRECTORY THAT THEY DONT HAVE ACCESS TO os.listdir CANNOT BE USED ON RESTRICTED DIRECTORIES
                 if os.path.exists(package.lib_path):
