@@ -957,6 +957,8 @@ class Assembly():
     def draw_objects(self,layout):
         scene = bpy.context.scene
         row = layout.row()
+        row.prop(self.obj_bp.cabinetlib,'type_mesh')
+        row = layout.row()
         row.operator('fd_assembly.load_active_assembly_objects',text="Load Child Objects",icon='FILE_REFRESH').object_name = self.obj_bp.name
         row.menu('MENU_add_assembly_object',text="",icon='ZOOMIN')
         if self.obj_bp.name == scene.mv.active_object_name:

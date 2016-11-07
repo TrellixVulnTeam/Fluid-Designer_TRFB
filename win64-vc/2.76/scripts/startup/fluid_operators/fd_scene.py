@@ -1838,7 +1838,10 @@ class OPS_export_mvfd(Operator):
         return self.get_part_z_location(obj.parent,value)
 
     def write_stl_node(self,node,obj,spec_group):
-        assembly = fd_types.Assembly(obj.parent)
+        if obj.mv.type == 'BPASSEMBLY':
+            assembly = fd_types.Assembly(obj)
+        else:
+            assembly = fd_types.Assembly(obj.parent)
         elm_part = self.xml.add_element(node,'Part',assembly.obj_bp.mv.name_object)
         
         if obj.cabinetlib.type_mesh == 'CUTPART':
