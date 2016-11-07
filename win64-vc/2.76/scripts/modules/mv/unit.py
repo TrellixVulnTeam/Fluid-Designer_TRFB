@@ -4,6 +4,7 @@ Common Unit Conversion Functions
 @author: Andrew
 '''
 import bpy
+from decimal import *
 
 def inch(inch):
     """ Converts inch to meter
@@ -32,3 +33,13 @@ def meter_to_active_unit(meter):
         return meter_to_millimeter(meter)
     else:
         return meter_to_inch(meter)
+    
+def inch_to_millimeter(inch):
+    """ Converts inch to millimeter
+    """
+    return inch * 25.4
+
+def decimal_inch_to_millimeter(inch):
+    """ Converts inch to millimeter returned as a decimal object
+    """
+    return Decimal(str(inch)) * Decimal(str(25.4))
