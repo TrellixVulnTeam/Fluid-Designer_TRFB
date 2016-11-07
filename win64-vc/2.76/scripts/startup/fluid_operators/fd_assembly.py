@@ -588,6 +588,49 @@ class OPS_make_group_from_selected_assembly(Operator):
         layout = self.layout
         layout.prop(self,"assembly_name")
 
+class OPS_make_assembly_from_selected_object(Operator):
+    bl_idname = "fd_assembly.make_assembly_from_selected_object"
+    bl_label = "Make Assembly From Selected Object"
+    bl_description = "This will create an assembly from the selected assembly"
+    bl_options = {'UNDO'}
+    
+    assembly_name = StringProperty(name="Group Name",default = "New Group")
+    
+    @classmethod
+    def poll(cls, context):
+        if context.object:
+            return True
+        else:
+            return False
+
+    def execute(self, context):
+        obj = context.object
+        assembly = fd_types.Assembly()
+        assembly.create_assembly()
+        assembly.set_name(self.assembly_name)
+        assembly.obj_bp.location = obj.location
+        assembly.obj_bp.rotation_euler = obj.rotation_euler
+        obj.parent = assembly.obj_bp
+        obj.location = (0,0,0)
+        obj.rotation_euler = (0,0,0)
+        assembly.obj_x.location.x = obj.dimensions.x
+        assembly.obj_y.location.y = -obj.dimensions.y
+        assembly.obj_z.location.z = obj.dimensions.z
+        cage = assembly.get_cage()
+        bpy.ops.object.select_all(action='DESELECT')
+        assembly.obj_bp.select = True
+        context.scene.objects.active = assembly.obj_bp
+        return {'FINISHED'}
+
+    def invoke(self,context,event):
+        self.assembly_name = context.object.mv.name_object
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(400))
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self,"assembly_name")
+
 class OPS_select_selected_assembly_base_point(Operator):
     bl_idname = "fd_assembly.select_selected_assemby_base_point"
     bl_label = "Select Assembly Base Point"
@@ -1088,6 +1131,7 @@ classes = [
            OPS_add_curve_to_assembly,
            OPS_add_text_to_assembly,
            OPS_make_group_from_selected_assembly,
+           OPS_make_assembly_from_selected_object,
            OPS_select_selected_assembly_base_point,
            OPS_select_parent_assembly_base_point,
            OPS_delete_object_in_assembly,

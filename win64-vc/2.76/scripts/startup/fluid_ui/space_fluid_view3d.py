@@ -1605,6 +1605,7 @@ class VIEW3D_MT_assemblytools(Menu):
 
     def draw(self, context):
         layout = self.layout
+        layout.operator("fd_assembly.make_assembly_from_selected_object",icon='LATTICE_DATA')
         layout.operator("fd_assembly.make_group_from_selected_assembly",icon='GROUP')
         layout.separator()
         layout.operator("fd_assembly.copy_selected_assembly",icon='PASTEDOWN')

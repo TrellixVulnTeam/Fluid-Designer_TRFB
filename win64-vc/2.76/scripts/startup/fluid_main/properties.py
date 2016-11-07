@@ -1489,6 +1489,15 @@ class fd_object(PropertyGroup):
                                            description="Custom properties assigned to the object. Only access from base point object.",
                                            type=mvPromptPage)
     
+    product_type = StringProperty(name="Product Type",
+                                  description="This is the type of the product")    
+    
+    product_sub_type = StringProperty(name="Product Sub Type",
+                                      description="This is the sub type of the product")      
+    
+    product_shape = StringProperty(name="Product Shape",
+                                   description="This is the shape of the product")          
+    
     is_wall_mesh = BoolProperty(name="Is Wall Mesh",
                                 description="Determines if the object is a wall mesh.",
                                 default=False)
@@ -1496,6 +1505,10 @@ class fd_object(PropertyGroup):
     is_cabinet_door = BoolProperty(name="Is Cabinet Door",
                                    description="Determines if the object is a cabinet door.",
                                    default=False)
+    
+    is_cabinet_drawer_front = BoolProperty(name="Is Cabinet Drawer Front",
+                                           description="Determines if the object is a cabinet drawer front.",
+                                           default=False)
     
     is_cabinet_drawer_box = BoolProperty(name="Is Cabinet Drawer Box",
                                          description="Determines if the object is a drawer box.",

@@ -1609,6 +1609,11 @@ class OPS_export_mvfd(Operator):
                     prompt_value = str(0)
                 self.xml.add_element_with_text(elm_prompt,'Value',prompt_value)
 
+            #HEIGHT ABOVE FLOOR
+            if obj_product.location.z > 0:
+                elm_prompt = self.xml.add_element(elm_prompts,'Prompt',"HeightAboveFloor")
+                self.xml.add_element_with_text(elm_prompt,'Value',self.location(obj_product.location.z))
+                
             elm_parts = self.xml.add_element(elm_product,"Parts")
             self.write_stl_files_for_product(elm_parts,obj_product,spec_group)
             

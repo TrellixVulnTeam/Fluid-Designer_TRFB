@@ -179,6 +179,7 @@ class Assembly():
             
             obj_cage.draw_type = 'WIRE'
             obj_cage.hide_select = True
+            obj_cage.hide_render = True
             obj_cage.lock_location = (True,True,True)
             obj_cage.lock_rotation = (True,True,True)
             obj_cage.cycles_visibility.camera = False

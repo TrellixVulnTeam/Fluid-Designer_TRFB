@@ -1235,12 +1235,10 @@ class OPS_properties(Operator):
                 wall = fd_types.Wall(obj.parent)
                 wall.draw_transform(layout)
                 for obj in wall.obj_bp.children:
-                    if obj.type == 'MESH':
-                        if len(obj.vertex_groups) == 3: #Check for 3 Vertex Groups to make sure obj is the wall mesh
-                                                        #This will exclude wall obstacles and BPASSEMBLY types. 
-                            row = layout.row(align=True)
-                            row.prop_enum(obj, "draw_type", 'WIRE',text="Wire") 
-                            row.prop_enum(obj, "draw_type", 'TEXTURED',text="Textured") 
+                    if obj.mv.is_wall_mesh:
+                        row = layout.row(align=True)
+                        row.prop_enum(obj, "draw_type", 'WIRE',text="Wire") 
+                        row.prop_enum(obj, "draw_type", 'TEXTURED',text="Textured") 
                 return None
         
         obj_bp = utils.get_parent_assembly_bp(obj)

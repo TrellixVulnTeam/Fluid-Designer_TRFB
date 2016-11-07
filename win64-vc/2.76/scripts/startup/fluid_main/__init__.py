@@ -40,8 +40,10 @@ def update_library_paths(scene=None):
                 if item.tag == "Packages":
                     elm_packages = item.getchildren()
                     for elm_package in elm_packages:
-                        if os.path.exists(elm_package.attrib["Name"]):
+                        package_name = os.path.basename(os.path.normpath(elm_package.attrib["Name"]))
+                        if os.path.exists(elm_package.attrib["Name"]) and package_name not in wm.library_packages:
                             package = wm.library_packages.add()
+                            package.name = package_name
                             package.lib_path = elm_package.attrib["Name"]
                             package_items = elm_package.getchildren()
                             for pkg_item in package_items:
@@ -143,7 +145,7 @@ def register():
         kmi = edit_curve_km.keymap_items.new('wm.call_menu', 'RIGHTMOUSE', 'PRESS')
         kmi.properties.name = 'MENU_right_click_menu_edit_curve'
     
-    # Look for eclipse bugging tools
+    # Look for eclipse debugging tools
     if os.path.exists(r'C:\Program Files\eclipse\plugins\org.python.pydev_2.8.2.2013090511\pysrc'):
         PYDEV_SOURCE_DIR = r'C:\Program Files\eclipse\plugins\org.python.pydev_2.8.2.2013090511\pysrc'
         if sys.path.count(PYDEV_SOURCE_DIR) < 1:
