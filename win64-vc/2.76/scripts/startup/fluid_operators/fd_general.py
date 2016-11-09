@@ -2594,6 +2594,9 @@ class OPS_create_thumbnails(Operator):
         file.write("for obj in data_to.objects:\n")
         file.write("    bpy.context.scene.objects.link(obj)\n")
         file.write("    obj.select = True\n")
+        file.write("    if obj.type == 'CURVE':\n")
+        file.write("        bpy.context.scene.camera.rotation_euler = (0,0,0)\n")
+        file.write("        obj.data.dimensions = '2D'\n")
         file.write("    bpy.context.scene.objects.active = obj\n")
         file.write("    bpy.ops.view3d.camera_to_view_selected()\n")
         file.write("    render = bpy.context.scene.render\n")
@@ -2761,8 +2764,8 @@ class OPS_create_thumbnails(Operator):
                     row.label(text="",icon='BLANK1')
                     row.label(text="",icon='BLANK1')
                     row.label(text=item.name,icon=self.item_icon)
-                    row.prop(item,"is_selected",text="")      
-                                          
+                    row.prop(item,"is_selected",text="")                                 
+
 #------REGISTER
 classes = [
            OPS_drag_and_drop,
