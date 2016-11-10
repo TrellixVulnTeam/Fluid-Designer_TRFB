@@ -16,6 +16,8 @@ DIVIDER = path.join(ROOT_PATH,"Cut Parts","Part with Edgebanding.blend")
 DIVISION = path.join(ROOT_PATH,"Cut Parts","Part with Edgebanding.blend")
 ADJ_MACHINING = path.join(ROOT_PATH,"Machining","Adjustable Shelf Holes.blend")
 
+SHELF_SETBACK = unit.inch(.25)
+
 def add_adj_shelf_machining(part,insert):
     
     Width = insert.get_var('dim_x','Width')
@@ -77,8 +79,6 @@ class Simple_Shelves(fd_types.Assembly):
         self.prompt('Edgebanding Thickness','EDGE_THICKNESS(sgi,"Cabinet_Interior_Edges' + self.open_name + '")',[sgi])
     
     def add_adj_prompts(self):
-        g = bpy.context.scene.lm_cabinets.interior_defaults
-        
         self.add_prompt(name="Shelf Qty",
                         prompt_type='QUANTITY',
                         value=self.shelf_qty,
@@ -86,7 +86,7 @@ class Simple_Shelves(fd_types.Assembly):
         
         self.add_prompt(name="Shelf Setback",
                         prompt_type='DISTANCE',
-                        value=g.adj_shelf_setback,
+                        value=SHELF_SETBACK,
                         tab_index=0)
 
         sgi = self.get_var('cabinetlib.spec_group_index','sgi')
@@ -210,7 +210,6 @@ class Shelves(fd_types.Assembly):
         self.prompt('Adjustable Shelf Thickness','THICKNESS(sgi,"Cabinet_Shelf' + self.open_name + '")',[sgi])
 
     def add_fixed_prompts(self):
-        g = bpy.context.scene.lm_cabinets.interior_defaults
 
         self.add_prompt(name="Fixed Shelf Qty",
                         prompt_type='QUANTITY',
@@ -219,7 +218,7 @@ class Shelves(fd_types.Assembly):
         
         self.add_prompt(name="Fixed Shelf Setback",
                         prompt_type='DISTANCE',
-                        value=g.fixed_shelf_setback,
+                        value=SHELF_SETBACK,
                         tab_index=0)
         
         self.add_prompt(name="Fixed Shelf Thickness",
@@ -326,8 +325,7 @@ class Shelves(fd_types.Assembly):
             fix_shelf.prompt('Hide','IF(' + str(i) + '>Fixed_Shelf_Qty,True,False)',[Fixed_Shelf_Qty])
             fix_shelf.cutpart("Cabinet_Shelf")
             fix_shelf.edgebanding('Cabinet_Interior_Edges',l1 = True)
-            cabinet_machining.add_drilling(fix_shelf)
-            
+
     def draw(self):
         self.create_assembly()
         

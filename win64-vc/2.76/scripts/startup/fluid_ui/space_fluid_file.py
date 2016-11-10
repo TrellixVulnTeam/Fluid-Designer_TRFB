@@ -395,6 +395,8 @@ class PANEL_open_scripting_libraries(Panel):
 
     def draw(self, context):
         layout = self.layout
+        wm = context.window_manager
+        
         col = layout.column(align=True)
         paths = utils.get_library_scripts_dir(context)
         
@@ -406,6 +408,11 @@ class PANEL_open_scripting_libraries(Panel):
                     for file in files:
                         if file == '__init__.py':
                             col.operator('fd_general.change_file_browser_path',text=folder,icon='FILE_FOLDER').path = os.path.join(path,folder)
+        
+        col.separator()                    
+        
+        for package in wm.mv.library_packages:
+            col.operator('fd_general.change_file_browser_path',text=os.path.basename(os.path.normpath(package.lib_path)),icon='FILE_FOLDER').path = package.lib_path
 
 class MENU_File_Browser_Options(Menu):
     bl_label = "File Browser Options"

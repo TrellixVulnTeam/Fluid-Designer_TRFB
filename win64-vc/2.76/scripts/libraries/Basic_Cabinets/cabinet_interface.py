@@ -16,21 +16,6 @@ class PANEL_Basic_Cabinet_Options(bpy.types.Panel):
         layout = self.layout
         layout.label('',icon='BLANK1')
 
-    def draw_column_style_options(self,layout):
-        columns_panel_box = layout.box()
-        columns_panel_box.label("Columns Options:")
-        
-        row = columns_panel_box.row(align=True)    
-        row.prop(self.props,'expand_column',text="",icon='TRIA_DOWN' if self.props.expand_column else 'TRIA_RIGHT',emboss=False)
-        row.label('Columns:')
-        row.prop(self.props,'column_category',text="",icon='FILE_FOLDER')
-        row.prop(self.props,'column_style',text="")
-        row.operator('lm_cabinets.update_column_selection',text="",icon='MAN_TRANS')
-        if self.props.expand_column:
-            row = columns_panel_box.row()
-            row.label(text="",icon='BLANK1')
-            row.template_icon_view(self.props,"column_style",show_labels=True)
-        
     def draw_exterior_defaults(self,layout):
         col = layout.column(align=True)
         
