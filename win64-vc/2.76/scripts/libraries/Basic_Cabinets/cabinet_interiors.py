@@ -153,8 +153,7 @@ class Shelves(fd_types.Assembly):
         self.prompt('Edgebanding Thickness','EDGE_THICKNESS(sgi,"Cabinet_Interior_Edges' + self.open_name + '")',[sgi])
     
     def add_adj_prompts(self):
-        g = bpy.context.scene.lm_cabinets.interior_defaults
-        
+
         self.add_prompt(name="Adj Shelf Qty",
                         prompt_type='QUANTITY',
                         value=self.shelf_qty,
@@ -162,7 +161,7 @@ class Shelves(fd_types.Assembly):
         
         self.add_prompt(name="Adj Shelf Setback",
                         prompt_type='DISTANCE',
-                        value=g.adj_shelf_setback,
+                        value=SHELF_SETBACK,
                         tab_index=0)
         
         self.add_prompt(name="Space From Front",
