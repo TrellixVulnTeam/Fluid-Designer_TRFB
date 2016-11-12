@@ -1413,6 +1413,58 @@ class Assembly_Object():
         self.obj.mv.name = name
         self.obj.mv.name_object = name
 
+    def get_var(self,data_path,var_name="",transform_space='WORLD_SPACE',transform_type='LOC_X'):
+        """ This returns a variable which can be used in python expressions
+            arg1: data_path the data path to retrieve the variable from there are 
+                  reserved names that can be used.
+                  dim_x = X Dimension of the Assembly
+                  dim_y = Y Dimension of the Assembly
+                  dim_z = Z Dimension of the Assembly
+                  loc_x = X Location of the Assembly
+                  loc_y = Y Location of the Assembly
+                  loc_z = Z Location of the Assembly
+                  rot_x = X Rotation of the Assembly
+                  rot_y = Y Rotation of the Assembly
+                  rot_z = Z Rotation of the Assembly
+                  world_loc_x = X Location of the Assembly in world space
+                  world_loc_y = Y Location of the Assembly in world space
+                  world_loc_z = Z Location of the Assembly in world space
+            arg2: var_name the variable name to use for the returned variable. If 
+                  an empty string is passed in then the data_path is used as the
+                  variable name. all spaces are replaced with the underscore charcter
+            arg3: (TODO: THIS IS ONLY USED BECAUSE WE CANNOT USE 'matrix_world[X][X]' in data_path) transform_space ENUM in ('WORLD_SPACE','TRANSFORM_SPACE','LOCAL_SPACE')
+                  only used if calculating world space
+            arg4: (TODO: THIS IS ONLY USED BECAUSE WE CANNOT USE 'matrix_world[X][X]' in data_path)
+        """
+        if var_name == "":
+            var_name = data_path.replace(" ","_")
+        if data_path == 'dim_x':
+            return Variable(self.obj,'dimensions.x',var_name)
+        elif data_path == 'dim_y':
+            return Variable(self.obj,'dimensions.y',var_name)
+        elif data_path == 'dim_z':
+            return Variable(self.obj,'dimensions.z',var_name)
+        elif data_path == 'loc_x':
+            return Variable(self.obj,'location.x',var_name)
+        elif data_path == 'loc_y':
+            return Variable(self.obj,'location.y',var_name)
+        elif data_path == 'loc_z':
+            return Variable(self.obj,'location.z',var_name)
+        elif data_path == 'world_loc_x':
+            return Variable(self.obj,'matrix_world[0][3]',var_name,var_type='TRANSFORMS',transform_space=transform_space,transform_type=transform_type)
+        elif data_path == 'world_loc_y':
+            return Variable(self.obj,'matrix_world[1][3]',var_name,var_type='TRANSFORMS',transform_space=transform_space,transform_type=transform_type)
+        elif data_path == 'world_loc_z':
+            return Variable(self.obj,'matrix_world[2][3]',var_name,var_type='TRANSFORMS',transform_space=transform_space,transform_type=transform_type)
+        elif data_path == 'rot_x':
+            return Variable(self.obj,'rotation_euler.x',var_name)
+        elif data_path == 'rot_y':
+            return Variable(self.obj,'rotation_euler.y',var_name)
+        elif data_path == 'rot_z':
+            return Variable(self.obj,'rotation_euler.z',var_name)
+        else:
+            print("Prompt Variable not available on Assembly_Object")
+
     def x_loc(self,expression="",driver_vars=[],value=0):
         if expression == "":
             self.obj.location.x = value
