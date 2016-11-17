@@ -1638,12 +1638,14 @@ class Dimension():
         context = bpy.context
         bpy.ops.object.add(type='EMPTY')
         self.anchor = context.object
+        self.anchor.location = (0,0,0)
         self.anchor.mv.type = 'VISDIM_A'
         self.anchor.mv.name_object = "Anchor"
         self.anchor.hide = True
         
         bpy.ops.object.add(type='EMPTY')
         self.end_point = context.object
+        self.end_point.location = (0,0,0)
         self.end_point.mv.type = 'VISDIM_B'
         self.end_point.mv.name_object = "End Point"
         self.end_point.parent = self.anchor
