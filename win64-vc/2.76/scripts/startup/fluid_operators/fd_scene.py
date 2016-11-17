@@ -1591,6 +1591,7 @@ class OPS_export_mvfd(Operator):
             self.xml.add_element_with_text(elm_product,'XOrigin',self.location(obj_product.matrix_world[0][3]))
             self.xml.add_element_with_text(elm_product,'YOrigin',self.location(obj_product.matrix_world[1][3]))
             self.xml.add_element_with_text(elm_product,'ZOrigin',self.location(obj_product.location.z))
+            self.xml.add_element_with_text(elm_product,'Comment',obj_product.mv.comment)
             if obj_product.parent:
                 angle = obj_product.parent.rotation_euler.z + obj_product.rotation_euler.z
                 self.xml.add_element_with_text(elm_product,'Angle',self.angle(angle))
@@ -1637,7 +1638,7 @@ class OPS_export_mvfd(Operator):
             self.xml.add_element_with_text(elm_product,'IsCorner','False')
             self.xml.add_element_with_text(elm_product,'LinkIDLocation',obj.users_scene[0].name)
             self.xml.add_element_with_text(elm_product,'LinkIDSpecificationGroup',spec_group.name)
-            if obj_product.mv.item_number == 0:
+            if obj.mv.item_number == 0:
                 self.xml.add_element_with_text(elm_product,'ItemNumber',str(item_number))
                 item_number += 1
             else:
@@ -1649,6 +1650,7 @@ class OPS_export_mvfd(Operator):
             self.xml.add_element_with_text(elm_product,'XOrigin',self.location(obj.matrix_world[0][3]))
             self.xml.add_element_with_text(elm_product,'YOrigin',self.location(obj.matrix_world[1][3]))
             self.xml.add_element_with_text(elm_product,'ZOrigin',self.location(obj.location.z))
+            self.xml.add_element_with_text(elm_product,'Comment',obj.mv.comment)
             self.xml.add_element_with_text(elm_product,'Angle',self.angle(obj.rotation_euler.z))
             
             elm_parts = self.xml.add_element(elm_product,"Parts")
