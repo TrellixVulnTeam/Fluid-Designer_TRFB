@@ -839,6 +839,7 @@ class Assembly():
         if ui.group_tabs == 'INFO':
             box = col.box()
             self.draw_transform(box)
+            box.prop(self.obj_bp.mv,'comment')
         if ui.group_tabs == 'PROMPTS':
             box = col.box()
             self.obj_bp.mv.PromptPage.draw_prompt_page(box,self.obj_bp,allow_edit=True)
