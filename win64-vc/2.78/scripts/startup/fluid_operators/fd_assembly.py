@@ -64,6 +64,7 @@ class OPS_draw_walls(Operator):
     drawing_plane = None
     wall = None
     previous_wall = None
+    is_disconnected = False
     
     typed_value = ""
     
@@ -139,7 +140,7 @@ class OPS_draw_walls(Operator):
                     self.wall.obj_x.location.x = unit.inch(float(value))
                 
     def extend_wall(self):
-        if self.previous_wall:
+        if self.previous_wall and not self.is_disconnected:
             prev_wall_rot = round(self.previous_wall.obj_bp.rotation_euler.z,2)
             wall_rot = round(self.wall.obj_bp.rotation_euler.z,2)
             
@@ -258,6 +259,7 @@ class OPS_draw_walls(Operator):
         self.previous_wall = self.wall
         self.create_wall()
         self.typed_value = ""
+        self.is_disconnected = False
         
     def event_is_place_wall(self,event):
         if event.type == 'LEFTMOUSE' and event.value == 'PRESS':
@@ -296,6 +298,7 @@ class OPS_draw_walls(Operator):
         self.wall.obj_y.location.y = bpy.context.scene.mv.default_wall_depth
         if selected_obj:
             if event.ctrl:
+                self.is_disconnected = True
                 self.wall.obj_bp.constraints.clear()
                 self.wall.obj_bp.location.x = selected_point[0]
                 self.wall.obj_bp.location.y = selected_point[1]
