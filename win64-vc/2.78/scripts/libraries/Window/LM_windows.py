@@ -17,7 +17,7 @@ MATERIAL_FILE = os.path.join(os.path.dirname(__file__),"materials","materials.bl
 DEFAULT_WIDTH = unit.inch(36.0)
 DEFAULT_HEIGHT = unit.inch(36.0)
 DEFAULT_DEPTH = unit.inch(8.0)
-HEIGHT_ABOVE_FLOOR = unit.inch(50.0)
+HEIGHT_ABOVE_FLOOR = unit.inch(40.0)
 
 class Window(fd_types.Assembly):
     library_name = "Windows"
