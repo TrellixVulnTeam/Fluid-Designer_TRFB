@@ -217,6 +217,9 @@ class OPS_render_settings(Operator):
         row.label(text="Render Size:",icon='STICKY_UVS_VERT')        
         row.prop(rd, "resolution_x", text="X")
         row.prop(rd, "resolution_y", text="Y")
+        row = box.row(align=True)
+        row.label("Resolution Percentage:")
+        row.prop(rd, "resolution_percentage", text="")
         
         if ui.render_type_tabs == 'PRR':
             row = box.row()
