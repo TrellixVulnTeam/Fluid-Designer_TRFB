@@ -857,6 +857,8 @@ class OPERATOR_Build_Room(Operator):
     right_side_wall = None
     door = None
     
+    wall_mesh_objs = []
+    
     floor = None
     
     clicked_ok = False
@@ -1004,24 +1006,28 @@ class OPERATOR_Build_Room(Operator):
         self.entry_wall.obj_bp.rotation_euler.z = math.radians(180)
         
         back_wall = self.back_wall.get_wall_mesh()
+        self.wall_mesh_objs.append(back_wall)
         back_wall.data.vertices[1].co[0] -= self.wall_thickness 
         back_wall.data.vertices[2].co[0] += self.wall_thickness 
         back_wall.data.vertices[5].co[0] -= self.wall_thickness 
         back_wall.data.vertices[6].co[0] += self.wall_thickness 
          
         left_side_wall = self.left_side_wall.get_wall_mesh()
+        self.wall_mesh_objs.append(left_side_wall)
         left_side_wall.data.vertices[1].co[0] -= self.wall_thickness 
         left_side_wall.data.vertices[2].co[0] += self.wall_thickness 
         left_side_wall.data.vertices[5].co[0] -= self.wall_thickness 
         left_side_wall.data.vertices[6].co[0] += self.wall_thickness 
          
         right_side_wall = self.right_side_wall.get_wall_mesh()
+        self.wall_mesh_objs.append(right_side_wall)
         right_side_wall.data.vertices[1].co[0] -= self.wall_thickness 
         right_side_wall.data.vertices[2].co[0] += self.wall_thickness 
         right_side_wall.data.vertices[5].co[0] -= self.wall_thickness 
         right_side_wall.data.vertices[6].co[0] += self.wall_thickness 
 
         entry_wall = self.entry_wall.get_wall_mesh()
+        self.wall_mesh_objs.append(entry_wall)
         entry_wall.data.vertices[1].co[0] -= self.wall_thickness 
         entry_wall.data.vertices[2].co[0] += self.wall_thickness 
         entry_wall.data.vertices[5].co[0] -= self.wall_thickness 
@@ -1054,10 +1060,12 @@ class OPERATOR_Build_Room(Operator):
         self.back_wall = self.create_wall(context)
 
         back_wall = self.back_wall.get_wall_mesh()
+        self.wall_mesh_objs.append(back_wall)
         back_wall.data.vertices[1].co[0] -= self.wall_thickness 
         back_wall.data.vertices[5].co[0] -= self.wall_thickness 
          
         left_side_wall = self.left_side_wall.get_wall_mesh()
+        self.wall_mesh_objs.append(left_side_wall)
         left_side_wall.data.vertices[2].co[0] += self.wall_thickness 
         left_side_wall.data.vertices[6].co[0] += self.wall_thickness 
 
@@ -1071,16 +1079,19 @@ class OPERATOR_Build_Room(Operator):
         self.right_side_wall.obj_bp.rotation_euler.z = math.radians(-90)
 
         back_wall = self.back_wall.get_wall_mesh()
+        self.wall_mesh_objs.append(back_wall)
         back_wall.data.vertices[1].co[0] -= self.wall_thickness 
         back_wall.data.vertices[2].co[0] += self.wall_thickness 
         back_wall.data.vertices[5].co[0] -= self.wall_thickness 
         back_wall.data.vertices[6].co[0] += self.wall_thickness 
         
         left_side_wall = self.left_side_wall.get_wall_mesh()
+        self.wall_mesh_objs.append(left_side_wall)
         left_side_wall.data.vertices[2].co[0] += self.wall_thickness 
         left_side_wall.data.vertices[6].co[0] += self.wall_thickness 
         
         right_side_wall = self.right_side_wall.get_wall_mesh()
+        self.wall_mesh_objs.append(right_side_wall)
         right_side_wall.data.vertices[1].co[0] -= self.wall_thickness 
         right_side_wall.data.vertices[5].co[0] -= self.wall_thickness 
         
@@ -1088,6 +1099,7 @@ class OPERATOR_Build_Room(Operator):
         utils.connect_objects_location(self.back_wall.obj_x,self.right_side_wall.obj_bp)
         
     def invoke(self,context,event):
+        self.wall_mesh_objs = []
         utils.delete_obj_list(bpy.data.objects)
         props = bpy.context.scene.fd_roombuilder
         self.wall_height = context.scene.mv.default_wall_height
@@ -1106,10 +1118,15 @@ class OPERATOR_Build_Room(Operator):
         self.set_camera_position(context)
         wm = context.window_manager
         return wm.invoke_props_dialog(self, width=400)
-    
+
     def execute(self, context):
-        bpy.ops.fd_roombuilder.collect_walls()
         return {'FINISHED'}
+        
+    def __del__(self):
+        for mesh in self.wall_mesh_objs:
+            bpy.ops.fd_object.apply_hook_modifiers(object_name=mesh.name)
+        
+        bpy.ops.fd_roombuilder.collect_walls()     
         
     def draw(self,context):
         layout = self.layout
@@ -1213,7 +1230,6 @@ class OPERATOR_Collect_Walls(Operator):
         ceiling.mv.name_object = "Ceiling"
         ceiling.location.z = mv.default_wall_height
         ceiling.hide = True
-        ceiling.hide_render = True
         ceiling.fd_roombuilder.is_ceiling = True
         
         bpy.ops.fd_object.add_room_lamp()
