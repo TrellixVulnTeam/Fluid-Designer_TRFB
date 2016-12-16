@@ -1030,6 +1030,7 @@ class OPERATOR_Build_Room(Operator):
         #TODO: Develop a way for users to change entry door style. (Sliding, Bifold, Single, Double)
         bp = utils.get_group(os.path.join(os.path.dirname(__file__),"Entry Doors","Entry Door Frame.blend"))
         self.door = fd_types.Assembly(bp)
+        self.door.obj_bp.mv.type_group = 'PRODUCT'
         self.door.obj_bp.parent = self.entry_wall.obj_bp
         
         objs = utils.get_child_objects(self.door.obj_bp)
@@ -1107,17 +1108,12 @@ class OPERATOR_Build_Room(Operator):
         return wm.invoke_props_dialog(self, width=400)
     
     def execute(self, context):
-#         bpy.ops.view3d.view_all(center=True)
         bpy.ops.fd_roombuilder.collect_walls()
         return {'FINISHED'}
         
     def draw(self,context):
         layout = self.layout
         box = layout.box()
-        
-        row = box.row()
-        row.label("Wall Height:")
-        row.prop(self,"wall_height",text="")
         
         props = bpy.context.scene.fd_roombuilder
         
