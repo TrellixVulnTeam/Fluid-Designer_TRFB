@@ -2614,7 +2614,7 @@ class OPS_create_thumbnails(Operator):
     def create_material_thumbnail_script(self,source_dir,source_file,material_name):
         file = open(os.path.join(source_dir,"temp.py"),'w')
         file.write("import bpy\n")
-        file.write("import fd\n")
+        file.write("from mv import unit\n")
         file.write("with bpy.data.libraries.load(r'" + source_file + "', False, True) as (data_from, data_to):\n")
         file.write("    for mat in data_from.materials:\n")
         file.write("        if mat == '" + material_name + "':\n")
