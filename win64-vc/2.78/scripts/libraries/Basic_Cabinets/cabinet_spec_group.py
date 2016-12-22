@@ -15,7 +15,7 @@ DOOR_MATERIAL = ("Plastics","Melamine","White Melamine")
 GLASS_MATERIAL = ("Glass","Glass","Glass")
 METAL = ("Metals","Metals","Stainless Steel")
 DRAWER_BOX_MATERIAL = ("Plastics","Melamine","White Melamine")
-COUNTER_TOP_MATERIAL = ("Stone","Stone","Basalt Slate")
+COUNTER_TOP_MATERIAL = ("Stone","Marble","Basalt Slate")
 
 class Material_Pointers():
     
