@@ -146,6 +146,10 @@ class INFO_MT_file(Menu):
         layout.menu("INFO_MT_file_external_data", icon='EXTERNAL_DATA')
 
         layout.separator()
+        
+        layout.prop(context.scene.mv.ui,"use_default_blender_interface",icon='BLENDER',text="Show Default Blender Tools")
+
+        layout.separator()
 
         layout.operator_context = 'EXEC_AREA'
         if bpy.data.is_dirty and context.user_preferences.view.use_quit_dialog:

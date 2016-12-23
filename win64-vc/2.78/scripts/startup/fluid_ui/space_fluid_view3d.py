@@ -1201,7 +1201,7 @@ class VIEW3D_HT_fluidheader(Header):
         if not context.scene.mv.ui.use_default_blender_interface:
             if context.scene.layers[0] != True:
                 layout.label('Some layers are not visible',icon='ERROR')
-                layout.operator('view3d.layers',text="Show All Layers").nr = 0
+                layout.operator('view3d.layers',text="Show All Layers").nr = 1
                 
             obj = context.active_object
             toolsettings = context.tool_settings

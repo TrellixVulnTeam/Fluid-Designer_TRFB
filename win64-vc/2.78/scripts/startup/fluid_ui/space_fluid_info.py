@@ -31,13 +31,6 @@ class INFO_HT_fluidheader(Header):
         scene = context.scene
         
         if not context.scene.mv.ui.use_default_blender_interface:
-            if scene.mv.ui.show_debug_tools:
-                layout.prop(scene.mv.ui,"show_debug_tools",icon='DISCLOSURE_TRI_DOWN',text="",emboss=False)
-                layout.prop(scene.mv.ui,"use_default_blender_interface",icon='BLENDER',text="")
-                layout.operator("wm.console_toggle", icon='CONSOLE',text="")
-                layout.operator("fluidgeneral.start_debug", icon='GAME',text="")
-            else:
-                layout.prop(scene.mv.ui,"show_debug_tools",icon='DISCLOSURE_TRI_RIGHT',text="",emboss=False)
         
             row = layout.row(align=True)
             INFO_MT_fd_menus.draw_collapsible(context, layout)
@@ -137,6 +130,10 @@ class INFO_MT_fluidfile(Menu):
         layout.separator()
 
         layout.menu("INFO_MT_file_external_data", icon='EXTERNAL_DATA')
+
+        layout.separator()
+        
+        layout.prop(context.scene.mv.ui,"use_default_blender_interface",icon='BLENDER',text="Show Default Blender Tools")
 
         layout.separator()
 
@@ -240,6 +237,9 @@ class INFO_MT_fluidhelp(Menu):
         layout.operator("wm.url_open", text="Python API Reference", icon='URL').url = bpy.types.WM_OT_doc_view._prefix
         layout.operator("wm.operator_cheat_sheet", icon='TEXT')
         layout.operator("wm.sysinfo", icon='TEXT')
+        layout.separator()
+        layout.operator("wm.console_toggle", icon='CONSOLE')
+        layout.operator("fluidgeneral.start_debug", icon='GAME',text="Enable Debugging")
         layout.separator()
         layout.operator("wm.splash", icon='BLENDER')
 
