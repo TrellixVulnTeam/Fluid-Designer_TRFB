@@ -768,6 +768,58 @@ class OPS_rename_assembly(Operator):
         layout = self.layout
         layout.prop(self, "new_name")
 
+class OPS_delete_selected_product(Operator):
+    bl_idname = "fd_assembly.delete_selected_product"
+    bl_label = "Delete Selected Product"
+    bl_options = {'UNDO'}
+    
+    @classmethod
+    def poll(cls, context):
+        obj_bp = utils.get_bp(context.object,'PRODUCT')
+        if obj_bp:
+            return True
+        else:
+            return False
+    
+    def get_boolean_objects(self,obj_bp,bool_list):
+        for child in obj_bp.children:
+            if child.mv.use_as_bool_obj:
+                bool_list.append(child)
+            if len(child.children) > 0:
+                self.get_boolean_objects(child, bool_list)
+    
+    def execute(self, context):
+        obj_bp = utils.get_bp(context.object,'PRODUCT')
+        bool_list = []
+        self.get_boolean_objects(obj_bp, bool_list)
+        for bool_obj in bool_list:
+            self.remove_referenced_modifiers(context, bool_obj)
+        obj_list = []
+        obj_list = utils.get_child_objects(obj_bp,obj_list)
+        utils.delete_obj_list(obj_list)
+        self.object_name = ""
+        return {'FINISHED'}
+
+    def remove_referenced_modifiers(self,context,obj_ref):
+        """ This is removes boolean modifers that use this object
+            mainly used to remove boolean modifiers for walls.
+        """
+        for obj in context.scene.objects:
+            if obj.mv.type == 'NONE' and obj.type == 'MESH':
+                for mod in obj.modifiers:
+                    if mod.type == 'BOOLEAN':
+                        if mod.object == obj_ref:
+                            obj.modifiers.remove(mod)
+
+    def invoke(self,context,event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(300))
+
+    def draw(self, context):
+        obj_bp = utils.get_bp(context.object,'PRODUCT')
+        layout = self.layout
+        layout.label("Assembly Name: " + obj_bp.mv.name_object)
+
 class OPS_delete_selected_assembly(Operator):
     bl_idname = "fd_assembly.delete_selected_assembly"
     bl_label = "Delete Selected Assembly"
@@ -1143,6 +1195,7 @@ classes = [
            OPS_delete_object_in_assembly,
            OPS_load_active_assembly_objects,
            OPS_rename_assembly,
+           OPS_delete_selected_product,
            OPS_delete_selected_assembly,
            OPS_copy_selected_assembly,
            OPS_copy_parent_assembly,
