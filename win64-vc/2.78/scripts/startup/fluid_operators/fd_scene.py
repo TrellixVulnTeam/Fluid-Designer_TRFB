@@ -1513,7 +1513,7 @@ class OPS_export_mvfd(Operator):
     def angle(self,angle):
         return str(round(math.degrees(angle),4))
     
-    def clear_and_collection_data(self,context):
+    def clear_and_collect_data(self,context):
         for product in self.products:
             self.products.remove(product)
         
@@ -1553,6 +1553,7 @@ class OPS_export_mvfd(Operator):
         
         for obj_wall in self.walls:
             wall = fd_types.Wall(obj_wall)
+            wall_name = wall.obj_bp.mv.name_object if wall.obj_bp.mv.name_object != "" else wall.name
             elm_wall = self.xml.add_element(elm_walls,'Wall',wall.obj_bp.mv.name_object)
             self.xml.add_element_with_text(elm_wall,'LinkID',obj_wall.name)
             self.xml.add_element_with_text(elm_wall,'LinkIDLocation',obj_wall.users_scene[0].name)
@@ -1571,7 +1572,8 @@ class OPS_export_mvfd(Operator):
         for obj_product in self.products:
             spec_group = specgroups[obj_product.cabinetlib.spec_group_index]
             product = fd_types.Assembly(obj_product)
-            elm_product = self.xml.add_element(elm_products,'Product',product.obj_bp.mv.name_object)
+            product_name = product.obj_bp.mv.name_object if product.obj_bp.mv.name_object != "" else product.obj_bp.name
+            elm_product = self.xml.add_element(elm_products,'Product',product_name)
             self.xml.add_element_with_text(elm_product,'LinkID',obj_product.name)
             if obj_product.parent:
                 self.xml.add_element_with_text(elm_product,'LinkIDWall',obj_product.parent.name)
@@ -1633,8 +1635,8 @@ class OPS_export_mvfd(Operator):
         #This is needed so we can export buyout objects that aren't assigned to a product
         for obj in self.buyout_products:
             spec_group = specgroups[obj.cabinetlib.spec_group_index]
-            
-            elm_product = self.xml.add_element(elm_products,'Product',obj.mv.name_object)
+            buyout_product_name = obj.mv.name_object if obj.mv.name_object != "" else obj.name
+            elm_product = self.xml.add_element(elm_products,'Product',buyout_product_name)
             self.xml.add_element_with_text(elm_product,'LinkID',obj.name)
             self.xml.add_element_with_text(elm_product,'LinkIDWall','None')
             self.xml.add_element_with_text(elm_product,'IsBuyout','True')
@@ -1657,10 +1659,10 @@ class OPS_export_mvfd(Operator):
             self.xml.add_element_with_text(elm_product,'Angle',self.angle(obj.rotation_euler.z))
             
             elm_parts = self.xml.add_element(elm_product,"Parts")
-            elm_part = self.xml.add_element(elm_parts,'Part',obj.mv.name_object)
+            elm_part = self.xml.add_element(elm_parts,'Part',buyout_product_name)
             self.xml.add_element_with_text(elm_part,'PartType',"4")
 
-            if obj.mv.name_object not in self.buyout_materials:
+            if buyout_product_name not in self.buyout_materials:
                 self.buyout_materials.append(obj.mv.name_object)
 
             self.xml.add_element_with_text(elm_part,'LinkID',obj.name)
@@ -1696,7 +1698,8 @@ class OPS_export_mvfd(Operator):
     def write_materials(self,project_node):
         elm_materials = self.xml.add_element(project_node,"Materials")
         for material in bpy.context.scene.cabinetlib.sheets:
-            elm_material = self.xml.add_element(elm_materials,'Material',material.name)
+            material_name = material.name if material.name != "" else "Unnamed"
+            elm_material = self.xml.add_element(elm_materials,'Material',material_name)
             self.xml.add_element_with_text(elm_material,'Type',"2")
             self.xml.add_element_with_text(elm_material,'Thickness',self.distance(material.thickness))
             self.xml.add_element_with_text(elm_material,'LinkIDCoreRendering',material.core_material)
@@ -1715,37 +1718,45 @@ class OPS_export_mvfd(Operator):
     def write_edgebanding(self,project_node):
         elm_edgebanding = self.xml.add_element(project_node,"Edgebanding")
         for edgeband in bpy.context.scene.cabinetlib.edgebanding:
-            elm_edge = self.xml.add_element(elm_edgebanding,'Edgeband',edgeband.name)
+            edgeband_name = edgeband.name if edgeband.name != "" else "Unnamed"
+            elm_edge = self.xml.add_element(elm_edgebanding,'Edgeband',edgeband_name)
             self.xml.add_element_with_text(elm_edge,'Type',"3")
             self.xml.add_element_with_text(elm_edge,'Thickness',str(unit.meter_to_active_unit(edgeband.thickness)))
 
     def write_buyout_materials(self,project_node):
         elm_buyouts = self.xml.add_element(project_node,"Buyouts")
         for buyout in self.buyout_materials:
-            self.xml.add_element(elm_buyouts,'Buyout',buyout)
+            buyout_name = buyout if buyout != "" else "Unnamed"
+            self.xml.add_element(elm_buyouts,'Buyout',buyout_name)
     
     def write_solid_stock_material(self,project_node):
         elm_solid_stocks = self.xml.add_element(project_node,"SolidStocks")
         for solid_stock in self.solid_stock_materials:
-            elm_solid_stock = self.xml.add_element(elm_solid_stocks,'SolidStock',solid_stock)
+            solid_stock_name = solid_stock if solid_stock != "" else "Unnamed"
+            elm_solid_stock = self.xml.add_element(elm_solid_stocks,'SolidStock',solid_stock_name)
             self.xml.add_element_with_text(elm_solid_stock,'Thickness',str(unit.meter_to_active_unit(self.solid_stock_materials[solid_stock])))
         
     def write_spec_groups(self,project_node):
         elm_spec_groups = self.xml.add_element(project_node,"SpecGroups")
         
         for spec_group in bpy.context.scene.mv.spec_groups:
-            elm_spec_group = self.xml.add_element(elm_spec_groups,'SpecGroup',spec_group.name)
+            spec_group_name = spec_group.name if spec_group.name != "" else "Unnamed"
+            elm_spec_group = self.xml.add_element(elm_spec_groups,'SpecGroup',spec_group_name)
             elm_cutparts = self.xml.add_element(elm_spec_group,'CutParts')
             for cutpart in spec_group.cutparts:
-                elm_cutpart = self.xml.add_element(elm_cutparts,'PointerName',cutpart.mv_pointer_name)
+                elm_cutpart_name = cutpart.mv_pointer_name if cutpart.mv_pointer_name != "" else "Unnamed"
+                elm_cutpart = self.xml.add_element(elm_cutparts,'PointerName',elm_cutpart_name)
                 mat_name = utils.get_material_name_from_pointer(cutpart,spec_group)
-                self.xml.add_element_with_text(elm_cutpart,'MaterialName',mat_name)
+                material_name = mat_name if mat_name != "" else "Unnamed"
+                self.xml.add_element_with_text(elm_cutpart,'MaterialName',material_name)
                  
             elm_edgeparts = self.xml.add_element(elm_spec_group,'EdgeParts')
             for edgepart in spec_group.edgeparts:
-                elm_edgepart = self.xml.add_element(elm_edgeparts,'PointerName',edgepart.mv_pointer_name)
+                elm_edgepart_name = edgepart.mv_pointer_name if edgepart.mv_pointer_name != "" else "Unnamed"
+                elm_edgepart = self.xml.add_element(elm_edgeparts,'PointerName',elm_edgepart_name)
                 mat_name = utils.get_edgebanding_name_from_pointer_name(edgepart.name,spec_group)
-                self.xml.add_element_with_text(elm_edgepart,'MaterialName',mat_name)
+                edge_material_name = mat_name if mat_name != "" else "Unnamed"
+                self.xml.add_element_with_text(elm_edgepart,'MaterialName',edge_material_name)
                 
     def write_subassemblies_for_product(self,elm_subassembly,obj_bp,spec_group):
         for child in obj_bp.children:
@@ -1759,7 +1770,8 @@ class OPS_export_mvfd(Operator):
                         if achild.mv.comment != "":
                             comment = achild.mv.comment
                             break
-                    elm_item = self.xml.add_element(elm_subassembly,'Subassembly',assembly.obj_bp.mv.name_object)
+                    sub_name = assembly.obj_bp.mv.name_object if assembly.obj_bp.mv.name_object != "" else assembly.obj_bp.name
+                    elm_item = self.xml.add_element(elm_subassembly,'Subassembly',sub_name)
                     self.xml.add_element_with_text(elm_item,'LinkID',assembly.obj_bp.name)
                     self.xml.add_element_with_text(elm_item,'XLocation',self.distance(assembly.obj_bp.location.x))
                     self.xml.add_element_with_text(elm_item,'YLocation',self.distance(assembly.obj_bp.location.y))
@@ -1775,7 +1787,8 @@ class OPS_export_mvfd(Operator):
                 assembly = fd_types.Assembly(child)
                 hide = assembly.get_prompt("Hide")
                 if hide and not hide.value():
-                    elm_item = self.xml.add_element(elm_subassembly,'Subassembly',assembly.obj_bp.mv.name_object)
+                    sub_name = assembly.obj_bp.mv.name_object if assembly.obj_bp.mv.name_object != "" else assembly.obj_bp.name
+                    elm_item = self.xml.add_element(elm_subassembly,'Subassembly',sub_name)
                     self.xml.add_element_with_text(elm_item,'LinkID',assembly.obj_bp.name)
                     self.xml.add_element_with_text(elm_item,'XLocation',self.distance(assembly.obj_bp.location.x))
                     self.xml.add_element_with_text(elm_item,'YLocation',self.distance(assembly.obj_bp.location.y))
@@ -1797,8 +1810,8 @@ class OPS_export_mvfd(Operator):
                     #TODO: Figure out how to locate hardware correctly
                     #product_bp = utils.get_bp(child,'PRODUCT')
                     #diff = product_bp.matrix_world - child.matrix_world
-
-                    elm_item = self.xml.add_element(elm_hardware,'Hardware',child.mv.name_object)
+                    hardware_name = child.mv.name_object if child.mv.name_object != "" else child.name
+                    elm_item = self.xml.add_element(elm_hardware,'Hardware',hardware_name)
                     self.xml.add_element_with_text(elm_item,'XDimension',self.distance(child.dimensions.x))
                     self.xml.add_element_with_text(elm_item,'YDimension',self.distance(child.dimensions.y))
                     self.xml.add_element_with_text(elm_item,'ZDimension',self.distance(child.dimensions.z))
@@ -1813,7 +1826,8 @@ class OPS_export_mvfd(Operator):
         for child in obj_bp.children:
             if child.cabinetlib.type_mesh == 'BUYOUT':
                 if not child.hide:
-                    elm_item = self.xml.add_element(elm_buyout,'Buyout',child.mv.name_object)
+                    buyout_name = child.mv.name_object if child.mv.name_object != "" else child.name
+                    elm_item = self.xml.add_element(elm_buyout,'Buyout',buyout_name)
                     self.xml.add_element_with_text(elm_item,'Comment',child.mv.comment)
             self.write_buyout_for_product(elm_buyout, child)
             
@@ -1848,9 +1862,11 @@ class OPS_export_mvfd(Operator):
         else:
             assembly = fd_types.Assembly(obj.parent)
         if obj.type == 'CURVE':
-            elm_part = self.xml.add_element(node,'Part',obj.mv.name_object)
+            curve_name = obj.mv.name_object if obj.mv.name_object != "" else obj.name
+            elm_part = self.xml.add_element(node,'Part',curve_name)
         else:
-            elm_part = self.xml.add_element(node,'Part',assembly.obj_bp.mv.name_object)
+            obj_name = assembly.obj_bp.mv.name_object if assembly.obj_bp.mv.name_object != "" else assembly.obj_bp.name
+            elm_part = self.xml.add_element(node,'Part',obj_name)
         
         if obj.cabinetlib.type_mesh == 'CUTPART':
             self.xml.add_element_with_text(elm_part,'PartType',"2")
@@ -1949,7 +1965,8 @@ class OPS_export_mvfd(Operator):
     def write_machine_tokens(self,elm_part,obj_part):
         elm_tokens = self.xml.add_element(elm_part,"MachineTokens")
         for token in obj_part.mv.mp.machine_tokens:
-            elm_token = self.xml.add_element(elm_tokens,'MachineToken',token.name)
+            token_name = token.name if token.name != "" else "Unnamed"
+            elm_token = self.xml.add_element(elm_tokens,'MachineToken',token_name)
             param_dict = token.create_parameter_dictionary()
             if token.type_token == 'CORNERNOTCH':
                 instructions = token.type_token + token.face + " " + token.edge
@@ -1971,7 +1988,7 @@ class OPS_export_mvfd(Operator):
     def execute(self, context):
         project_name, ext = os.path.splitext(os.path.basename(bpy.data.filepath))
          
-        self.clear_and_collection_data(context)
+        self.clear_and_collect_data(context)
         
         # CREATE XML
         self.xml = fd_types.MV_XML()

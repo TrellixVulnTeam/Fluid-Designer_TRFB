@@ -1819,7 +1819,7 @@ class MV_XML():
         with open(path, 'w',encoding='utf-8') as file:
             self.tree.write(file,encoding='unicode')
             
-        self.format_xml_file(path)
+#         self.format_xml_file(path)
 
 class Prompts_Interface(bpy.types.Operator):
     
