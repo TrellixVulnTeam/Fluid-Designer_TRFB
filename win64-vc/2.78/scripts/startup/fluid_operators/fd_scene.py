@@ -1861,59 +1861,60 @@ class OPS_export_mvfd(Operator):
             assembly = fd_types.Assembly(obj)
         else:
             assembly = fd_types.Assembly(obj.parent)
-        if obj.type == 'CURVE':
-            curve_name = obj.mv.name_object if obj.mv.name_object != "" else obj.name
-            elm_part = self.xml.add_element(node,'Part',curve_name)
-        else:
-            obj_name = assembly.obj_bp.mv.name_object if assembly.obj_bp.mv.name_object != "" else assembly.obj_bp.name
-            elm_part = self.xml.add_element(node,'Part',obj_name)
-        
-        if obj.cabinetlib.type_mesh == 'CUTPART':
-            self.xml.add_element_with_text(elm_part,'PartType',"2")
-
-        if obj.cabinetlib.type_mesh == 'BUYOUT':
-            self.xml.add_element_with_text(elm_part,'PartType',"4")
-            if utils.get_material_name(obj) not in self.buyout_materials:
-                self.buyout_materials.append(utils.get_material_name(obj))
-                
-        if obj.cabinetlib.type_mesh == 'SOLIDSTOCK':
-            self.xml.add_element_with_text(elm_part,'PartType',"3")
-            if utils.get_material_name(obj) not in self.solid_stock_materials:
-                self.solid_stock_materials[utils.get_material_name(obj)] = utils.get_part_thickness(obj)
-                
-        self.xml.add_element_with_text(elm_part,'LinkID',assembly.obj_bp.name)
-        self.xml.add_element_with_text(elm_part,'Qty',"1")
-        self.xml.add_element_with_text(elm_part,'MaterialName',utils.get_material_name(obj))
-        self.xml.add_element_with_text(elm_part,'Thickness',self.distance(utils.get_part_thickness(obj)))
-        self.xml.add_element_with_text(elm_part,'UseSMA','True' if obj.mv.use_sma else 'False')
-        self.xml.add_element_with_text(elm_part,'LinkIDProduct',utils.get_bp(obj,'PRODUCT').name)
-        self.xml.add_element_with_text(elm_part,'LinkIDParent',assembly.obj_bp.parent.name)
-        self.xml.add_element_with_text(elm_part,'PartLength',self.distance(assembly.obj_x.location.x))
-        self.xml.add_element_with_text(elm_part,'PartWidth',self.distance(assembly.obj_y.location.y))
-        self.xml.add_element_with_text(elm_part,'Comment',assembly.obj_bp.mv.comment)
-        self.xml.add_element_with_text(elm_part,'XOrigin',self.get_part_x_location(assembly.obj_bp,assembly.obj_bp.location.x))
-        self.xml.add_element_with_text(elm_part,'YOrigin',self.get_part_y_location(assembly.obj_bp,assembly.obj_bp.location.y))
-        self.xml.add_element_with_text(elm_part,'ZOrigin',self.get_part_z_location(assembly.obj_bp,assembly.obj_bp.location.z))
-        self.xml.add_element_with_text(elm_part,'XRotation',self.angle(assembly.obj_bp.rotation_euler.x))
-        self.xml.add_element_with_text(elm_part,'YRotation',self.angle(assembly.obj_bp.rotation_euler.y))
-        self.xml.add_element_with_text(elm_part,'ZRotation',self.angle(assembly.obj_bp.rotation_euler.z))
-        self.xml.add_element_with_text(elm_part,'EdgeWidth1',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_w1,spec_group))
-        self.xml.add_element_with_text(elm_part,'EdgeLength1',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_l1,spec_group))
-        self.xml.add_element_with_text(elm_part,'EdgeWidth2',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_w2,spec_group))
-        self.xml.add_element_with_text(elm_part,'EdgeLength2',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_l2,spec_group))
-        self.xml.add_element_with_text(elm_part,'DrawToken3D',"DRAW3DBOX CABINET")
-        self.xml.add_element_with_text(elm_part,'ElvToken2D',"DRAW2DBOX CABINET")
-        self.xml.add_element_with_text(elm_part,'BasePoint',self.get_part_base_point(assembly))
-        self.xml.add_element_with_text(elm_part,'MachinePoint',"1")
-        self.xml.add_element_with_text(elm_part,'Par1',"")
-        self.xml.add_element_with_text(elm_part,'Par2',"")
-        self.xml.add_element_with_text(elm_part,'Par3',"")
-        
-        self.write_machine_tokens(elm_part, obj)
-        if obj.mv.use_sma:
-            global_matrix = axis_conversion(to_forward='Y',to_up='Z').to_4x4() * Matrix.Scale(1.0, 4)
-            faces = faces_from_mesh(obj, global_matrix, True)
-            self.write_geometry(elm_part, faces)
+        if assembly.obj_bp.mv.type_group != "PRODUCT":
+            if obj.type == 'CURVE':
+                curve_name = obj.mv.name_object if obj.mv.name_object != "" else obj.name
+                elm_part = self.xml.add_element(node,'Part',curve_name)
+            else:
+                obj_name = assembly.obj_bp.mv.name_object if assembly.obj_bp.mv.name_object != "" else assembly.obj_bp.name
+                elm_part = self.xml.add_element(node,'Part',obj_name)
+            
+            if obj.cabinetlib.type_mesh == 'CUTPART':
+                self.xml.add_element_with_text(elm_part,'PartType',"2")
+    
+            if obj.cabinetlib.type_mesh == 'BUYOUT':
+                self.xml.add_element_with_text(elm_part,'PartType',"4")
+                if utils.get_material_name(obj) not in self.buyout_materials:
+                    self.buyout_materials.append(utils.get_material_name(obj))
+                    
+            if obj.cabinetlib.type_mesh == 'SOLIDSTOCK':
+                self.xml.add_element_with_text(elm_part,'PartType',"3")
+                if utils.get_material_name(obj) not in self.solid_stock_materials:
+                    self.solid_stock_materials[utils.get_material_name(obj)] = utils.get_part_thickness(obj)
+                    
+            self.xml.add_element_with_text(elm_part,'LinkID',assembly.obj_bp.name)
+            self.xml.add_element_with_text(elm_part,'Qty',"1")
+            self.xml.add_element_with_text(elm_part,'MaterialName',utils.get_material_name(obj))
+            self.xml.add_element_with_text(elm_part,'Thickness',self.distance(utils.get_part_thickness(obj)))
+            self.xml.add_element_with_text(elm_part,'UseSMA','True' if obj.mv.use_sma else 'False')
+            self.xml.add_element_with_text(elm_part,'LinkIDProduct',utils.get_bp(obj,'PRODUCT').name)
+            self.xml.add_element_with_text(elm_part,'LinkIDParent',assembly.obj_bp.parent.name)
+            self.xml.add_element_with_text(elm_part,'PartLength',self.distance(assembly.obj_x.location.x))
+            self.xml.add_element_with_text(elm_part,'PartWidth',self.distance(assembly.obj_y.location.y))
+            self.xml.add_element_with_text(elm_part,'Comment',assembly.obj_bp.mv.comment)
+            self.xml.add_element_with_text(elm_part,'XOrigin',self.get_part_x_location(assembly.obj_bp,assembly.obj_bp.location.x))
+            self.xml.add_element_with_text(elm_part,'YOrigin',self.get_part_y_location(assembly.obj_bp,assembly.obj_bp.location.y))
+            self.xml.add_element_with_text(elm_part,'ZOrigin',self.get_part_z_location(assembly.obj_bp,assembly.obj_bp.location.z))
+            self.xml.add_element_with_text(elm_part,'XRotation',self.angle(assembly.obj_bp.rotation_euler.x))
+            self.xml.add_element_with_text(elm_part,'YRotation',self.angle(assembly.obj_bp.rotation_euler.y))
+            self.xml.add_element_with_text(elm_part,'ZRotation',self.angle(assembly.obj_bp.rotation_euler.z))
+            self.xml.add_element_with_text(elm_part,'EdgeWidth1',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_w1,spec_group))
+            self.xml.add_element_with_text(elm_part,'EdgeLength1',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_l1,spec_group))
+            self.xml.add_element_with_text(elm_part,'EdgeWidth2',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_w2,spec_group))
+            self.xml.add_element_with_text(elm_part,'EdgeLength2',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_l2,spec_group))
+            self.xml.add_element_with_text(elm_part,'DrawToken3D',"DRAW3DBOX CABINET")
+            self.xml.add_element_with_text(elm_part,'ElvToken2D',"DRAW2DBOX CABINET")
+            self.xml.add_element_with_text(elm_part,'BasePoint',self.get_part_base_point(assembly))
+            self.xml.add_element_with_text(elm_part,'MachinePoint',"1")
+            self.xml.add_element_with_text(elm_part,'Par1',"")
+            self.xml.add_element_with_text(elm_part,'Par2',"")
+            self.xml.add_element_with_text(elm_part,'Par3',"")
+            
+            self.write_machine_tokens(elm_part, obj)
+            if obj.mv.use_sma:
+                global_matrix = axis_conversion(to_forward='Y',to_up='Z').to_4x4() * Matrix.Scale(1.0, 4)
+                faces = faces_from_mesh(obj, global_matrix, True)
+                self.write_geometry(elm_part, faces)
 
     def get_part_base_point(self,assembly):
         mx = False
