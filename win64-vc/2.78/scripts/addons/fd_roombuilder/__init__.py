@@ -1123,8 +1123,14 @@ class OPERATOR_Build_Room(Operator):
         return {'FINISHED'}
         
     def __del__(self):
+        #FIX MESH SIZE FOR EDITING AFTER ROOM CREATION
         for mesh in self.wall_mesh_objs:
-            bpy.ops.fd_object.apply_hook_modifiers(object_name=mesh.name)
+            bpy.ops.fd_assembly.connect_meshes_to_hooks_in_assembly(object_name = mesh.name)
+        
+        #HIDE EMPTIES AFTER CONNECTING HOOKS
+        for obj in bpy.context.scene.objects:
+            if obj.type == 'EMPTY':
+                obj.hide = True
         
         bpy.ops.fd_roombuilder.collect_walls()     
         
