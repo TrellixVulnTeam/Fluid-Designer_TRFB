@@ -217,6 +217,9 @@ class OPS_draw_walls(Operator):
                 self.previous_wall.obj_y.hide = True
                 self.previous_wall.obj_z.hide = True
                 
+                if len(obj.data.uv_textures) == 0:
+                    bpy.ops.fd_object.unwrap_mesh(object_name=obj.name)                
+                
     def set_type_value(self,event):
         if event.value == 'PRESS':
             if event.type == "ONE" or event.type == "NUMPAD_1":
