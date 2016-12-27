@@ -88,6 +88,7 @@ class Entry_Door(fd_types.Assembly):
             door_handle.x_loc('Width-INCH(9)',[Width])
             door_handle.y_loc(value = unit.inch(-0.875))
             door_handle.z_loc(value = HANDLE_HEIGHT)
+            door_handle.assign_material("Stainless Steel",MATERIAL_FILE,"Stainless Steel")
 
         if self.double_door == True:
             door_panel.x_dim('(Width-INCH(6))*0.5',[Width])
@@ -112,6 +113,7 @@ class Entry_Door(fd_types.Assembly):
             door_handle_right.x_loc('Dpr_Width-INCH(3)', [Dpr_Width])
             door_handle_right.y_loc(value = unit.inch(-0.875))
             door_handle_right.z_loc(value = HANDLE_HEIGHT)
+            door_handle_right.assign_material("Stainless Steel",MATERIAL_FILE,"Stainless Steel")
                 
         self.update()       
   

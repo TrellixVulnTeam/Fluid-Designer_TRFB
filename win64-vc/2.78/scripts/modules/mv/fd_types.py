@@ -1577,6 +1577,35 @@ class Assembly_Object():
         for slot in self.obj.cabinetlib.material_slots:
             slot.pointer_name = material_pointer_name
 
+    def assign_material(self,slot_name,material_path,material_name):
+        """ Returns:None - sets the every material slot that matches the slot_name
+                           to the material_pointer_name
+
+            slot_name:string - name of the mv.material_slot to assign material to
+          
+            material_path:string - file path to retrieve material from
+            
+            material_name:string - material name to retrieve from the file specified in the material path
+        """
+        material = None
+        
+        if material_name in bpy.data.materials:
+            material = bpy.data.materials[material_name]
+        else:
+            with bpy.data.libraries.load(material_path, False, False) as (data_from, data_to):
+                for mat in data_from.materials:
+                    if mat == material_name:
+                        data_to.materials = [mat]
+                        break
+                    
+            for mat in data_to.materials:
+                material = mat
+
+        for index, slot in enumerate(self.obj.cabinetlib.material_slots):
+            if slot.name == slot_name:
+                slot.material_path = material_path
+                slot.item_name = material_name
+                self.obj.material_slots[index].material = material
 
 class Material_Pointer():
     
