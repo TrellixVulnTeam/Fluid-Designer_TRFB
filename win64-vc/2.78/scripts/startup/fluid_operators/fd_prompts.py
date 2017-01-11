@@ -140,7 +140,7 @@ class OPS_run_calculator(Operator):
             if tab.calculator_type == 'YDIM' and child.mv.type == 'VPDIMY':
                 return child.location.y
             if tab.calculator_type == 'ZDIM' and child.mv.type == 'VPDIMZ':
-                return child.location.z
+                return abs(child.location.z)
             
     def execute(self, context):
         obj = bpy.data.objects[self.data_name]
