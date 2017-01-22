@@ -1530,7 +1530,6 @@ class OPS_brd_library_items(Operator):
     
     def draw_product(self,class_name):
         pkg = __import__(self.package_name)
-        print("DRAWING",self.package_name,self.module_name,class_name)
         item = eval("pkg." + self.module_name + "." + class_name + "()")
         item.draw()
         item.update()
