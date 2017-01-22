@@ -307,6 +307,8 @@ class Assembly():
                            
             material_pointer_name:string - name of the material pointer 
                                            to assign
+                                           
+            slot_name = "":string (optional) - if not "" then the material_pointer_name will be assigned to the slot                                           
         """
         for slot in self.obj_bp.cabinetlib.material_slots:
             if slot_name == "":
@@ -1166,8 +1168,11 @@ class Assembly():
                 
         default_spec_group = bpy.context.scene.mv.spec_groups[bpy.context.scene.mv.spec_group_index]
         bpy.ops.fd_material.change_product_spec_group(object_name=self.obj_bp.name,spec_group_name=default_spec_group.name)
-
-        self.set_name(self.assembly_name)
+        if self.assembly_name == "":
+            self.set_name(utils.get_product_class_name(self.__class__.__name__))
+        else:
+            self.set_name(self.assembly_name)
+        
         self.obj_bp.mv.type_group = self.type_assembly
         self.obj_bp.mv.placement_type = self.placement_type
         self.obj_bp.mv.mirror_z = self.mirror_z
