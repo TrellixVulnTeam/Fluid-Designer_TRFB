@@ -265,12 +265,15 @@ class OPS_draw_walls(Operator):
         self.is_disconnected = False
         
     def event_is_place_wall(self,event):
-        if event.type == 'LEFTMOUSE' and event.value == 'PRESS':
-            return True
-        elif event.type == 'NUMPAD_ENTER' and event.value == 'PRESS':
-            return True
-        elif event.type == 'RET' and event.value == 'PRESS':
-            return True
+        if not event.ctrl:
+            if event.type == 'LEFTMOUSE' and event.value == 'PRESS':
+                return True
+            elif event.type == 'NUMPAD_ENTER' and event.value == 'PRESS':
+                return True
+            elif event.type == 'RET' and event.value == 'PRESS':
+                return True
+            else:
+                return False
         else:
             return False
         
