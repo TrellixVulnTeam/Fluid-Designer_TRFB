@@ -9,7 +9,7 @@ import bpy
 import os
 import subprocess
 
-output_path = "C:\\Users\\Andrew.MICROVELLUM\\Documents\\GitHub\\Libraries\\Osborne-Wood-Products\\Architectural Columns Separate"
+output_path = ""
 
 if os.path.exists(bpy.data.filepath):
         
