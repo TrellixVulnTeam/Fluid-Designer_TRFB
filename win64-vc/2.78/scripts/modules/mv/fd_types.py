@@ -12,80 +12,121 @@ from . import utils
 import xml.etree.ElementTree as ET
 
 class Assembly():
+    """
+    ##package_name
+    The python package the assembly is stored in. \n
+    - Type: String
+            
+    ##module_name
+    The python module the assembly is stored in. \n
+    - Type: String
     
-    """ Type:string - The python package the assembly is stored in """
+    ##library_name
+    The library folder name to save assembly to. \n
+    - Type: String
+            
+    ##category_name
+    The category folder name to save assembly to. \n
+    - Type: String
+    
+    ##assembly_name
+    The assembly name. \n
+    - Type: String        
+    
+    ##property_id
+    The Prompt Page Operator ID. This is the bl_id property. \n
+    - Type: String
+    
+    ##plan_draw_id
+    The Operator ID that should be called when updating a prebuilt assembly. This is the bl_id property. \n
+    - Type: String
+    
+    ##update_id
+    The Operator ID that should be called when dropping this assembly into the scene. This is the bl_id property. \n
+    - Type: String
+    
+    ##drop_id
+    The Operator ID that should be called when dropping this assembly into the scene. This is the bl_id property \n
+    - Type: String
+    
+    ##prompts
+    The list of prompts to overwrite when creating this assembly (key = prompt name, value = prompt value). \n
+    - Type: Dictionary
+    
+    ##obj_bp
+    Base point of the assembly. \n
+    - Type: bpy.types.Object
+    
+    ##obj_x
+    X dimension of the assembly. \n
+    - Type: bpy.types.Object
+    
+    ##obj_y
+    Y dimension of the assembly. \n
+    - Type: bpy.types.Object
+    
+    ##obj_z
+    Z dimension of the assembly. \n
+    - Type: bpy.types.Object
+    
+    ##type_assembly
+    Determines if the library assembly is an insert or a product. \n
+    - Type: enum_string("PRODUCT", "INSERT") 
+    
+    ##placement_type
+    Used for drag and drop from placement. \n
+    - Type: enum_string("","Corner")
+    
+    ##mirror_z
+    Determines if the z dimension is mirrored. \n
+    - Type: Bool
+    
+    ##mirror_y
+    Determines if the y dimension is mirrored. Typically used for all cabinets. \n
+    - Type: Bool
+    
+    ##width
+    The default x dimension of the assembly. \n
+    - Type: Float
+    
+    ##height
+    The default z dimension of the assembly. \n
+    - Type: Float
+    
+    ##depth
+    The default y dimension of the assembly. \n
+    - Type: Float
+    
+    ##height_above_floor
+    The default z location of the assembly. \n
+    - Type: Float
+    """
+    
     package_name = ""
-    
-    """ Type:string - The python module the assembly is stored in """
     module_name = ""    
-    
-    """ Type:string - The library folder name to save assembly to """
     library_name = ""
-    
-    """ Type:string - The category folder name to save assembly to """
     category_name = ""
-    
-    """ Type:string - The assembly name """
     assembly_name = ""    
 
-    """ Type:string - The Prompt Page Operator ID
-                      This is the bl_id property  """
     property_id = ""
-    
-    """ Type:string - The Operator ID that should be called when drawing a 2D Plan
-                      This is the bl_id property  """
     plan_draw_id = ""
-    
-    """ Type:string - The Operator ID that should be called when updating a prebuilt assembly
-                      This is the bl_id property  """
     update_id = ""    
-    
-    """ Type:string - The Operator ID that should be called when dropping this assembly into the scene
-                      This is the bl_id property  """
     drop_id = ""        
     
-    """ Type:dictionary - The list of prompts to overwrite when creating this assembly
-                          key = prompt name
-                          value = prompt value  """
     prompts = {}
     
-    """ Type:bpy.types.Object - base point of the assembly """
     obj_bp = None
-    
-    """ Type:bpy.types.Object - x dimension of the assembly """
     obj_x = None
-    
-    """ Type:bpy.types.Object - y dimension of the assembly """
     obj_y = None
-    
-    """ Type:bpy.types.Object - z dimension of the assembly """
     obj_z = None
     
-    """ Type:enum_string("PRODUCT",
-                         "INSERT") 
-                         - Determines if the library assembly is an insert or a product """
     type_assembly = "PRODUCT"
-    
-    """ Type:enum_string("","Corner") - Used for drag and drop from placement """
     placement_type = ""    
-    
-    """ Type:bool - Determines if the z dimension is mirrored. """
     mirror_z = False
-    
-    """ Type:bool - Determines if the y dimension is mirrored. 
-                    Typically used for all cabinets  """
     mirror_y = True
-    
-    """ Type:float - The default x dimension of the assembly  """
     width = 0
-    
-    """ Type:float - The default z dimension of the assembly  """
     height = 0
-    
-    """ Type:float - The default y dimension of the assembly  """
     depth = 0
-    
-    """ Type:float - The default z location of the assembly  """
     height_above_floor = 0
     
     def __init__(self,obj_bp=None):
