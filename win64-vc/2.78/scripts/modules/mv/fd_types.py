@@ -130,9 +130,16 @@ class Assembly():
     height_above_floor = 0
     
     def __init__(self,obj_bp=None):
-        """ Assembly Constructor. If you want to create an instance of
-            an existing Assembly then pass in the base point of the assembly 
-            in the obj_bp parameter
+        """ 
+        Assembly Constructor. If you want to create an instance of
+        an existing Assembly then pass in the base point of the assembly 
+        in the obj_bp parameter
+        
+        **Parameters:**
+        
+        * **obj_bp** (bpy.types.object, (optional))
+        
+        **Returns:** None
         """
         if obj_bp:
             self.obj_bp = obj_bp
@@ -147,9 +154,9 @@ class Assembly():
                     break
 
     def create_assembly(self):
-        """ This creates the basic structure for an assembly
-            This must be called first when creating an assembly 
-            from a script
+        """ 
+        This creates the basic structure for an assembly.
+        This must be called first when creating an assembly from a script.
         """
         bpy.ops.object.select_all(action='DESELECT')
         verts = [(0, 0, 0)]
@@ -204,8 +211,8 @@ class Assembly():
         self.set_object_names()
     
     def build_cage(self):
-        """ This builds the cage object which is a cube that
-            visually represents volume of the assembly.
+        """ 
+        This builds the cage object which is a cube that visually represents volume of the assembly.
         """
         if self.obj_bp and self.obj_x and self.obj_y and self.obj_z:
             size = (self.obj_x.location.x, self.obj_y.location.y, self.obj_z.location.z)
@@ -235,8 +242,10 @@ class Assembly():
             return obj_cage
 
     def add_empty(self):
-        """ Returns:Assembly_Object - creates an empty and returns
-                                      it as an Assembly_Object
+        """ 
+        Creates an empty and returns it as an Assembly_Object
+        
+        **Returns:** fd_types.Assembly_Object
         """
         bpy.ops.object.empty_add()
         obj_empty = bpy.context.active_object
@@ -245,8 +254,10 @@ class Assembly():
         return empty
 
     def add_opening(self):
-        """ Returns:Assembly - creates an empty opening to this assembly
-                               and returns it as an Assembly
+        """ 
+        Creates and adds an empty opening to this assembly and returns it as an Assembly.
+                               
+        **Returns:** fd_types.Assembly
         """
         opening = Assembly()
         opening.create_assembly()
@@ -256,8 +267,9 @@ class Assembly():
         return opening
 
     def get_cage(self):
-        """ This gets the cage for an assembly. If the cage cannot be found
-            then a new one is create and returned by the function
+        """ 
+        This gets the cage for an assembly. If the cage cannot be found
+        then a new one is create and returned by the function.
         """
         for child in self.obj_bp.children:
             if child.mv.type == 'CAGE':
@@ -265,28 +277,36 @@ class Assembly():
         return self.build_cage()
 
     def get_var(self,data_path,var_name="",transform_space='WORLD_SPACE',transform_type='LOC_X'):
-        """ This returns a variable which can be used in python expressions
-            arg1: data_path the data path to retrieve the variable from there are 
-                  reserved names that can be used.
-                  dim_x = X Dimension of the Assembly
-                  dim_y = Y Dimension of the Assembly
-                  dim_z = Z Dimension of the Assembly
-                  loc_x = X Location of the Assembly
-                  loc_y = Y Location of the Assembly
-                  loc_z = Z Location of the Assembly
-                  rot_x = X Rotation of the Assembly
-                  rot_y = Y Rotation of the Assembly
-                  rot_z = Z Rotation of the Assembly
-                  world_loc_x = X Location of the Assembly in world space
-                  world_loc_y = Y Location of the Assembly in world space
-                  world_loc_z = Z Location of the Assembly in world space
-            arg2: var_name the variable name to use for the returned variable. If 
-                  an empty string is passed in then the data_path is used as the
-                  variable name. all spaces are replaced with the underscore charcter
-            arg3: (TODO: DELETE THIS IS BEING PASSED IN THE DATAPATH) transform_space ENUM in ('WORLD_SPACE','TRANSFORM_SPACE','LOCAL_SPACE')
-                  only used if calculating world space
-            arg4: (TODO: DELETE THIS IS BEING PASSED IN THE DATAPATH)
+        """ 
+        Returns a variable which can be used in python expressions.
+        
+        **Parameters:**
+        
+        * **data_path** (string, (never None)) - Data_path the data path to retrieve the variable from there are reserved names that can be used.
+          * 'dim_x' = X Dimension of the Assembly
+          * 'dim_y' = Y Dimension of the Assembly
+          * 'dim_z' = Z Dimension of the Assembly
+          * 'loc_x' = X Location of the Assembly
+          * 'loc_y' = Y Location of the Assembly
+          * 'loc_z' = Z Location of the Assembly
+          * 'rot_x' = X Rotation of the Assembly
+          * 'rot_y' = Y Rotation of the Assembly
+          * 'rot_z' = Z Rotation of the Assembly
+          * 'world_loc_x' = X Location of the Assembly in world space
+          * 'world_loc_y' = Y Location of the Assembly in world space
+          * 'world_loc_z' = Z Location of the Assembly in world space
+        
+        * **var_name** (string, (Optional)) - The variable name to use for the returned variable. 
+                                              If an empty string is passed in then the data_path is used as the variable name. 
+                                              All spaces are replaced with the underscore charcter.
+        
+        * **transform_space** (ENUM in ('WORLD_SPACE','TRANSFORM_SPACE','LOCAL_SPACE')) - TODO: DELETE, THIS IS BEING PASSED IN THE DATAPATH.
+        
+        * **transform_type** (ENUM in ()) - TODO: REMOVE PARAMETER. THIS IS BEING PASSED IN THE DATAPATH.
+        
+        **Returns:** fd_types.Variable
         """
+        
         if var_name == "":
             var_name = data_path.replace(" ","_")
         if data_path == 'dim_x':
@@ -343,13 +363,16 @@ class Assembly():
                     return 'mv.PromptPage.COL_Prompt["' + prompt_name + '"].PriceValue'
         
     def set_material_pointers(self,material_pointer_name,slot_name=""):
-        """ Returns:None - sets the every material slot for every mesh
-                           to the material_pointer_name
+        """ 
+        Sets every material slot for every mesh to the material_pointer_name.
+             
+        **Parameters:**
                            
-            material_pointer_name:string - name of the material pointer 
-                                           to assign
+        * **material_pointer_name** (string, (never None)) - Name of the material pointer to assign.
                                            
-            slot_name = "":string (optional) - if not "" then the material_pointer_name will be assigned to the slot                                           
+        * **slot_name** (string, (optional)) - If not "" then the material_pointer_name will be assigned to the slot.
+            
+        **Returns:** None                                     
         """
         for slot in self.obj_bp.cabinetlib.material_slots:
             if slot_name == "":
@@ -448,14 +471,16 @@ class Assembly():
             prompt.PriceValue = value
 
     def calc_width(self):
-        """ Calculates the width of the group based on the rotation
-            Used to determine collisions for rotated groups
+        """ 
+        Calculates the width of the group based on the rotation. 
+        Used to determine collisions for rotated groups.
         """
         return math.cos(self.obj_bp.rotation_euler.z) * self.obj_x.location.x
     
     def calc_depth(self):
-        """ Calculates the depth of the group based on the rotation
-            Used to determine collisions for rotated groups
+        """ 
+        Calculates the depth of the group based on the rotation. 
+        Used to determine collisions for rotated groups.
         """
         #TODO: This not correct
         if self.obj_bp.rotation_euler.z < 0:
@@ -464,8 +489,9 @@ class Assembly():
             return math.fabs(self.obj_y.location.y)
     
     def calc_x(self):
-        """ Calculates the x location of the group based on the rotation
-            Used to determine collisions for rotated groups
+        """ 
+        Calculates the x location of the group based on the rotation. 
+        Used to determine collisions for rotated groups.
         """
         return math.sin(self.obj_bp.rotation_euler.z) * self.obj_y.location.y
 
@@ -476,8 +502,8 @@ class Assembly():
                 bpy.ops.fd_assembly.connect_meshes_to_hooks_in_assembly(object_name=child.name)
 
     def has_height_collision(self,group):
-        """ Determines if this group will collide in the z with 
-            the group that is passed in arg 2
+        """ 
+        Determines if this group will collide in the z with the group that is passed in arg 2.
         """
 
         if self.obj_bp.matrix_world[2][3] > self.obj_z.matrix_world[2][3]:
@@ -603,8 +629,9 @@ class Assembly():
                     return Assembly(obj_bp)
 
     def get_next_wall(self,placement):
-        """ This gets the next LEFT or RIGHT wall that this product is connected to
-            This is used for placing product on corner cabinets that are in corners
+        """ 
+        This gets the next LEFT or RIGHT wall that this product is connected to. 
+        This is used for placing product on corner cabinets that are in corners.
         """
         if self.obj_bp.parent:
             wall = Wall(self.obj_bp.parent)
@@ -795,10 +822,14 @@ class Assembly():
                 driver.driver.expression = expression
 
     def add_assembly(self,file_path):
-        """ Returns:Part - adds an assembly to this assembly
-                           and returns it as a fd_types.Part
-                              
-            path: strings - The folder location to the assembly to add.
+        """
+        Adds an assembly to this assembly and returns it as a fd_types.Part.
+        
+        **Parameters:**
+        
+        * **file_path** (String, (never None)) - The folder location to the assembly to add.
+        
+        **Returns:** fd_types.Part
         """
         with bpy.data.libraries.load(file_path, False, False) as (data_from, data_to):
             for group in data_from.groups:
@@ -829,12 +860,15 @@ class Assembly():
             return part
 
     def add_object(self,file_path):
-        """ Returns:Assembly_Object - adds an assembly to this assembly
-                                      and returns it as a fd_types.Part
-                              
-            path:tuple of strings - The folder location to the object to add.
-                                    split into strings.
-                                    i.e ("Library Name","Category Name","Object Name")
+        """ 
+        Adds an object to this assembly and returns it as a fd_types.Assembly_Object.
+        
+        **Parameters:**
+        
+        * **file_path** (tuple[string], (never None)) - The folder location to the object to add, split into strings.
+                                                        i.e ("Library Name","Category Name","Object Name")
+        
+        **Returns:** fd_types.Assembly_Object
         """
         with bpy.data.libraries.load(file_path, False, False) as (data_from, data_to):
             for ob in data_from.objects:
@@ -1187,15 +1221,15 @@ class Assembly():
                         utils.draw_driver_variables(layout,driver,self.obj_bp.name)
 
     def update(self,obj_bp=None):
-        """ Returns:None - sets the specification group, 
-                                    placement_type, 
-                                    mirror_z,
-                                    mirror_y,
-                                    name,
-                                    product_id,
-                                    height_above_floor,
-                                    runs the calculators,
-                                    and sets prompts based on the prompt dictionary property
+        """ 
+        Sets the specification group, placement_type, mirror_z, mirror_y, name, product_id,
+        height_above_floor, runs the calculators, and sets prompts based on the prompt dictionary property.
+        
+        **Parameters:**
+        
+        * **obj_bp** (bpy.types.object, (optional)) - An assembly base point.
+        
+        **Returns:** None
         """
         if obj_bp:
             self.obj_bp = obj_bp
@@ -1235,12 +1269,18 @@ class Assembly():
 class Part(Assembly):
     
     def assign_material(self,slot_name,material_path,material_name):
-        """ Returns:None - sets the every material slot for every mesh that matches the slot_name
-                           to the material_pointer_name
-
-            slot_name:string - name of the mv.material_slot to assign material to
-          
-            material_path:string - file path to retrieve material from
+        """
+        Sets the every material slot for every mesh that matches the slot_name to the material_pointer_name.
+        
+        **Parameters:**
+        
+        * **slot_name** (string, (never None)) - Name of the mv.material_slot to assign material to.
+        
+        * **material_path** (string, (never None)) - File path to retrieve material from.
+        
+        * **material_name** (string, (never None)) - Material name.
+        
+        ***Returns:*** None
         """
         material = None
         
@@ -1264,11 +1304,14 @@ class Part(Assembly):
                     child.material_slots[index].material = material
     
     def material(self,material_pointer_name):
-        """ Returns:None - sets the every material slot for every mesh
-                           to the material_pointer_name
-                           
-            material_pointer_name:string - name of the material pointer 
-                                           to assign
+        """ 
+        Sets every material slot for every mesh to the material_pointer_name.
+        
+        **Parameters:**
+        
+        * **material_pointer_name** (string, (never None)) - Name of the material pointer to assign.
+        
+        **Returns:** None
         """
         for slot in self.obj_bp.cabinetlib.material_slots:
             slot.pointer_name = material_pointer_name
@@ -1278,11 +1321,14 @@ class Part(Assembly):
                     slot.pointer_name = material_pointer_name
 
     def cutpart(self,cutpart_name):
-        """ Returns:None - assigns the every mesh cut part 
-                           to the cutpart_name
-                           
-            cutpart_name:string - name of the material pointer 
-                                  to assign
+        """ 
+        Assigns every mesh cut part to the cutpart_name.
+        
+        **Parameters:**
+        
+        * **cutpart_name** (string, (never None)) - Name of the material pointer to assign.
+        
+        **Returns:** None
         """
         for child in self.obj_bp.children:
             if child.type == 'MESH' and child.cabinetlib.type_mesh == 'CUTPART':
