@@ -1,7 +1,5 @@
 '''
-Created on Jul 25, 2016
 Common Unit Conversion Functions
-@author: Andrew
 '''
 import bpy
 from decimal import *

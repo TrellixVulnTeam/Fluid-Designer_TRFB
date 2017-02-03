@@ -1,7 +1,5 @@
 '''
-Created on Jul 25, 2016
-
-@author: Andrew
+Utility Functions
 '''
 
 import bpy
