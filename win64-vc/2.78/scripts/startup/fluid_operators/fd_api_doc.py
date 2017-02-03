@@ -35,6 +35,14 @@ class OPS_create_api_doc(bpy.types.Operator):
         file = open(filepath, "w")
         fw = file.write
         
+        fw("#Fluid Designer\n")
+        fw("*  [Home](Home)")
+        fw("*  [Understanding the User Interface](Understanding-the-User-Interface)")
+        fw("*  [Navigating the 3D Viewport](Navigating-the-3D-Viewport)")
+        fw("*  [Navigating the Library Browser](Navigating-the-Library-Browser)")
+        fw("*  [The Room Builder Panel](The-Room-Builder-Panel)")
+        fw("*  [Hotkeys](Fluid-Designer-Hot-Keys)")
+        
         fw("#API Documentation\n")
         
         for mod in modules:
