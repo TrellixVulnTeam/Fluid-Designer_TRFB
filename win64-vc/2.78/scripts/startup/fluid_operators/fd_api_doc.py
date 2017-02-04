@@ -13,7 +13,7 @@ class OPS_create_api_doc(bpy.types.Operator):
     bl_idname = "fd_api_doc.create_api_doc"
     bl_label = "Create Fluid API Documentation"
     
-    GIT_WIKI_PATH = "C:\\Users\Montes\\Documents\\GitHub\\Fluid-Designer.wiki"
+    output_path = bpy.props.StringProperty(name="Output Path")
         
     def esc_uscores(self, string):
         if string:
@@ -31,17 +31,17 @@ class OPS_create_api_doc(bpy.types.Operator):
         return new_classes
     
     def write_sidebar(self, modules):
-        filepath = os.path.join(self.GIT_WIKI_PATH, "FD_Sidebar.md")
+        filepath = os.path.join(self.output_path, "FD_Sidebar.md")
         file = open(filepath, "w")
         fw = file.write
         
         fw("#Fluid Designer\n")
-        fw("*  [Home](Home)")
-        fw("*  [Understanding the User Interface](Understanding-the-User-Interface)")
-        fw("*  [Navigating the 3D Viewport](Navigating-the-3D-Viewport)")
-        fw("*  [Navigating the Library Browser](Navigating-the-Library-Browser)")
-        fw("*  [The Room Builder Panel](The-Room-Builder-Panel)")
-        fw("*  [Hotkeys](Fluid-Designer-Hot-Keys)")
+        fw("*  [Home](Home)\n")
+        fw("*  [Understanding the User Interface](Understanding-the-User-Interface)\n")
+        fw("*  [Navigating the 3D Viewport](Navigating-the-3D-Viewport)\n")
+        fw("*  [Navigating the Library Browser](Navigating-the-Library-Browser)\n")
+        fw("*  [The Room Builder Panel](The-Room-Builder-Panel)\n")
+        fw("*  [Hotkeys](Fluid-Designer-Hot-Keys)\n\n")
         
         fw("#API Documentation\n")
         
@@ -60,7 +60,7 @@ class OPS_create_api_doc(bpy.types.Operator):
         file.close()
     
     def write_class_doc(self, cls):
-        filepath = os.path.join(self.GIT_WIKI_PATH, cls[0] + ".md")
+        filepath = os.path.join(self.output_path, cls[0] + ".md")
         file = open(filepath, "w")
         fw = file.write
         
@@ -86,7 +86,7 @@ class OPS_create_api_doc(bpy.types.Operator):
         file.close()
         
     def write_mod_doc(self, mod):
-        filepath = os.path.join(self.GIT_WIKI_PATH, mod[0] + ".md")
+        filepath = os.path.join(self.output_path, mod[0] + ".md")
         file = open(filepath, "w")
         fw = file.write       
         
