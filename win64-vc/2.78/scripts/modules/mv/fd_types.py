@@ -506,7 +506,13 @@ class Assembly():
 
     def has_height_collision(self,group):
         """ 
-        Determines if this group will collide in the z with the group that is passed in arg 2.
+        Determines if this group will collide in the z with the group that is passed in.
+        
+        **Parameters:**
+                           
+        * **group** (bpy.types.Group, (never None)) - Name of the group to test against.
+            
+        **Returns:** Bool          
         """
 
         if self.obj_bp.matrix_world[2][3] > self.obj_z.matrix_world[2][3]:
@@ -536,6 +542,16 @@ class Assembly():
             return True
 
     def has_width_collision(self,group):
+        """ 
+        Determines if this group will collide in the x with the group that is passed in.
+        
+        **Parameters:**
+                           
+        * **group** (bpy.types.Group, (never None)) - Name of the group to test against.
+            
+        **Returns:** Bool          
+        """        
+        
         grp1_x_1 = self.obj_bp.matrix_world[0][3]
         grp1_x_2 = self.obj_x.matrix_world[0][3]
 
@@ -549,6 +565,16 @@ class Assembly():
             return True
 
     def get_adjacent_assembly(self,direction='LEFT'):
+        """ 
+        Returns an adjacent assembly to this assembly on the same Wall in the direction given.
+        
+        **Parameters:**
+                           
+        * **direction** (Enum in ['LEFT', 'RIGHT', 'ABOVE', 'BELOW'], (never None)) - Direction to check.
+            
+        **Returns:** fd_types.Assembly          
+        """        
+        
         if self.obj_bp.parent:
             wall = Wall(self.obj_bp.parent)
         list_obj_bp = wall.get_wall_groups()
@@ -635,7 +661,14 @@ class Assembly():
         """ 
         This gets the next LEFT or RIGHT wall that this product is connected to. 
         This is used for placing product on corner cabinets that are in corners.
+        
+        **Parameters:**
+                           
+        * **placement** (Enum in ['LEFT', 'RIGHT'], (never None)) - Direction to check for next wall.
+            
+        **Returns:** fd_types.Wall         
         """
+        
         if self.obj_bp.parent:
             wall = Wall(self.obj_bp.parent)
             
@@ -1338,30 +1371,39 @@ class Part(Assembly):
                 child.cabinetlib.cutpart_name = cutpart_name
 
     def solid_stock(self,solid_stock_name):
-        """ Returns:None - assigns the every mesh solid stock 
-                           to the solid_stock_name
-                           
-            solid_stock_name:string - solid stock name to assign to obj
-        """
+        """ 
+        Assigns the every mesh solid stock to the solid_stock_name.
+        
+        **Parameters:**
+        
+        * **solid_stock_name** (string, (never None)) - Solid stock name to assign to obj.
+        
+        **Returns:** None
+        """        
+
         for child in self.obj_bp.children:
             if child.type == 'MESH' and child.cabinetlib.type_mesh == 'SOLIDSTOCK':
                 child.mv.solid_stock = solid_stock_name
 
     def edgebanding(self,edgebanding_name,w1=False,l1=False,w2=False,l2=False):
-        """ Returns:None - assigns every mesh cut part 
-                           to the edgebanding_name
-                           
-            edgebanding_name:string - name of the edgepart pointer 
-                                      to assign
-                                      
-            w1:bool - determines if to edgeband width 1 of the part
-            
-            w2:bool - determines if to edgeband width 2 of the part
-            
-            l1:bool - determines if to edgeband length 1 of the part
-            
-            l2:bool - determines if to edgeband length 2 of the part
-        """
+        """ 
+        Assigns every mesh cut part to the edgebanding_name.
+        
+        **Parameters:**
+        
+        * **edgebanding_name** (string, (never None)) - Name of the edgepart pointer to assign.
+        
+        * **w1** (bool, (optional, default=False)) - Determines if to edgeband width 1 of the part.
+        
+        * **w2** (bool, (optional, default=False)) - Determines if to edgeband width 2 of the part.
+        
+        * **l1** (bool, (optional, default=False)) - Determines if to edgeband length 1 of the part.
+        
+        * **l2** (bool, (optional, default=False)) - Determines if to edgeband length 2 of the part.
+        
+        **Returns:** None
+        """         
+
         for child in self.obj_bp.children:
             if child.type == 'MESH' and child.cabinetlib.type_mesh == 'EDGEBANDING':
                 child.cabinetlib.edgepart_name = edgebanding_name
