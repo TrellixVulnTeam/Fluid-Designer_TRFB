@@ -435,6 +435,9 @@ class Assembly():
                 number_of_tabs += 1
         return number_of_tabs
 
+    def get_prompt_tabs(self):
+        return self.obj_bp.mv.PromptPage.COL_MainTab
+
     def get_prompt(self,prompt_name):
         if prompt_name in self.obj_bp.mv.PromptPage.COL_Prompt:
             return self.obj_bp.mv.PromptPage.COL_Prompt[prompt_name]
