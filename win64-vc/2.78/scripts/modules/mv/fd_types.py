@@ -13,6 +13,11 @@ import xml.etree.ElementTree as ET
 
 class Assembly():
     """
+    Assemblies are collections of objects that work together to create parametric assets. 
+    Assemblies can have any number of mesh objects, curves, and empties, but there is a specific structure that is required for Assemblies. 
+    Assemblies all have a base point which is typically a mesh object that is made up of a single vertex. Every object in an assembly is parented to this object. 
+    The three other objects that are required are empties that control the X, Y, and Z dimension of the assembly.
+
     ##package_name
     The python package the assembly is stored in. \n
     - Type: String
@@ -1303,6 +1308,10 @@ class Assembly():
         self.set_prompts(self.prompts)
 
 class Part(Assembly):
+    """
+    Part Assembly.
+    """
+    
     
     def assign_material(self,slot_name,material_path,material_name):
         """
@@ -1471,6 +1480,9 @@ class Part(Assembly):
             print("Error: '" + token.name + "' not found while setting expression '" + expression + "'")
 
 class Wall(Assembly):
+    """
+    Wall Assembly.
+    """
     
     def __init__(self,obj_bp=None):
         if obj_bp:
