@@ -70,18 +70,20 @@ class OPS_create_api_doc(bpy.types.Operator):
             fw(self.esc_uscores(getdoc(cls[1])) + "\n\n")
          
         for func in getmembers(cls[1], predicate=isfunction):
-            args = getargspec(func[1])[0]
-            args_str = ', '.join(item for item in args if item != 'self')
-             
-            fw("##{}{}{}{}\n\n".format(self.esc_uscores(func[0]),
-                                       "(",
-                                       self.esc_uscores(args_str),
-                                       ")"))
-             
-            if getdoc(func[1]):
-                fw(self.esc_uscores(getdoc(func[1])) + "\n")
-            else:
-                fw("Undocumented.\n\n")
+            
+            if cls[0] in func[1].__qualname__:
+                args = getargspec(func[1])[0]
+                args_str = ', '.join(item for item in args if item != 'self')
+                 
+                fw("##{}{}{}{}\n\n".format(self.esc_uscores(func[0]),
+                                           "(",
+                                           self.esc_uscores(args_str),
+                                           ")"))
+                 
+                if getdoc(func[1]):
+                    fw(self.esc_uscores(getdoc(func[1])) + "\n")
+                else:
+                    fw("Undocumented.\n\n")
             
         file.close()
         
