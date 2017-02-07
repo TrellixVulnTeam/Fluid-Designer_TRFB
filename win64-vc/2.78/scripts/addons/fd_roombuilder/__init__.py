@@ -461,6 +461,8 @@ class OPERATOR_Add_Obstacle(Operator):
         for obj in context.scene.objects:
             if obj.mv.product_type == 'Obstacle':
                 continue
+            if obj.mv.type == 'CAGE':
+                continue            
             if obj.parent:
                 if obj.parent.name == self.wall.obj_bp.name:
                     pass
