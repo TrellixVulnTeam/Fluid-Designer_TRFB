@@ -1956,7 +1956,7 @@ def render_opengl(self, context):
     img = get_render_image(ren_path)
     
     if img is None:
-        self.report({'ERROR'}, "Invalid render path")
+        self.report({'ERROR'}, "Invalid render path:" + ren_path)
         return False
 
     tile_x = 240
