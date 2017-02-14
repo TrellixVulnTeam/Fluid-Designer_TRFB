@@ -77,7 +77,7 @@ class OPS_create_api_doc(bpy.types.Operator):
                  
                 fw("##{}{}{}{}\n\n".format(self.esc_uscores(func[0]),
                                            "(",
-                                           self.esc_uscores(args_str),
+                                           self.esc_uscores(args_str) if args_str else " ",
                                            ")"))
                  
                 if getdoc(func[1]):
