@@ -579,7 +579,7 @@ def get_product_class(context,library_name,category_name,product_name):
     
     for modname, modobj in inspect.getmembers(pkg):
         for name, obj in inspect.getmembers(modobj):
-            if "PRODUCT_" in name:
+            if "PRODUCT_" in name and inspect.isclass(obj):
                 product = obj()
                 if product.assembly_name == "":
                     product.assembly_name = get_product_class_name(name)
@@ -597,7 +597,7 @@ def get_insert_class(context,library_name,category_name,insert_name):
     
     for modname, modobj in inspect.getmembers(pkg):
         for name, obj in inspect.getmembers(modobj):
-            if "INSERT_" in name:
+            if "INSERT_" in name and inspect.isclass(obj):
                 insert = obj()
                 if insert.library_name == library_name and insert.category_name == category_name and insert.assembly_name == insert_name:
                     insert.package_name = lib.package_name
