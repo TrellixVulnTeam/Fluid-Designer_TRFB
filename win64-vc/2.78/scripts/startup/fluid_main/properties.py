@@ -156,7 +156,8 @@ def assign_default_libraries(self,context):
     if library_tabs == 'PRODUCT':
         for lib in context.window_manager.cabinetlib.lib_products:
             if os.path.exists(lib.lib_path):
-                lib = context.window_manager.cabinetlib.lib_products[0]
+                # This was causing errors if the library path wasn't created yet
+#                 lib = context.window_manager.cabinetlib.lib_products[0]
                 bpy.ops.fd_general.change_library(library_name=lib.name)
                 return
     if library_tabs == 'INSERT':
@@ -455,6 +456,7 @@ class mvPrompt(bpy.types.PropertyGroup):
             for index, item in enumerate(self.COL_EnumItem):
                 if item.name == value:
                     self.EnumIndex = index
+                    break
 
         if self.Type == 'CHECKBOX':
             self.CheckBoxValue = value
