@@ -244,6 +244,8 @@ def assign_materials_from_pointers(obj):
         material = get_material((slot.library_name,slot.category_name),slot.item_name)
         if material:
             obj.material_slots[index].material = material
+        else:
+            print("MATERIAL NOT FOUND",slot.library_name,slot.category_name,slot.item_name,obj.mv.name_object)
 
     #MAKE SURE OBJECT IS TEXTURED
     if obj.mv.type == 'CAGE':
@@ -486,6 +488,12 @@ def get_library_dir(lib_type = ""):
 def get_material(folders,material_name):
     if material_name in bpy.data.materials:
         return bpy.data.materials[material_name]
+    
+    #Make sure no folders are blank
+    for folder in folders:
+        if folder == "":
+            return None
+    
     search_directory = get_library_dir("materials")
     for folder in folders:
         search_directory = os.path.join(search_directory,folder)
