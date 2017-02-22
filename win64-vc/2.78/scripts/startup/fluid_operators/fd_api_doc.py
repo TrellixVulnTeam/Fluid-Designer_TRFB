@@ -184,16 +184,19 @@ class OPS_create_content_overview_doc(bpy.types.Operator):
             
             p_style = ParagraphStyle("item style", wordWrap='CJK')
             
-            img_path = os.path.join(os.path.dirname(__file__),"1 Door 1 Drawer Base.png")
-            item_img = Image(img_path)            
+            #img_path = os.path.join(os.path.dirname(__file__),"1 Door 1 Drawer Base.png")
+            img_path = "C:\\users\\montes\\desktop\\1 Door 1 Drawer Base.png"
+            item_img = Image(img_path, inch, inch)            
             
             for i in lib.items:
                 if len(row) == 4:
                     data.append(row)
                     row = []
                 
-                row.append(item_img)    
-                row.append(Paragraph(i.name, p_style))
+                i_tbl = Table([[item_img], [Paragraph(i.name, p_style)]])
+                
+                row.append(i_tbl)    
+                #row.append(Paragraph(i.name, p_style))
                 
             #print(data)
             
