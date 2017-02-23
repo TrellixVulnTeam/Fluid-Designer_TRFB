@@ -140,8 +140,6 @@ class OPS_create_content_overview_doc(bpy.types.Operator):
         pass    
     
     def write_pdf(self, context):
-        #import reportlab
-        
         from reportlab.pdfgen import canvas
         from reportlab.lib.pagesizes import legal,inch,cm
         from reportlab.platypus import Image
@@ -173,157 +171,36 @@ class OPS_create_content_overview_doc(bpy.types.Operator):
         wm = context.window_manager.cabinetlib
         
         for lib in wm.lib_products:
-            p_lib_name_style = ParagraphStyle("Library name paragraph style", fontSize=14)
-            p_lib_name = Paragraph(lib.name, p_lib_name_style)
-            
-            lib_data = [[p_lib_name]]
-            lib_data.append(["Description \nDescription \nDescription"])
-            
-            data = []
-            row = []
-            
-            p_style = ParagraphStyle("item style", wordWrap='CJK')
-            
-            #img_path = os.path.join(os.path.dirname(__file__),"1 Door 1 Drawer Base.png")
-            img_path = "C:\\users\\montes\\desktop\\1 Door 1 Drawer Base.png"
-            item_img = Image(img_path, inch, inch)            
-            
+            lib_name = Paragraph(lib.name, ParagraphStyle("Library name paragraph style", fontSize=14))
+            lib_data = [[lib_name]]
+            mod_doc = getdoc(importlib.import_module(lib.package_name + "." + lib.module_name))
+            lib_data.append([mod_doc])
+            lib_hdr_tbl = Table(lib_data, colWidths = 500, rowHeights = None, repeatRows = 1)
+            lib_hdr_tbl.setStyle(hdr_style)
+            self.elements.append(lib_hdr_tbl)      
+             
+            item_tbl_data = []
+            item_tbl_row = []
+             
             for i in lib.items:
-                if len(row) == 4:
-                    data.append(row)
-                    row = []
+                print(i.name, i.has_thumbnail)
                 
-                i_tbl = Table([[item_img], [Paragraph(i.name, p_style)]])
-                
-                row.append(i_tbl)    
-                #row.append(Paragraph(i.name, p_style))
-                
-            #print(data)
+                lib_path  = lib.lib_path
+                img_path = os.path.join(lib_path, i.category_name, i.name + ".png")
+                #img_path = 'C:\\users\\montes\\desktop\\1 Door 1 Drawer Base.png'
+                 
+                #print(img_path)
+                item_img = Image(img_path, inch, inch)
+                  
+                if len(item_tbl_row) == 4:
+                    item_tbl_data.append(item_tbl_row)
+                    item_tbl_row = []
+                  
+                i_tbl = Table([[item_img], [Paragraph(i.name, ParagraphStyle("item name style", wordWrap='CJK'))]])
+                item_tbl_row.append(i_tbl)    
             
-            item_table = Table(data, colWidths=125)
-            
-            #lib_data.append(item_table)
-            
-#             lib_items = []
-#             row = []
-#             
-#             table = [[0 for i in range(4)] 
-#                      for j in range(int(math.ceil(len(lib.items) / 4)))]
-#             
-#             print(table)
-#             
-#             for idx, item in enumerate(lib.items):
-#                 print("[" + str(int(math.floor(idx / 4))) + "]" + "[" + str(int((idx / 4 - math.floor(idx / 4)) * 4)) + "]")
-#                 
-#                 table[int(math.floor(idx / 4))][int((idx / 4 - math.floor(idx / 4)) * 4)] = item.name
-#                 
-#             print(table)    
-#                 row.append(item.name)
-#                 print(row)
-#                 if idx + 1 % 4 == 0:
-#                     print("HT")
-#                     row = []
-#                     lib_items.append(row)
-                
-            
-            #t_items = Table(table)
-            
-            #lib_data.append(table)
-            
-            lib_hdr = Table(lib_data, colWidths = 500, rowHeights = None, repeatRows = 1)
-            lib_hdr.setStyle(hdr_style)
-            
-            
-            self.elements.append(lib_hdr)
-            self.elements.append(item_table)
-            
-        
-#         date_tbl_style = TableStyle([('TEXTCOLOR',(0,0),(-1,-1),colors.black),
-#                                      ('BOX',(0,0),(-1,-1),1,colors.black),
-#                                      ('GRID',(0,0),(-1,-1),1,colors.black),
-#                                      ('FONTSIZE',(0,0),(-1,-1),8),
-#                                      ('VALIGN',(0,0),(-1,-1),'TOP'),
-#                                      ('ALIGN',(0,0),(-1,-1),'CENTER'),
-#                                      ('LINEBELOW',(0,0),(-1,0),2,colors.black),
-#                                      ('BACKGROUND',(0,1),(-1,-1),colors.white)])        
-#         
-#         dlr_tbl_data = [["s"]]
-#         dlr_tbl_data.append(["s"])
-#         dlr_tbl_data.append(["s"])
-#         dlr_tbl_data.append(["s"])
-#         dlr_tbl_data.append(["s"])
-#         dlr_tbl = Table(dlr_tbl_data, colWidths=250, rowHeights=13, repeatRows=1)        
-#          
-#         date_tbl_data = [["Date", "s" + " #"],["s", "17318"]]
-#         date_tbl = Table(date_tbl_data, colWidths=100, repeatRows=1)
-#         date_tbl.hAlign = 'CENTER'
-#         date_tbl.setStyle(date_tbl_style)
-#          
-#         date_tbl_ctnr_data = [[Paragraph("s", styles["Title"])]]
-#         date_tbl_ctnr_data.append([date_tbl])
-#         date_tbl_cntr = Table(date_tbl_ctnr_data, colWidths=250, repeatRows=1) 
-#         ctnr_tbl_style = TableStyle([('TEXTCOLOR',(0,0),(-1,-1),colors.black),
-#                                      ('FONTSIZE',(0,0),(-1,-1),8),
-#                                      ('VALIGN',(0,0),(-1,-1),'TOP'),
-#                                      ('ALIGN',(0,0),(-1,-1),'CENTER'),
-#                                      ('BACKGROUND',(0,1),(-1,-1),colors.white)]) 
-#                 
-#         date_tbl_cntr.setStyle(ctnr_tbl_style)       
-#         
-#         #vendor_icon_path = os.path.join(os.path.dirname(__file__),"jk_logo.jpg")
-#         #vendor_icon = Image(vendor_icon_path, width=104, height=60)
-#         vendor_data = [["Vendor", ""]]
-#         vendor_data.append(["J&K Cabinetry", "s"])
-#         vendor_data.append(["2250 LBJ FWY Suite 100", ""])
-#         vendor_data.append(["Dallas, TX, 75234", ""])
-#         vendor_data.append(["(972)-247-6414", ""])
-#         vendor_data.append(["info@jandkcabinetry.com", ""])
-#         vendor_data.append([""])
-#         
-#         vendor_tbl = Table(vendor_data, colWidths=(125), rowHeights=13, repeatRows=1)    
-#         vendor_tbl.hAlign = 'CENTER'
-#         vendor_tbl_style = TableStyle([('TEXTCOLOR',(0,0),(-1,-1),colors.black),
-#                                        ('BOX',(0,0),(-1,-1),1,colors.black),
-#                                        ('FONTSIZE',(0,0),(-1,-1),8),
-#                                        ('VALIGN',(0,0),(-1,-1),'TOP'),
-#                                        ('ALIGN',(0,0),(-1,-1),'LEFT'),
-#                                        ('LINEBELOW',(0,0),(-1,0),2,colors.black),
-#                                        ('BACKGROUND',(0,1),(-1,-1),colors.white)])
-#         
-#         vendor_tbl.setStyle(vendor_tbl_style)   
-#         
-#         cust_data = [["Ship To"]]
-#         cust_data.append(["s"])
-#         cust_data.append(["s"])
-#         cust_data.append([str("s") + ", " + str("s") + ", " + str("s")])
-#         cust_data.append(["s"])
-#         cust_data.append(["s"])
-#         cust_data.append([""])
-#         
-#         cust_tbl = Table(cust_data, colWidths=(250), rowHeights=13, repeatRows=1)    
-#         cust_tbl.hAlign = 'CENTER'
-#         cust_tbl_style = TableStyle([('TEXTCOLOR',(0,0),(-1,-1),colors.black),
-#                                      ('BOX',(0,0),(-1,-1),1,colors.black),
-#                                      ('FONTSIZE',(0,0),(-1,-1),8),
-#                                      ('VALIGN',(0,0),(-1,-1),'TOP'),
-#                                      ('ALIGN',(0,0),(-1,-1),'LEFT'),
-#                                      ('LINEBELOW',(0,0),(-1,0),2,colors.black),
-#                                      ('BACKGROUND',(0,1),(-1,-1),colors.white)])
-#         
-#         cust_tbl.setStyle(cust_tbl_style)             
-#         
-#         ctnr_tbl_data = [[dlr_tbl, date_tbl_cntr], [vendor_tbl, cust_tbl]]
-#         ctnr_table = Table(ctnr_tbl_data, colWidths=270, repeatRows=1)
-#         ctnr_table.hAlign = 'CENTER'
-#         ctnr_tbl_style = TableStyle([('TEXTCOLOR',(0,0),(-1,-1),colors.black),
-#                                      ('FONTSIZE',(0,0),(-1,-1),8),
-#                                      ('VALIGN',(0,0),(-1,-1),'TOP'),
-#                                      ('ALIGN',(0,0),(-1,-1),'LEFT'),
-#                                      ('BACKGROUND',(0,1),(-1,-1),colors.white)])
-#         
-#         ctnr_table.setStyle(ctnr_tbl_style)    
-#         
-#         self.elements.append(ctnr_table)        
+            item_tbl = Table(item_tbl_data, colWidths=125)
+            self.elements.append(item_tbl)
         
         doc.build(self.elements)
     
@@ -369,9 +246,13 @@ class OPS_create_content_overview_doc(bpy.types.Operator):
         bpy.ops.fd_general.load_library_modules()
         wm = context.window_manager.cabinetlib
         
-        self.write_pdf(context)
+        self.write_pdf(context)        
         
-#         for library in wm.lib_products:
+#         for library in wm.lib_products:           
+#     
+#             docs = getdoc(importlib.import_module(library.package_name + "." + library.module_name))
+#             print(docs)
+#             
 #             print("\n")
 #             print("lib.items", library.items)
 #             print("lib.lib_path", library.lib_path)
@@ -379,7 +260,7 @@ class OPS_create_content_overview_doc(bpy.types.Operator):
 #             print("lib.name", library.name)
 #             print("lib.package_name", library.package_name)
 #             print("\n")
-#             
+#              
 #             for i in library.items:
 #                 print("item.category_name", i.category_name)
 #                 print("item.class_name", i.class_name)
@@ -388,7 +269,7 @@ class OPS_create_content_overview_doc(bpy.types.Operator):
 #                 print("item.library_name", i.library_name)
 #                 print("item.name", i.name)
 #                 print("\n")
-#                    
+#                     
 #             print("\n")
         
         return {'FINISHED'}
