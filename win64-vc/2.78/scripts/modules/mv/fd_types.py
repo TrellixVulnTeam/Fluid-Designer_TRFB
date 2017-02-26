@@ -164,18 +164,22 @@ class Assembly():
         This must be called first when creating an assembly from a script.
         """
         bpy.ops.object.select_all(action='DESELECT')
-        verts = [(0, 0, 0)]
-        mesh = bpy.data.meshes.new("Base Point")
-        bm = bmesh.new()
-        for v_co in verts:
-            bm.verts.new(v_co)
-        bm.to_mesh(mesh)
-        mesh.update()
-        obj_base = object_utils.object_data_add(bpy.context,mesh)
-        obj_parent = obj_base.object
+        obj_parent = utils.create_single_vertex("New Assembly")
         obj_parent.location = (0,0,0)
         obj_parent.mv.type = 'BPASSEMBLY'
-        obj_parent.mv.name_object = 'New Assembly'
+        
+#         verts = [(0, 0, 0)]
+#         mesh = bpy.data.meshes.new("Base Point")
+#         bm = bmesh.new()
+#         for v_co in verts:
+#             bm.verts.new(v_co)
+#         bm.to_mesh(mesh)
+#         mesh.update()
+#         obj_base = object_utils.object_data_add(bpy.context,mesh)
+#         obj_parent = obj_base.object
+#         obj_parent.location = (0,0,0)
+#         obj_parent.mv.type = 'BPASSEMBLY'
+#         obj_parent.mv.name_object = 'New Assembly'
 
         bpy.ops.object.empty_add()
         obj_x = bpy.context.active_object

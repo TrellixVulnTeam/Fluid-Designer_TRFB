@@ -55,6 +55,12 @@ def create_floor_mesh(name,size):
 
     return create_object_from_verts_and_faces(verts,faces,name)
 
+def create_single_vertex(name):
+    
+    verts = [(0, 0, 0)]
+    
+    return create_object_from_verts_and_faces(verts,[],name)
+
 def create_object_from_verts_and_faces(verts,faces,name):
     """ Creates an object from Verties and Faces
         arg1: Verts List of tuples [(float,float,float)]
