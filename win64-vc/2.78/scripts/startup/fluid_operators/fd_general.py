@@ -1341,6 +1341,8 @@ class OPS_load_library_modules(Operator):
     bl_label = "Load Library Modules"
     bl_description = "This will load the available product library modules"
     bl_options = {'UNDO'}
+    
+    external_lib_only = bpy.props.BoolProperty(name="External Libraries Only", default=False)
 
     def get_library(self,libraries,library_name,module_name,package_name,path):
         if library_name in libraries:
@@ -1363,7 +1365,7 @@ class OPS_load_library_modules(Operator):
         for library in wm.lib_inserts:
             wm.lib_inserts.remove(0)        
         
-        packages = utils.get_library_packages(context)
+        packages = utils.get_library_packages(context, only_external=True if self.external_lib_only else False)
         
         for package in packages:
             pkg = import_module(package)
