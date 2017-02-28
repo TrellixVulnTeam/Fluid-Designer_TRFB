@@ -9,6 +9,15 @@ from inspect import *
 import mv
 import os
 import math
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import legal,inch,cm
+from reportlab.platypus import Image
+from reportlab.platypus import Paragraph,Table,TableStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Frame, Spacer, PageTemplate, PageBreak
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A3, A4, landscape, portrait
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY
 
 class OPS_create_api_doc(bpy.types.Operator):
     bl_idname = "fd_api_doc.create_api_doc"
@@ -134,24 +143,64 @@ class OPS_create_content_overview_doc(bpy.types.Operator):
     bl_idname = "fd_api_doc.create_content_overview"
     bl_label = "Create Fluid Content Overview Documentation"
     
+    write_path = bpy.props.StringProperty(name="Write Path", default="")
     elements = []
+    package = None
+    
     
     def write_html(self):
         pass    
     
-    def write_pdf(self, context):
-        from reportlab.pdfgen import canvas
-        from reportlab.lib.pagesizes import legal,inch,cm
-        from reportlab.platypus import Image
-        from reportlab.platypus import Paragraph,Table,TableStyle
-        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Frame, Spacer, PageTemplate, PageBreak
-        from reportlab.lib import colors
-        from reportlab.lib.pagesizes import A3, A4, landscape, portrait
-        from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-        from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY
+    def create_header(self, lib):
+        hdr_style = TableStyle([('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                                ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
+                                ('TOPPADDING', (0, 0), (-1, -1), 15),
+                                ('FONTSIZE', (0, 0), (-1, -1), 8),
+                                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                                ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
+                                ('LINEBELOW', (0, 0), (-1, -1), 2, colors.black),
+                                ('BACKGROUND', (0, 1), (-1, -1), colors.white)])        
         
-        file_path = "C:\\Users\\montes\\desktop\\Fluid Content Docs"
-        file_name = "fluid_content_libraries.pdf"
+        lib_name = Paragraph(lib.name, ParagraphStyle("Library name paragraph style", fontSize=18))
+        lib_data = [[lib_name]]
+        mod_doc = getdoc(importlib.import_module(lib.package_name + "." + lib.module_name))
+        lib_data.append([mod_doc])
+        lib_hdr_tbl = Table(lib_data, colWidths = 500, rowHeights = None, repeatRows = 1)
+        lib_hdr_tbl.setStyle(hdr_style)
+        self.elements.append(lib_hdr_tbl)
+    
+    def create_item_table(self, lib):
+        item_tbl_data = []
+        item_tbl_row = []
+           
+        for i in lib.items:
+            if i.has_thumbnail:
+                lib_path = lib.lib_path
+                img_path = os.path.join(lib_path, i.category_name, i.name + ".png")
+                item_img = Image(img_path, inch, inch)
+            else:
+                item_img = None
+                    
+            if len(item_tbl_row) == 4:
+                item_tbl_data.append(item_tbl_row)
+                item_tbl_row = []
+                
+            i_tbl = Table([[item_img if item_img else ""], [Paragraph(i.name, ParagraphStyle("item name style", wordWrap='CJK'))]])
+            item_tbl_row.append(i_tbl)    
+          
+        if len(item_tbl_data) > 0:
+          
+            item_tbl = Table(item_tbl_data, colWidths=125)
+            self.elements.append(item_tbl)
+            self.elements.append(Spacer(1, inch * 0.5))
+    
+    def write_pdf(self, context):
+        print("self.write_path: ", self.write_path)
+        file_path = os.path.join(self.write_path if self.write_path != "" else self.package.lib_path, "doc")
+        file_name = self.package.name + ".pdf"
+        
+        if not os.path.exists(file_path):
+            os.mkdir(file_path)
         
         doc = SimpleDocTemplate(os.path.join(file_path, file_name), 
                                 pagesize = A4,
@@ -159,118 +208,31 @@ class OPS_create_content_overview_doc(bpy.types.Operator):
                                 rightMargin = 0.25 * inch,
                                 topMargin = 0.25 * inch,
                                 bottomMargin = 0.25 * inch)
-        
-        hdr_style = TableStyle([('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-                                ('BOTTOMPADDING', (0, 0), (0, 0), 10),
-                                ('FONTSIZE', (0, 0), (-1, -1), 8),
-                                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                                ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
-                                ('LINEBELOW', (0, 0), (0, 0), 2, colors.black),
-                                ('BACKGROUND', (0, 1), (-1, -1), colors.white)])
-        
+         
         wm = context.window_manager.cabinetlib
-        
+         
         for lib in wm.lib_products:
-            lib_name = Paragraph(lib.name, ParagraphStyle("Library name paragraph style", fontSize=14))
-            lib_data = [[lib_name]]
-            mod_doc = getdoc(importlib.import_module(lib.package_name + "." + lib.module_name))
-            lib_data.append([mod_doc])
-            lib_hdr_tbl = Table(lib_data, colWidths = 500, rowHeights = None, repeatRows = 1)
-            lib_hdr_tbl.setStyle(hdr_style)
-            self.elements.append(lib_hdr_tbl)      
-             
-            item_tbl_data = []
-            item_tbl_row = []
-             
-            for i in lib.items:
-                print(i.name, i.has_thumbnail)
-                
-                lib_path  = lib.lib_path
-                img_path = os.path.join(lib_path, i.category_name, i.name + ".png")
-                #img_path = 'C:\\users\\montes\\desktop\\1 Door 1 Drawer Base.png'
-                 
-                #print(img_path)
-                item_img = Image(img_path, inch, inch)
-                  
-                if len(item_tbl_row) == 4:
-                    item_tbl_data.append(item_tbl_row)
-                    item_tbl_row = []
-                  
-                i_tbl = Table([[item_img], [Paragraph(i.name, ParagraphStyle("item name style", wordWrap='CJK'))]])
-                item_tbl_row.append(i_tbl)    
+            self.create_header(lib)
+            self.create_item_table(lib)
             
-            item_tbl = Table(item_tbl_data, colWidths=125)
-            self.elements.append(item_tbl)
-        
+        for lib in wm.lib_inserts:
+            self.create_header(lib)
+            self.create_item_table(lib)
+         
         doc.build(self.elements)
     
     def execute(self, context):
-#         from importlib import import_module
-#         wm = context.window_manager.cabinetlib
-# 
-#         for library in wm.lib_products:
-#             wm.lib_products.remove(0)
-#          
-#         for library in wm.lib_inserts:
-#             wm.lib_inserts.remove(0)
-#         
-#         packages = mv.utils.get_library_packages(context)
-#         
-#         for package in packages:
-#             pkg = import_module(package)
-#             for mod_name, mod in getmembers(pkg):
-#                 for name, obj in getmembers(mod):
-#                     if isclass(obj) and "PRODUCT_" in name:
-#                         product = obj()
-#                         if product.assembly_name == "":
-#                             product.assembly_name = name.replace("PRODUCT_","").replace("_"," ")
-#                         path = os.path.join(os.path.dirname(pkg.__file__),"products",product.library_name)
-#                         lib = self.get_library(wm.lib_products,product.library_name,mod_name,package,path)
-#                         item = lib.items.add()
-#                         item.name = product.assembly_name
-#                         item.class_name = name
-#                         item.library_name = product.library_name
-#                         item.category_name = product.category_name
-#                         item.lib_path = os.path.join(os.path.dirname(pkg.__file__),"products",product.library_name)
-#                         thumbnail_path = os.path.join(item.lib_path,item.category_name,item.name.strip() + ".png")
-#                         if os.path.exists(thumbnail_path):
-#                             item.has_thumbnail = True
-#                         else:
-#                             item.has_thumbnail = False
-#                         file_path = os.path.join(item.lib_path,item.category_name,item.name.strip() + ".blend")
-#                         if os.path.exists(file_path):
-#                             item.has_file = True
-#                         else:
-#                             item.has_file = False
+        fd_wm = context.window_manager.mv
         
-        bpy.ops.fd_general.load_library_modules()
-        wm = context.window_manager.cabinetlib
-        
-        self.write_pdf(context)        
-        
-#         for library in wm.lib_products:           
-#     
-#             docs = getdoc(importlib.import_module(library.package_name + "." + library.module_name))
-#             print(docs)
-#             
-#             print("\n")
-#             print("lib.items", library.items)
-#             print("lib.lib_path", library.lib_path)
-#             print("lib.module_name", library.module_name)
-#             print("lib.name", library.name)
-#             print("lib.package_name", library.package_name)
-#             print("\n")
-#              
-#             for i in library.items:
-#                 print("item.category_name", i.category_name)
-#                 print("item.class_name", i.class_name)
-#                 print("item.category_name", i.category_name)
-#                 print("item.has_thumbnail", i.has_thumbnail)
-#                 print("item.library_name", i.library_name)
-#                 print("item.name", i.name)
-#                 print("\n")
-#                     
-#             print("\n")
+        for package in fd_wm.library_packages:
+            package.enabled = False
+            
+        for package in fd_wm.library_packages:
+            self.package = package
+            package.enabled = True
+            bpy.ops.fd_general.load_library_modules(external_lib_only=True)
+            self.write_pdf(context)
+            package.enabled = False
         
         return {'FINISHED'}
     
