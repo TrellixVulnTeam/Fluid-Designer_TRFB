@@ -8,6 +8,16 @@ import bpy
 from inspect import *
 import mv
 import os
+import math
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import legal,inch,cm
+from reportlab.platypus import Image
+from reportlab.platypus import Paragraph,Table,TableStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Frame, Spacer, PageTemplate, PageBreak
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A3, A4, landscape, portrait
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY
 
 class OPS_create_api_doc(bpy.types.Operator):
     bl_idname = "fd_api_doc.create_api_doc"
@@ -126,10 +136,110 @@ class OPS_create_api_doc(bpy.types.Operator):
             else:
                 self.write_mod_doc(mod)             
         
-        return {'FINISHED'} 
+        return {'FINISHED'}
+    
+    
+class OPS_create_content_overview_doc(bpy.types.Operator):
+    bl_idname = "fd_api_doc.create_content_overview"
+    bl_label = "Create Fluid Content Overview Documentation"
+    
+    write_path = bpy.props.StringProperty(name="Write Path", default="")
+    elements = []
+    package = None
+    
+    
+    def write_html(self):
+        pass    
+    
+    def create_header(self, lib):
+        hdr_style = TableStyle([('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                                ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
+                                ('TOPPADDING', (0, 0), (-1, -1), 15),
+                                ('FONTSIZE', (0, 0), (-1, -1), 8),
+                                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                                ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
+                                ('LINEBELOW', (0, 0), (-1, -1), 2, colors.black),
+                                ('BACKGROUND', (0, 1), (-1, -1), colors.white)])        
+        
+        lib_name = Paragraph(lib.name, ParagraphStyle("Library name paragraph style", fontSize=18))
+        lib_data = [[lib_name]]
+        mod_doc = getdoc(importlib.import_module(lib.package_name + "." + lib.module_name))
+        lib_data.append([mod_doc])
+        lib_hdr_tbl = Table(lib_data, colWidths = 500, rowHeights = None, repeatRows = 1)
+        lib_hdr_tbl.setStyle(hdr_style)
+        self.elements.append(lib_hdr_tbl)
+    
+    def create_item_table(self, lib):
+        item_tbl_data = []
+        item_tbl_row = []
+           
+        for i in lib.items:
+            if i.has_thumbnail:
+                lib_path = lib.lib_path
+                img_path = os.path.join(lib_path, i.category_name, i.name + ".png")
+                item_img = Image(img_path, inch, inch)
+            else:
+                item_img = None
+                    
+            if len(item_tbl_row) == 4:
+                item_tbl_data.append(item_tbl_row)
+                item_tbl_row = []
+                
+            i_tbl = Table([[item_img if item_img else ""], [Paragraph(i.name, ParagraphStyle("item name style", wordWrap='CJK'))]])
+            item_tbl_row.append(i_tbl)    
+          
+        if len(item_tbl_data) > 0:
+          
+            item_tbl = Table(item_tbl_data, colWidths=125)
+            self.elements.append(item_tbl)
+            self.elements.append(Spacer(1, inch * 0.5))
+    
+    def write_pdf(self, context):
+        print("self.write_path: ", self.write_path)
+        file_path = os.path.join(self.write_path if self.write_path != "" else self.package.lib_path, "doc")
+        file_name = self.package.name + ".pdf"
+        
+        if not os.path.exists(file_path):
+            os.mkdir(file_path)
+        
+        doc = SimpleDocTemplate(os.path.join(file_path, file_name), 
+                                pagesize = A4,
+                                leftMargin = 0.25 * inch,
+                                rightMargin = 0.25 * inch,
+                                topMargin = 0.25 * inch,
+                                bottomMargin = 0.25 * inch)
+         
+        wm = context.window_manager.cabinetlib
+         
+        for lib in wm.lib_products:
+            self.create_header(lib)
+            self.create_item_table(lib)
+            
+        for lib in wm.lib_inserts:
+            self.create_header(lib)
+            self.create_item_table(lib)
+         
+        doc.build(self.elements)
+    
+    def execute(self, context):
+        fd_wm = context.window_manager.mv
+        
+        for package in fd_wm.library_packages:
+            package.enabled = False
+            
+        for package in fd_wm.library_packages:
+            self.package = package
+            package.enabled = True
+            bpy.ops.fd_general.load_library_modules(external_lib_only=True)
+            self.write_pdf(context)
+            package.enabled = False
+        
+        return {'FINISHED'}
+    
     
 classes = [
            OPS_create_api_doc,
+           OPS_create_content_overview_doc,
            ]
 
 def register():
