@@ -41,3 +41,6 @@ def decimal_inch_to_millimeter(inch):
     """ Converts inch to millimeter returned as a decimal object
     """
     return Decimal(str(inch)) * Decimal(str(25.4))
+
+def draw_dollar_price(value):
+    return  "$" + str(round(value,2))
