@@ -18,6 +18,7 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A3, A4, landscape, portrait
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER, TA_JUSTIFY
+from reportlab.platypus.flowables import HRFlowable
 
 class OPS_create_api_doc(bpy.types.Operator):
     bl_idname = "fd_api_doc.create_api_doc"
@@ -143,15 +144,29 @@ class OPS_create_content_overview_doc(bpy.types.Operator):
     bl_idname = "fd_api_doc.create_content_overview"
     bl_label = "Create Fluid Content Overview Documentation"
     
+    INCLUDE_FILE_NAME = "doc_include.txt"
     write_path = bpy.props.StringProperty(name="Write Path", default="")
     elements = []
     package = None
     
     
     def write_html(self):
-        pass    
+        pass
     
-    def create_header(self, lib):
+    def read_include_file(self, path):
+        dirs = []
+        file_path = os.path.join(path, self.INCLUDE_FILE_NAME)
+        
+        if os.path.exists(file_path):
+            file = open(os.path.join(path, self.INCLUDE_FILE_NAME), "r")
+            dirs_raw = list(file)
+            
+            for dir in dirs_raw:
+                dirs.append(dir.replace("\n", ""))
+        
+        return dirs
+    
+    def create_hdr(self, name, font_size):
         hdr_style = TableStyle([('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
                                 ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
                                 ('TOPPADDING', (0, 0), (-1, -1), 15),
@@ -161,43 +176,97 @@ class OPS_create_content_overview_doc(bpy.types.Operator):
                                 ('LINEBELOW', (0, 0), (-1, -1), 2, colors.black),
                                 ('BACKGROUND', (0, 1), (-1, -1), colors.white)])        
         
-        lib_name = Paragraph(lib.name, ParagraphStyle("Library name paragraph style", fontSize=18))
-        lib_data = [[lib_name]]
-        mod_doc = getdoc(importlib.import_module(lib.package_name + "." + lib.module_name))
-        lib_data.append([mod_doc])
-        lib_hdr_tbl = Table(lib_data, colWidths = 500, rowHeights = None, repeatRows = 1)
-        lib_hdr_tbl.setStyle(hdr_style)
-        self.elements.append(lib_hdr_tbl)
-    
-    def create_item_table(self, lib):
+        name_p = Paragraph(name, ParagraphStyle("Category name style", fontSize=font_size))
+        hdr_tbl = Table([[name_p]], colWidths = 500, rowHeights = None, repeatRows = 1)
+        hdr_tbl.setStyle(hdr_style)
+        self.elements.append(hdr_tbl)
+        
+    def create_img_table(self, dir):
         item_tbl_data = []
         item_tbl_row = []
-           
-        for i in lib.items:
-            if i.has_thumbnail:
-                lib_path = lib.lib_path
-                img_path = os.path.join(lib_path, i.category_name, i.name + ".png")
-                item_img = Image(img_path, inch, inch)
-            else:
-                item_img = None
+        
+        for file in os.listdir(dir):
+            print(file)
+         
+        for i, file in enumerate(os.listdir(dir)):
+            last_item = len(os.listdir(dir)) - 1
+            if ".png" in file:
+                img = Image(os.path.join(dir, file), inch, inch)
+                img_name = file.replace(".png", "")
+                              
+                if len(item_tbl_row) == 4:
+                    item_tbl_data.append(item_tbl_row)
+                    item_tbl_row = []
+                elif i == last_item:
+                    item_tbl_data.append(item_tbl_row)
+                      
+                i_tbl = Table([[img], [Paragraph(img_name, ParagraphStyle("item name style", wordWrap='CJK'))]])
+                item_tbl_row.append(i_tbl)    
                     
-            if len(item_tbl_row) == 4:
-                item_tbl_data.append(item_tbl_row)
-                item_tbl_row = []
-                
-            i_tbl = Table([[item_img if item_img else ""], [Paragraph(i.name, ParagraphStyle("item name style", wordWrap='CJK'))]])
-            item_tbl_row.append(i_tbl)    
-          
         if len(item_tbl_data) > 0:
-          
             item_tbl = Table(item_tbl_data, colWidths=125)
             self.elements.append(item_tbl)
-            self.elements.append(Spacer(1, inch * 0.5))
+            self.elements.append(Spacer(1, inch * 0.5))            
+        
+    def search_dir(self, path):
+        thumb_dir = False
+        
+        for file in os.listdir(path):
+            if ".png" in file:
+                thumb_dir = True
+                
+        if thumb_dir:   
+            self.create_img_table(path)
+            
+        for file in os.listdir(path):
+            if os.path.isdir(os.path.join(path, file)):
+                self.create_hdr(file, font_size=14)
+                self.search_dir(os.path.join(path, file))
+                
+
+                
+
+            
+        
+        #create header for this path
+        
+        #search dir for .png
+        
+        #if png create table
+        
+        #if dir 
+        
+        
+#         for lib in libraries:
+#             for cat in os.listdir(os.path.join(path, lib)):
+#                 self.create_hdr(lib + ": " + cat, font_size=16)
+
+#                 item_tbl_data = []
+#                 item_tbl_row = []
+#                 
+#                 for i, file in enumerate(os.listdir(os.path.join(path, lib, cat))):
+#                     last_item = len(os.listdir(os.path.join(path, lib, cat))) - 1
+#                     if ".png" in file:
+#                         img = Image(os.path.join(path, lib, cat, file), inch, inch)
+#                         img_name = file.replace(".png", "")
+#                                     
+#                         if len(item_tbl_row) == 4:
+#                             item_tbl_data.append(item_tbl_row)
+#                             item_tbl_row = []
+#                         elif i == last_item:
+#                             item_tbl_data.append(item_tbl_row)
+#                             
+#                         i_tbl = Table([["img"], [Paragraph(img_name, ParagraphStyle("item name style", wordWrap='CJK'))]])
+#                         item_tbl_row.append(i_tbl)    
+#                           
+#                 if len(item_tbl_data) > 0:
+#                     item_tbl = Table(item_tbl_data, colWidths=125)
+#                     self.elements.append(item_tbl)
+#                     self.elements.append(Spacer(1, inch * 0.5))     
     
-    def write_pdf(self, context):
-        print("self.write_path: ", self.write_path)
-        file_path = os.path.join(self.write_path if self.write_path != "" else self.package.lib_path, "doc")
-        file_name = self.package.name + ".pdf"
+    def write_pdf(self, mod):
+        file_path = os.path.join(self.write_path if self.write_path != "" else mod.__path__[0], "doc")
+        file_name = mod.__package__ + ".pdf"
         
         if not os.path.exists(file_path):
             os.mkdir(file_path)
@@ -207,33 +276,42 @@ class OPS_create_content_overview_doc(bpy.types.Operator):
                                 leftMargin = 0.25 * inch,
                                 rightMargin = 0.25 * inch,
                                 topMargin = 0.25 * inch,
-                                bottomMargin = 0.25 * inch)
+                                bottomMargin = 0.25 * inch)      
          
-        wm = context.window_manager.cabinetlib
-         
-        for lib in wm.lib_products:
-            self.create_header(lib)
-            self.create_item_table(lib)
-            
-        for lib in wm.lib_inserts:
-            self.create_header(lib)
-            self.create_item_table(lib)
+        lib_name = mod.__package__.replace("_", " ") 
+        self.create_hdr(lib_name, font_size=24)
+        
+        print("\n", lib_name, "\n")
+        
+        dirs = self.read_include_file(os.path.join(mod.__path__[0], "doc"))
+        
+        if len(dirs) > 0:
+            for d in dirs:
+                path = os.path.join(mod.__path__[0], d)
+                if os.path.exists(path):
+                    self.create_hdr(d.title(), font_size=18)
+                    self.search_dir(path)
+                 
+        else:
+            products_path = os.path.join(mod.__path__[0], "products")
+            if os.path.exists(products_path):
+                self.create_hdr("Products", font_size=18)
+                self.search_dir(products_path)
+             
+            inserts_path = os.path.join(mod.__path__[0], "inserts")
+            if os.path.exists(inserts_path):
+                self.create_hdr("Inserts", font_size=18)
+                self.search_dir(inserts_path)              
          
         doc.build(self.elements)
     
     def execute(self, context):
-        fd_wm = context.window_manager.mv
+        packages = mv.utils.get_library_packages(context)
         
-        for package in fd_wm.library_packages:
-            package.enabled = False
-            
-        for package in fd_wm.library_packages:
-            self.package = package
-            package.enabled = True
-            bpy.ops.fd_general.load_library_modules(external_lib_only=True)
-            self.write_pdf(context)
-            package.enabled = False
-        
+        for p in packages:
+            mod = __import__(p)
+            self.write_pdf(mod)
+                
         return {'FINISHED'}
     
     
