@@ -184,9 +184,6 @@ class OPS_create_content_overview_doc(bpy.types.Operator):
     def create_img_table(self, dir):
         item_tbl_data = []
         item_tbl_row = []
-        
-        for file in os.listdir(dir):
-            print(file)
          
         for i, file in enumerate(os.listdir(dir)):
             last_item = len(os.listdir(dir)) - 1
