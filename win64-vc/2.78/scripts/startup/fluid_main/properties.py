@@ -938,6 +938,7 @@ class Machine_Token(PropertyGroup):
     type_token = EnumProperty(name="Mesh Type",
                               items=[('NONE',"None","None"),
                                      ('CORNERNOTCH',"CORNERNOTCH","CORNERNOTCH"),
+                                     ('CHAMFER',"CHAMFER","CHAMFER"),
                                      ('CONST',"CONST","CONST"),
                                      ('HOLES',"HOLES","HOLES"),
                                      ('SHLF',"SHLF","SHLF"),
@@ -968,7 +969,9 @@ class Machine_Token(PropertyGroup):
                                ('3',"3","3"),
                                ('4',"4","4"),
                                ('5',"5","5"),
-                               ('6',"6","6")],
+                               ('6',"6","6"),
+                               ('7',"7","7"),
+                               ('8',"8","8")],
                         description="Select the edge to assign the machine token to.",
                         default='1')
     
@@ -1116,6 +1119,17 @@ class Machine_Token(PropertyGroup):
             param_dict['Par8'] = ""
             param_dict['Par9'] = ""
             
+        if self.type_token == 'CHAMFER':
+            param_dict['Par1'] = str(unit.meter_to_active_unit(self.dim_in_x))
+            param_dict['Par2'] = str(unit.meter_to_active_unit(self.dim_in_y))
+            param_dict['Par3'] = str(unit.meter_to_active_unit(self.dim_in_z))
+            param_dict['Par4'] = str(unit.meter_to_active_unit(self.lead_in))
+            param_dict['Par5'] = ""
+            param_dict['Par6'] = ""
+            param_dict['Par7'] = str(self.tool_number)
+            param_dict['Par8'] = ""
+            param_dict['Par9'] = ""            
+            
         if self.type_token == 'SLIDE':
             param_dict['Par1'] = str(unit.meter_to_active_unit(self.dim_from_drawer_bottom))
             param_dict['Par2'] = str(unit.meter_to_active_unit(self.dim_to_first_hole))
@@ -1237,13 +1251,15 @@ class Machine_Token(PropertyGroup):
                 box.prop(self,'dim_in_x')
                 box.prop(self,'dim_in_y')
                 box.prop(self,'dim_in_z')
-                box.prop(self,'face_bore_dia')
-                box.prop(self,'end_dim_in_x')
-                box.prop(self,'end_dim_in_y')
-                box.prop(self,'distance_between_holes')
-                box.prop(self,'associative_dia')
-                box.prop(self,'associative_depth')
-                
+                box.prop(self,'lead_in')
+                box.prop(self,'tool_number')
+            if self.type_token == 'CHAMFER':
+                box.prop(self,'dim_in_x')
+                box.prop(self,'dim_in_y')
+                box.prop(self,'dim_in_z')
+                box.prop(self,'lead_in')
+                box.prop(self,'tool_number')
+                                
     def add_driver(self,obj,token_property,expression,driver_vars,index=None):
         data_path = 'mv.mp.machine_tokens.["' + self.name + '"].' + token_property
         
@@ -1535,6 +1551,9 @@ class fd_object(PropertyGroup):
     
     comment = StringProperty(name="Comment",
                              description="Comment to store information for reporting purposes.")    
+    
+    price = FloatProperty(name="Price",
+                          description="Stores the price for an object. This it only used for hardware.")    
     
     opengl_dim = PointerProperty(type=opengl_dim)
 
