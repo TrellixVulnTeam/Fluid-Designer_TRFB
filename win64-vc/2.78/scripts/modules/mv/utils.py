@@ -702,6 +702,21 @@ def calc_distance(point1,point2):
     """
     return math.sqrt((point1[0]-point2[0])**2 + (point1[1]-point2[1])**2 + (point1[2]-point2[2])**2) 
 
+def get_curve_length(obj_curve):
+    """ This gets a curve objects length. This currently only 
+        calculates straight segments.
+    """
+    length = 0
+    
+    if obj_curve.type == 'CURVE':
+        
+        for spline in obj_curve.data.splines:
+            for index, point in enumerate(spline.bezier_points):
+                if len(spline.bezier_points) > index + 1:
+                    length += calc_distance(point.co, spline.bezier_points[index+1].co)
+                    
+    return length
+
 #-------ENUM FUNCTIONS
 
 def create_image_preview_collection():
