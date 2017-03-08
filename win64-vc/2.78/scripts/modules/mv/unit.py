@@ -14,6 +14,11 @@ def millimeter(millimeter):
     """
     return millimeter * .001 #METERS
 
+def meter_to_feet(meter):
+    """ Converts meter to feet
+    """
+    return round(meter * 3.28084,4)
+
 def meter_to_inch(meter):
     """ Converts meter to inch
     """
