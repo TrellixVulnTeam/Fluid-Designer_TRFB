@@ -614,6 +614,8 @@ def get_insert_class(context,library_name,category_name,insert_name):
         for name, obj in inspect.getmembers(modobj):
             if "INSERT_" in name and inspect.isclass(obj):
                 insert = obj()
+                if insert.assembly_name == "":
+                    insert.assembly_name = get_insert_class_name(name)                
                 if insert.library_name == library_name and insert.category_name == category_name and insert.assembly_name == insert_name:
                     insert.package_name = lib.package_name
                     insert.module_name = modname
@@ -684,6 +686,10 @@ def get_wall_bp(obj):
 
 def get_product_class_name(class_name):
     name = class_name.replace("PRODUCT_","")
+    return name.replace("_"," ")
+
+def get_insert_class_name(class_name):
+    name = class_name.replace("INSERT_","")
     return name.replace("_"," ")
 
 def set_wireframe(obj,make_wire=True):
