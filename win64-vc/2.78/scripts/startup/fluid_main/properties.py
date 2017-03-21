@@ -683,6 +683,12 @@ class opengl_dim(PropertyGroup):
                                 default="INCH",
                                 description="Units")
     
+    gl_number_format = EnumProperty(items=(('DECIMAL', "Decimal", "Decimal"),
+                                           ('FRACTION', "Fraction", "Fraction")),
+                                    name="Number Format",
+                                    default='DECIMAL',
+                                    description="Number display format")
+    
     gl_imperial_rd_factor = EnumProperty(items=(('2', "1/2\"", "1/2\""),
                                                 ('4', "1/4\"", "1/4\""),
                                                 ('8', "1/8\"", "1/8\""),
