@@ -1868,8 +1868,18 @@ class OPS_dimension_interface(Operator):
         row.label("Color:")        
         row.prop(scene.mv.opengl_dim, 'gl_default_color', text="")        
         row = box.row()
-        row.label("Precision:")
-        row.prop(scene.mv.opengl_dim, 'gl_precision',text="")
+        
+        if scene.mv.opengl_dim.gl_dim_units in ('INCH', 'FEET'):
+            row.label("Round to the nearest:")
+            row.prop(scene.mv.opengl_dim, 'gl_imperial_rd_factor', text="")
+            row = box.row()
+            row.label("Number format:")
+            row.prop(scene.mv.opengl_dim, 'gl_number_format', text="")
+            
+        else:         
+            row.label("Precision:")
+            row.prop(scene.mv.opengl_dim, 'gl_precision',text="")
+        
         row = box.row()
         row.label("Text Size:")
         row.prop(scene.mv.opengl_dim, 'gl_font_size',text="")
