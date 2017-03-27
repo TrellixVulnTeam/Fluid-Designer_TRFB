@@ -18,91 +18,91 @@ class Assembly():
     Assemblies all have a base point which is typically a mesh object that is made up of a single vertex. Every object in an assembly is parented to this object. 
     The three other objects that are required are empties that control the X, Y, and Z dimension of the assembly.
 
-    ##package_name
+    ## package_name
     The python package the assembly is stored in. \n
     - Type: String
             
-    ##module_name
+    ## module_name
     The python module the assembly is stored in. \n
     - Type: String
     
-    ##library_name
+    ## library_name
     The library folder name to save assembly to. \n
     - Type: String
             
-    ##category_name
+    ## category_name
     The category folder name to save assembly to. \n
     - Type: String
     
-    ##assembly_name
+    ## assembly_name
     The assembly name. \n
     - Type: String        
     
-    ##property_id
+    ## property_id
     The Prompt Page Operator ID. This is the bl_id property. \n
     - Type: String
     
-    ##plan_draw_id
+    ## plan_draw_id
     The Operator ID that should be called when updating a prebuilt assembly. This is the bl_id property. \n
     - Type: String
     
-    ##update_id
+    ## update_id
     The Operator ID that should be called when dropping this assembly into the scene. This is the bl_id property. \n
     - Type: String
     
-    ##drop_id
+    ## drop_id
     The Operator ID that should be called when dropping this assembly into the scene. This is the bl_id property \n
     - Type: String
     
-    ##prompts
+    ## prompts
     The list of prompts to overwrite when creating this assembly (key = prompt name, value = prompt value). \n
     - Type: Dictionary
     
-    ##obj_bp
+    ## obj_bp
     Base point of the assembly. \n
     - Type: bpy.types.Object
     
-    ##obj_x
+    ## obj_x
     X dimension of the assembly. \n
     - Type: bpy.types.Object
     
-    ##obj_y
+    ## obj_y
     Y dimension of the assembly. \n
     - Type: bpy.types.Object
     
-    ##obj_z
+    ## obj_z
     Z dimension of the assembly. \n
     - Type: bpy.types.Object
     
-    ##type_assembly
+    ## type_assembly
     Determines if the library assembly is an insert or a product. \n
     - Type: enum_string("PRODUCT", "INSERT") 
     
-    ##placement_type
+    ## placement_type
     Used for drag and drop from placement. \n
     - Type: enum_string("","Corner")
     
-    ##mirror_z
+    ## mirror_z
     Determines if the z dimension is mirrored. \n
     - Type: Bool
     
-    ##mirror_y
+    ## mirror_y
     Determines if the y dimension is mirrored. Typically used for all cabinets. \n
     - Type: Bool
     
-    ##width
+    ## width
     The default x dimension of the assembly. \n
     - Type: Float
     
-    ##height
+    ## height
     The default z dimension of the assembly. \n
     - Type: Float
     
-    ##depth
+    ## depth
     The default y dimension of the assembly. \n
     - Type: Float
     
-    ##height_above_floor
+    ## height_above_floor
     The default z location of the assembly. \n
     - Type: Float
     """

@@ -46,7 +46,7 @@ class OPS_create_api_doc(bpy.types.Operator):
         file = open(filepath, "w")
         fw = file.write
         
-        fw("#Fluid Designer\n")
+        fw("# Fluid Designer\n")
         fw("*  [Home](Home)\n")
         fw("*  [Understanding the User Interface](Understanding-the-User-Interface)\n")
         fw("*  [Navigating the 3D Viewport](Navigating-the-3D-Viewport)\n")
@@ -54,10 +54,10 @@ class OPS_create_api_doc(bpy.types.Operator):
         fw("*  [The Room Builder Panel](The-Room-Builder-Panel)\n")
         fw("*  [Hotkeys](Fluid-Designer-Hot-Keys)\n\n")
         
-        fw("#API Documentation\n")
+        fw("# API Documentation\n")
         
         for mod in modules:
-            fw("\n##mv.{}\n".format(mod[0]))
+            fw("\n## mv.{}\n".format(mod[0]))
             
             classes = self.exclude_builtins(getmembers(mod[1], predicate=isclass), mod[0])
             
@@ -75,7 +75,7 @@ class OPS_create_api_doc(bpy.types.Operator):
         file = open(filepath, "w")
         fw = file.write
         
-        fw("#class {}{}{}{}\n\n".format(cls[1].__module__, ".", cls[0], "():"))
+        fw("# class {}{}{}{}\n\n".format(cls[1].__module__, ".", cls[0], "():"))
         
         if getdoc(cls[1]):
             fw(self.esc_uscores(getdoc(cls[1])) + "\n\n")
@@ -86,7 +86,7 @@ class OPS_create_api_doc(bpy.types.Operator):
                 args = getargspec(func[1])[0]
                 args_str = ', '.join(item for item in args if item != 'self')
                  
-                fw("##{}{}{}{}\n\n".format(self.esc_uscores(func[0]),
+                fw("## {}{}{}{}\n\n".format(self.esc_uscores(func[0]),
                                            "(",
                                            self.esc_uscores(args_str) if args_str else " ",
                                            ")"))
@@ -103,7 +103,7 @@ class OPS_create_api_doc(bpy.types.Operator):
         file = open(filepath, "w")
         fw = file.write       
         
-        fw("#module {}{}:\n\n".format("mv.", mod[0]))
+        fw("# module {}{}:\n\n".format("mv.", mod[0]))
         
         if getdoc(mod[1]):
             fw(self.esc_uscores(getdoc(mod[1])) + "\n\n")
@@ -112,7 +112,7 @@ class OPS_create_api_doc(bpy.types.Operator):
             args = getargspec(func[1])[0]
             args_str = ', '.join(item for item in args if item != 'self')
             
-            fw("##{}{}{}{}\n\n".format(self.esc_uscores(func[0]),
+            fw("## {}{}{}{}\n\n".format(self.esc_uscores(func[0]),
                                        "(",
                                        self.esc_uscores(args_str if args_str else " "),
                                        ")"))
