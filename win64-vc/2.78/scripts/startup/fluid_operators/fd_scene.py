@@ -1595,7 +1595,12 @@ class OPS_export_mvfd(Operator):
             self.xml.add_element_with_text(elm_product,'Depth',self.distance(product.obj_y.location.y))
             self.xml.add_element_with_text(elm_product,'XOrigin',self.location(obj_product.matrix_world[0][3]))
             self.xml.add_element_with_text(elm_product,'YOrigin',self.location(obj_product.matrix_world[1][3]))
-            self.xml.add_element_with_text(elm_product,'ZOrigin',self.location(obj_product.location.z))
+            #HEIGHT ABOVE FLOOR
+            if obj_product.location.z > 0:
+                hav = obj_product.location.z - math.fabs(product.obj_z.location.z)
+                self.xml.add_element_with_text(elm_product,'ZOrigin',self.location(hav))
+            else:
+                self.xml.add_element_with_text(elm_product,'ZOrigin',self.location(obj_product.location.z))
             self.xml.add_element_with_text(elm_product,'Comment',obj_product.mv.comment)
             if obj_product.parent:
                 angle = obj_product.parent.rotation_euler.z + obj_product.rotation_euler.z
@@ -1615,10 +1620,11 @@ class OPS_export_mvfd(Operator):
                     prompt_value = str(0)
                 self.xml.add_element_with_text(elm_prompt,'Value',prompt_value)
 
-            #HEIGHT ABOVE FLOOR
+            #HEIGHT ABOVE FLOOR IS OVERRIDDEN BY THE Z ORIGIN
             if obj_product.location.z > 0:
                 elm_prompt = self.xml.add_element(elm_prompts,'Prompt',"HeightAboveFloor")
-                self.xml.add_element_with_text(elm_prompt,'Value',self.location(obj_product.location.z))
+                hav = obj_product.location.z - math.fabs(product.obj_z.location.z)
+                self.xml.add_element_with_text(elm_prompt,'Value',"0")
                 
             elm_parts = self.xml.add_element(elm_product,"Parts")
             self.write_parts_for_product(elm_parts,obj_product,spec_group)
