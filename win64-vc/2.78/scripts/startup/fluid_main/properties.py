@@ -643,7 +643,7 @@ class opengl_dim(PropertyGroup):
     
     gl_font_size = IntProperty(name="Text Size",
                                description="Text size",
-                               default=14, 
+                               default=16, 
                                min=6, 
                                max=150)
     
@@ -693,8 +693,7 @@ class opengl_dim(PropertyGroup):
                                                 ('4', "1/4\"", "1/4\""),
                                                 ('8', "1/8\"", "1/8\""),
                                                 ('16', "1/16\"", "1/16\""),
-                                                ('32', "1/32\"", "1/32\""),
-                                                ('64', "1/64\"", "1/64\"")),
+                                                ('32', "1/32\"", "1/32\"")),
                                          name="Imperial Rounding",
                                          default="16",
                                          description="Rounding Factor")
@@ -1760,7 +1759,11 @@ bpy.utils.register_class(fd_scene)
 class fd_window_manager(PropertyGroup):
     use_opengl_dimensions = BoolProperty(name="Use OpenGL Dimensions",
                                          description="Use OpenGL Dimensions",
-                                         default=False)  
+                                         default=False)
+    #FOR TESTING - REMOVE WHEN DONE
+    use_opengl_dimensions_2 = BoolProperty(name="Use OpenGL Dimensions",
+                                         description="Use OpenGL Dimensions",
+                                         default=False)      
     
     elevation_scene_index = IntProperty(name="2d Elevation Scene Index",
                                         default=0,
