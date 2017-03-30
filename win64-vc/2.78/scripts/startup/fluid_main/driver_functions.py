@@ -45,6 +45,22 @@ def AND(*vars):
             return False
     return True
 
+def GET_SMALLEST_SIZE(size,*vars):
+    """ Returns the smallest value base on the size and values that are passed in
+        Acts like a lookuptable and returns the smallest value that is also >= Par1
+        Par1 - Size to lookup
+        Par2 - Vars to use as the lookup (values must be ordered smallest to largest)
+    """
+    for i, var in enumerate(vars):
+        if i == len(vars) - 1:
+            return var #RETURN LAST ITEM IN LIST
+        if size >= var and size <= vars[i+1]:
+            return var #IF SIZE IS LARGER THEN VAR BUT SMALLER THAN NEXT RETURN VAR
+        if size <= var:
+            return var #IF SIZE IF SMALLER THAN CURRENT VALUE RETURN VAR
+        
+    return vars[-1] #RETURN LAST ITEM IN LIST
+        
 def EQ1(opening_quantity,start_point,end_point):
     """ Returns equal spacing based on the quantity and start and end point:
         Par1 - opening_quantity - Number of spliters in opening
