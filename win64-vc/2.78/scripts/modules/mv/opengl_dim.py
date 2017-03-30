@@ -16,30 +16,48 @@ from mv import utils
 from bpy_extras import view3d_utils, object_utils
 import bpy_extras.image_utils as img_utils
 
-
-fractions_unicode = {"0.25": "\u00b9\u2044\u2084",
-                     "0.5": "\u00b9\u2044\u2082",
-                     "0.75": "\u00b3\u2044\u2084",
-                     "0.125": "\u00b9\u2044\u2088",
-                     "0.375": "\u00b3\u2044\u2088",
-                     "0.625": "\u2075\u2044\u2088",
-                     "0.875": "\u2077\u2044\u2088",
-                     "0.0625": "\u00b9\u2044\u2081\u2086",
-                     "0.1875": "\u00b3\u2044\u2081\u2086",
-                     "0.3125": "\u2075\u2044\u2081\u2086",
-                     "0.4375": "\u2077\u2044\u2081\u2086",
-                     "0.5625": "\u2079\u2044\u2081\u2086",
-                     "0.6875": "\u00b9\u00b9\u2044\u2081\u2086",
-                     "0.8125": "\u00b9\u00b3\u2044\u2081\u2086",
-                     "0.9375": "\u00b9\u2075\u2044\u2081\u2086"}
+fractions_unicode = {0.03125: "\u00b9\u2044\u2083\u2082",#1/32
+                     0.0625: "\u00b9\u2044\u2081\u2086",#1/16
+                     0.09375: "\u00b3\u2044\u2083\u2082",#3/32
+                     0.125: "\u00b9\u2044\u2088",#1/8
+                     0.15625: "\u2075\u2044\u2083\u2082",#5/32
+                     0.1875: "\u00b3\u2044\u2081\u2086",#3/16
+                     0.21875: "\u2077\u2044",#7/32
+                     0.25: "\u00b9\u2044\u2084",#1/4
+                     0.28125: "\u2079\u2044\u2083\u2082",#9/32
+                     0.3125: "\u2075\u2044\u2081\u2086",#5/16
+                     0.34375: "\u00b9\u00b9\u2044\u2083\u2082",#11/32
+                     0.375: "\u00b3\u2044\u2088",#3/8
+                     0.40625: "\u00b9\u00b3\u2044\u2083\u2082",#13/32
+                     0.4375: "\u2077\u2044\u2081\u2086",#7/16
+                     0.46875: "\u00b9\u2075\u2044\u2083\u2082",#15/32
+                     0.5: "\u00b9\u2044\u2082",#1/2
+                     0.53125: "\u00b9\u2077\u2044\u2083\u2082",#17/32
+                     0.5625: "\u2079\u2044\u2081\u2086",#9/16
+                     0.59375: "\u00b9\u2079\u2044\u2083\u2082",#19/32
+                     0.625: "\u2075\u2044\u2088",#5/8
+                     0.65625: "\u00b2\u00b9\u2044\u2083\u2082",#21/32
+                     0.6875: "\u00b9\u00b9\u2044\u2081\u2086",#11/16
+                     0.71875: "\u00b2\u00b3\u2044\u2083\u2082",#23/32
+                     0.75: "\u00b3\u2044\u2084",#3/4
+                     0.78125: "\u00b2\u2075\u2044\u2083\u2082",#25/32
+                     0.8125: "\u00b9\u00b3\u2044\u2081\u2086",#13/16
+                     0.84375: "\u00b2\u2077\u2044\u2083\u2082",#27/32 
+                     0.875: "\u2077\u2044\u2088",#7/8
+                     0.90625: "\u00b2\u2079\u2044\u2083\u2082",#29/32
+                     0.9375: "\u00b9\u2075\u2044\u2081\u2086",#15/16
+                     0.96875: "\u2073\u00b9\u2044\u2083\u2082"}#31/32
 
 def get_fraction_unicode(value):
-    pass
+    if value == 0:
+        return ""
+    else:
+        return " " + fractions_unicode[value]
 
 def get_rounded_dec(value):
-    scene_ogl_dim_props = bpy.context.scene.mv.opengl_dim
-    getcontext().rounding = ROUND_HALF_UP    
-    rd_fac = Decimal(str(scene_ogl_dim_props.gl_imperial_rd_factor))
+    ogl_dim_props = bpy.context.scene.mv.opengl_dim
+    getcontext().rounding = ROUND_05UP
+    rd_fac = Decimal(str(ogl_dim_props.gl_imperial_rd_factor))
     dec_inches = Decimal(str(value))
     rd_dec_inches = math.ceil(dec_inches * rd_fac)/rd_fac
     
@@ -66,7 +84,6 @@ def draw_opengl(self, context):
     context = bpy.context
     
     if context.window_manager.mv.use_opengl_dimensions_2:
-        print("running dim 2")
         region = context.region
         rv3d = get_rv3d(context, region)
         
@@ -227,6 +244,8 @@ def draw_text(x_pos, y_pos, display_text, rgb, fsize):
     return maxwidth, maxheight
 
 def format_distance(fmt, units, value, factor=1):
+    ogl_dim_props = bpy.context.scene.mv.opengl_dim
+    
     if units == "AUTO":
 
         if bpy.context.scene.unit_settings.system == "IMPERIAL":
@@ -277,8 +296,13 @@ def format_distance(fmt, units, value, factor=1):
         tx_dist = fmt % feet
 
     elif units == "INCH":
-        inches = value * 39.3700787
-        tx_dist = str(get_rounded_dec(inches)) + '"'
+        inches = get_rounded_dec(value * 39.3700787)
+        
+        if ogl_dim_props.gl_number_format == 'DECIMAL':
+            tx_dist = str(inches) + '"'
+        elif ogl_dim_props.gl_number_format == 'FRACTION':
+            frac_inch, int_inch = math.modf(inches)
+            tx_dist = str(int(int_inch)) + str(get_fraction_unicode(frac_inch)) +  '"'
         
     else:
         tx_dist = fmt % value
@@ -658,5 +682,5 @@ def get_custom_font():
     if "Calibri-Light" in bpy.data.fonts:
         return bpy.data.fonts["Calibri-Light"]
     else:
-        return bpy.data.fonts.load(os.path.join(os.path.dirname(bpy.app.binary_path),"Fonts","calibril.ttf"))        
-                                 
+        return bpy.data.fonts.load(os.path.join(os.path.dirname(bpy.app.binary_path),"Fonts","calibril.ttf"))
+           
