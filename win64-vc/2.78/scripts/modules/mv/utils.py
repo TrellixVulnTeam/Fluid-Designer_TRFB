@@ -252,7 +252,8 @@ def assign_materials_from_pointers(obj):
         if material:
             obj.material_slots[index].material = material
         else:
-            print("MATERIAL NOT FOUND",slot.library_name,slot.category_name,slot.item_name,obj.mv.name_object)
+            pass
+#             print("MATERIAL NOT FOUND",slot.library_name,slot.category_name,slot.item_name,obj.mv.name_object)
 
     #MAKE SURE OBJECT IS TEXTURED
     if obj.mv.type == 'CAGE':
@@ -1365,7 +1366,7 @@ def get_driver(obj,data_path,array_index):
     if obj.animation_data:
         for DR in obj.animation_data.drivers:
             if DR.data_path == data_path and DR.array_index == array_index:
-                return DR    
+                return DR
     
 def copy_drivers(obj,obj_target):
     """ This Function copies all drivers from obj
