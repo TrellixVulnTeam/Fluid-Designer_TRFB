@@ -1041,6 +1041,7 @@ class OPERATOR_Build_Room(Operator):
         #TODO: Develop a way for users to change entry door style. (Sliding, Bifold, Single, Double)
         bp = utils.get_group(os.path.join(os.path.dirname(__file__),"Entry Doors","Entry Door Frame.blend"))
         self.door = fd_types.Assembly(bp)
+        self.door.obj_bp.mv.mirror_y = False
         self.door.obj_bp.mv.type_group = 'PRODUCT'
         self.door.obj_bp.parent = self.entry_wall.obj_bp
         
