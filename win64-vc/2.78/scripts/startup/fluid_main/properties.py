@@ -1259,15 +1259,32 @@ class Machine_Token(PropertyGroup):
                 box.prop(self,'lead_out')
                 box.prop(self,'tool_number')
             if self.type_token == 'BORE':
-                box.prop(self,'dim_in_x')
-                box.prop(self,'dim_in_y')
-                box.prop(self,'dim_in_z')
-                box.prop(self,'face_bore_dia')
-                box.prop(self,'end_dim_in_x')
-                box.prop(self,'end_dim_in_y')
-                box.prop(self,'distance_between_holes')
-                box.prop(self,'associative_dia')
-                box.prop(self,'associative_depth')
+                row = box.row(align=True)
+                row.label("Start Dim:")
+                row.prop(self,'dim_in_x',text="X")
+                row.prop(self,'dim_in_y',text="Y")
+                row = box.row(align=True)
+                row.label("End Dim:")
+                row.prop(self,'end_dim_in_x',text="X")
+                row.prop(self,'end_dim_in_y',text="Y")  
+                  
+                row = box.row(align=True)
+                row.label("Drill Depth: (dim_in_z)")
+                row.prop(self,'dim_in_z',text="")
+                
+                row = box.row(align=True)
+                row.label("Drill Dia: (millimeters)")
+                row.prop(self,'face_bore_dia',text="")                
+                
+                row = box.row(align=True)
+                row.label("Distance Between Holes")
+                row.prop(self,'distance_between_holes',text="")     
+
+                row = box.row(align=True)
+                row.label("Associative")
+                row.prop(self,'associative_dia',text="Dia")
+                row.prop(self,'associative_depth',text="Depth")
+                
             if self.type_token == 'CORNERNOTCH':
                 box.prop(self,'dim_in_x')
                 box.prop(self,'dim_in_y')
