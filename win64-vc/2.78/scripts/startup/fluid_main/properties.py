@@ -673,14 +673,14 @@ class opengl_dim(PropertyGroup):
                                 min=6, 
                                 max=500)
     
-    gl_dim_units = EnumProperty(items=(('AUTO', "Automatic", "Use scene units"),
+    gl_dim_units = EnumProperty(items=(('AUTO', "Default", "Use system scene units"),
                                        ('METER', "Meters", "Meters"),
                                        ('CENTIMETER', "Centimeters", "Centimeters"),
                                        ('MILIMETER', "Millimeters", "Millimeters"),
                                        ('FEET', "Feet", "Feet"),
                                        ('INCH', "Inches", "Inches")),
                                 name="Units",
-                                default="INCH",
+                                default="AUTO",
                                 description="Units")
     
     gl_number_format = EnumProperty(items=(('DECIMAL', "Decimal", "Decimal"),

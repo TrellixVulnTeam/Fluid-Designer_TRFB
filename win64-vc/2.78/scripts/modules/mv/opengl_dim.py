@@ -25,7 +25,7 @@ def get_imp_rounded(value):
     
     return math.modf(round(inches * int(rd_fac)) / int(rd_fac))
 
-def fmt_imp(value, units):
+def fmt_imp(value, units='INCH'):
     g_props = bpy.context.scene.mv.opengl_dim
     dist_imp = get_imp_rounded(value)
     str_dist = "{}{}{}"
@@ -259,17 +259,7 @@ def draw_text(x_pos, y_pos, display_text, rgb, fsize):
 def format_distance(fmt, units, value):
     if units == "AUTO":
         if bpy.context.scene.unit_settings.system == "IMPERIAL":
-            feet = value * 3.2808399
-             
-            if round(feet, 2) >= 1.0:
-                fmt += "'"
-                tx_dist = fmt % feet
-                 
-            else:
-                inches = value * 39.3700787
-                fmt += '"'
-                tx_dist = fmt % inches
-            #tx_dist = fmt_imp(value)
+            tx_dist = fmt_imp(value, units='INCH')
 
         elif bpy.context.scene.unit_settings.system == "METRIC":
             if round(value, 2) >= 1.0:
