@@ -11,57 +11,69 @@ import os
 import time
 import math
 import mathutils
-from decimal import *
+from fractions import Fraction
 from mv import utils
 from bpy_extras import view3d_utils, object_utils
 import bpy_extras.image_utils as img_utils
 
-fractions_unicode = {0.03125: "\u00b9\u2044\u2083\u2082",#1/32
-                     0.0625: "\u00b9\u2044\u2081\u2086",#1/16
-                     0.09375: "\u00b3\u2044\u2083\u2082",#3/32
-                     0.125: "\u00b9\u2044\u2088",#1/8
-                     0.15625: "\u2075\u2044\u2083\u2082",#5/32
-                     0.1875: "\u00b3\u2044\u2081\u2086",#3/16
-                     0.21875: "\u2077\u2044",#7/32
-                     0.25: "\u00b9\u2044\u2084",#1/4
-                     0.28125: "\u2079\u2044\u2083\u2082",#9/32
-                     0.3125: "\u2075\u2044\u2081\u2086",#5/16
-                     0.34375: "\u00b9\u00b9\u2044\u2083\u2082",#11/32
-                     0.375: "\u00b3\u2044\u2088",#3/8
-                     0.40625: "\u00b9\u00b3\u2044\u2083\u2082",#13/32
-                     0.4375: "\u2077\u2044\u2081\u2086",#7/16
-                     0.46875: "\u00b9\u2075\u2044\u2083\u2082",#15/32
-                     0.5: "\u00b9\u2044\u2082",#1/2
-                     0.53125: "\u00b9\u2077\u2044\u2083\u2082",#17/32
-                     0.5625: "\u2079\u2044\u2081\u2086",#9/16
-                     0.59375: "\u00b9\u2079\u2044\u2083\u2082",#19/32
-                     0.625: "\u2075\u2044\u2088",#5/8
-                     0.65625: "\u00b2\u00b9\u2044\u2083\u2082",#21/32
-                     0.6875: "\u00b9\u00b9\u2044\u2081\u2086",#11/16
-                     0.71875: "\u00b2\u00b3\u2044\u2083\u2082",#23/32
-                     0.75: "\u00b3\u2044\u2084",#3/4
-                     0.78125: "\u00b2\u2075\u2044\u2083\u2082",#25/32
-                     0.8125: "\u00b9\u00b3\u2044\u2081\u2086",#13/16
-                     0.84375: "\u00b2\u2077\u2044\u2083\u2082",#27/32 
-                     0.875: "\u2077\u2044\u2088",#7/8
-                     0.90625: "\u00b2\u2079\u2044\u2083\u2082",#29/32
-                     0.9375: "\u00b9\u2075\u2044\u2081\u2086",#15/16
-                     0.96875: "\u2073\u00b9\u2044\u2083\u2082"}#31/32
+IMP_CONV_FAC_INCHES = 39.3700787
 
-def get_fraction_unicode(value):
-    if value == 0:
-        return ""
-    else:
-        return " " + fractions_unicode[value]
-
-def get_rounded_dec(value):
-    ogl_dim_props = bpy.context.scene.mv.opengl_dim
-    getcontext().rounding = ROUND_05UP
-    rd_fac = Decimal(str(ogl_dim_props.gl_imperial_rd_factor))
-    dec_inches = Decimal(str(value))
-    rd_dec_inches = math.ceil(dec_inches * rd_fac)/rd_fac
+def get_imp_rounded(value):
+    g_props = bpy.context.scene.mv.opengl_dim
+    rd_fac = g_props.gl_imperial_rd_factor
+    inches = value * IMP_CONV_FAC_INCHES
     
-    return rd_dec_inches
+    return math.modf(round(inches * int(rd_fac)) / int(rd_fac))
+
+def fmt_imp(value, units):
+    g_props = bpy.context.scene.mv.opengl_dim
+    dist_imp = get_imp_rounded(value)
+    str_dist = "{}{}{}"
+    
+    if units == "FEET":
+        feet = int(dist_imp[1] // 12)
+        inch = int(dist_imp[1] % 12)
+        fract = Fraction(dist_imp[0])     
+        
+        if feet == 0:
+            feet_fmt = ""
+        else:
+            feet_fmt = str(feet) + "' "
+        if inch == 0:
+            inch_fmt = ""
+            if fract != 0 and g_props.gl_number_format == 'DECIMAL':
+                inch_fmt += "0"
+        else:
+            inch_fmt = str(inch)
+            
+        if fract == 0:
+            fract_fmt = ""
+            if inch != 0:
+                inch_fmt += '"'
+        elif g_props.gl_number_format == 'FRACTION':
+            fract_fmt = " " + str(fract) + '"'
+        else:
+            fract_fmt = "." + str(dist_imp[0])[2:] + '"'
+    
+        return str_dist.format(feet_fmt, inch_fmt, fract_fmt)
+    
+    if units == "INCH":
+        inch = int(dist_imp[1])
+        fract = Fraction(dist_imp[0])
+        
+        if inch == 0:
+            inch_fmt = "" if g_props.gl_number_format == 'FRACTION' else "0"
+        else:
+            inch_fmt = str(inch)
+            
+        if fract == 0:
+            fract_fmt = ""    
+        elif g_props.gl_number_format == 'FRACTION':
+            fract_fmt = " " + str(fract)
+        else:
+            fract_fmt = "." + str(dist_imp[0])[2:]
+    
+        return str_dist.format(inch_fmt, fract_fmt, '"')
 
 def get_rv3d(context, region):
     if not context.space_data.region_quadviews:
@@ -243,23 +255,21 @@ def draw_text(x_pos, y_pos, display_text, rgb, fsize):
 
     return maxwidth, maxheight
 
-def format_distance(fmt, units, value, factor=1):
-    ogl_dim_props = bpy.context.scene.mv.opengl_dim
-    
+def format_distance(fmt, units, value):
     if units == "AUTO":
-
         if bpy.context.scene.unit_settings.system == "IMPERIAL":
             feet = value * 3.2808399
-            
+             
             if round(feet, 2) >= 1.0:
                 fmt += "'"
                 tx_dist = fmt % feet
-                
+                 
             else:
                 inches = value * 39.3700787
                 fmt += '"'
                 tx_dist = fmt % inches
-                
+            #tx_dist = fmt_imp(value)
+
         elif bpy.context.scene.unit_settings.system == "METRIC":
             if round(value, 2) >= 1.0:
                 fmt += " m"
@@ -290,19 +300,8 @@ def format_distance(fmt, units, value, factor=1):
         d_mm = value * (1000)
         tx_dist = fmt % d_mm
 
-    elif units == "FEET":
-        fmt += "'"
-        feet = value * (3.2808399)
-        tx_dist = fmt % feet
-
-    elif units == "INCH":
-        inches = get_rounded_dec(value * 39.3700787)
-        
-        if ogl_dim_props.gl_number_format == 'DECIMAL':
-            tx_dist = str(inches) + '"'
-        elif ogl_dim_props.gl_number_format == 'FRACTION':
-            frac_inch, int_inch = math.modf(inches)
-            tx_dist = str(int(int_inch)) + str(get_fraction_unicode(frac_inch)) +  '"'
+    elif units in ("FEET", "INCH"):
+        tx_dist = fmt_imp(value, units)
         
     else:
         tx_dist = fmt % value

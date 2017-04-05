@@ -643,7 +643,7 @@ class opengl_dim(PropertyGroup):
     
     gl_font_size = IntProperty(name="Text Size",
                                description="Text size",
-                               default=16, 
+                               default=14, 
                                min=6, 
                                max=150)
     
@@ -695,7 +695,7 @@ class opengl_dim(PropertyGroup):
                                                 ('16', "1/16\"", "1/16\""),
                                                 ('32', "1/32\"", "1/32\"")),
                                          name="Imperial Rounding",
-                                         default="16",
+                                         default="32",
                                          description="Rounding Factor")
         
     gl_precision = IntProperty(name='Precision', 
