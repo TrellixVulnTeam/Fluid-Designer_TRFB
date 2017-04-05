@@ -218,48 +218,7 @@ class OPS_create_content_overview_doc(bpy.types.Operator):
         for file in os.listdir(path):
             if os.path.isdir(os.path.join(path, file)):
                 self.create_hdr(file, font_size=14)
-                self.search_dir(os.path.join(path, file))
-                
-
-                
-
-            
-        
-        #create header for this path
-        
-        #search dir for .png
-        
-        #if png create table
-        
-        #if dir 
-        
-        
-#         for lib in libraries:
-#             for cat in os.listdir(os.path.join(path, lib)):
-#                 self.create_hdr(lib + ": " + cat, font_size=16)
-
-#                 item_tbl_data = []
-#                 item_tbl_row = []
-#                 
-#                 for i, file in enumerate(os.listdir(os.path.join(path, lib, cat))):
-#                     last_item = len(os.listdir(os.path.join(path, lib, cat))) - 1
-#                     if ".png" in file:
-#                         img = Image(os.path.join(path, lib, cat, file), inch, inch)
-#                         img_name = file.replace(".png", "")
-#                                     
-#                         if len(item_tbl_row) == 4:
-#                             item_tbl_data.append(item_tbl_row)
-#                             item_tbl_row = []
-#                         elif i == last_item:
-#                             item_tbl_data.append(item_tbl_row)
-#                             
-#                         i_tbl = Table([["img"], [Paragraph(img_name, ParagraphStyle("item name style", wordWrap='CJK'))]])
-#                         item_tbl_row.append(i_tbl)    
-#                           
-#                 if len(item_tbl_data) > 0:
-#                     item_tbl = Table(item_tbl_data, colWidths=125)
-#                     self.elements.append(item_tbl)
-#                     self.elements.append(Spacer(1, inch * 0.5))     
+                self.search_dir(os.path.join(path, file))    
     
     def write_pdf(self, mod):
         file_path = os.path.join(self.write_path if self.write_path != "" else mod.__path__[0], "doc")
