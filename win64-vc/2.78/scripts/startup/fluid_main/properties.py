@@ -1776,10 +1776,6 @@ bpy.utils.register_class(fd_scene)
 class fd_window_manager(PropertyGroup):
     use_opengl_dimensions = BoolProperty(name="Use OpenGL Dimensions",
                                          description="Use OpenGL Dimensions",
-                                         default=False)
-    #FOR TESTING - REMOVE WHEN DONE
-    use_opengl_dimensions_2 = BoolProperty(name="Use OpenGL Dimensions",
-                                         description="Use OpenGL Dimensions",
                                          default=False)      
     
     elevation_scene_index = IntProperty(name="2d Elevation Scene Index",

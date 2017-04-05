@@ -113,8 +113,6 @@ bpy.app.handlers.load_post.append(sync_spec_groups)
 bpy.app.handlers.load_post.append(load_library_modules)
 
 # Register the OpenGL Call back for dims
-bpy.types.SpaceView3D.draw_handler_add(utils.draw_opengl, (None,None), 'WINDOW', 'POST_PIXEL')
-#FOR TESTING - REMOVE WHEN DONE
 bpy.types.SpaceView3D.draw_handler_add(opengl_dim.draw_opengl, (None,None), 'WINDOW', 'POST_PIXEL')
 
 def register():

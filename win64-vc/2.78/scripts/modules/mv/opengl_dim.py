@@ -95,9 +95,10 @@ def get_rv3d(context, region):
 def draw_opengl(self, context):
     context = bpy.context
     
-    if context.window_manager.mv.use_opengl_dimensions_2:
+    if context.window_manager.mv.use_opengl_dimensions:
         region = context.region
         rv3d = get_rv3d(context, region)
+        
         
         if not rv3d: return
 
