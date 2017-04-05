@@ -1853,39 +1853,48 @@ class OPS_dimension_interface(Operator):
     def draw(self, context):
         wm = context.window_manager.mv
         scene = context.scene
-        if wm.use_opengl_dimensions is False:
-            icon = 'VISIBLE_IPO_ON'
-            txt = 'Show Dimensions'
-        else:
-            icon = "VISIBLE_IPO_OFF"
-            txt = 'Hide Dimensions'
-        
+        dim_props = scene.mv.opengl_dim
+        sys_units = scene.unit_settings.system
         layout = self.layout
         box = layout.box()
-        box.prop(scene.mv.opengl_dim, 'gl_dim_units')
-        box.prop(scene.mv.opengl_dim, 'gl_arrow_type',)
-        row = box.row()
-        row.label("Color:")        
-        row.prop(scene.mv.opengl_dim, 'gl_default_color', text="")        
+        
         row = box.row()
         
-        if scene.mv.opengl_dim.gl_dim_units in ('INCH', 'FEET'):
+        if dim_props.gl_dim_units == 'AUTO':
+            row.label("Units:" +
+                      "                    (" +
+                      sys_units.title() +
+                      ")")
+        else:
+            row.label("Units:")
+        
+        row.prop(dim_props, 'gl_dim_units', text="")
+        
+        row = box.row()
+        row.label("Arrow Type:")
+        row.prop(dim_props, 'gl_arrow_type', text="")
+        row = box.row()
+        row.label("Color:")        
+        row.prop(dim_props, 'gl_default_color', text="")        
+        row = box.row()
+        
+        if dim_props.gl_dim_units in ('INCH', 'FEET') or dim_props.gl_dim_units == 'AUTO' and sys_units == 'IMPERIAL':
             row.label("Round to the nearest:")
-            row.prop(scene.mv.opengl_dim, 'gl_imperial_rd_factor', text="")
+            row.prop(dim_props, 'gl_imperial_rd_factor', text="")
             row = box.row()
             row.label("Number format:")
-            row.prop(scene.mv.opengl_dim, 'gl_number_format', text="")
+            row.prop(dim_props, 'gl_number_format', text="")
             
         else:         
             row.label("Precision:")
-            row.prop(scene.mv.opengl_dim, 'gl_precision',text="")
+            row.prop(dim_props, 'gl_precision',text="")
         
         row = box.row()
         row.label("Text Size:")
-        row.prop(scene.mv.opengl_dim, 'gl_font_size',text="")
+        row.prop(dim_props, 'gl_font_size',text="")
         row = box.row()
         row.label("Arrow Size:")        
-        row.prop(scene.mv.opengl_dim, 'gl_arrow_size', text="")
+        row.prop(dim_props, 'gl_arrow_size', text="")
 
 class OPS_toggle_dimension_handles(Operator):
     bl_idname = "fd_general.toggle_dimension_handles"
