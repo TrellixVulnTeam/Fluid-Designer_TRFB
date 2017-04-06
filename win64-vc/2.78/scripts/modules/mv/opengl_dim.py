@@ -127,42 +127,42 @@ def draw_opengl(self, context):
     else:
         return
     
-def draw_dimensions(context, obj, opengl_dim, region, rv3d):
-    scene_ogl_dim_props = bpy.context.scene.mv.opengl_dim
+def draw_dimensions(context, obj, i_dim, region, rv3d):
+    g_props = bpy.context.scene.mv.opengl_dim
     
-    pr = scene_ogl_dim_props.gl_precision
+    pr = g_props.gl_precision
     fmt = "%1." + str(pr) + "f"
     
-    units = scene_ogl_dim_props.gl_dim_units
-    fsize = scene_ogl_dim_props.gl_font_size    
-    a_size = scene_ogl_dim_props.gl_arrow_size
-    a_type = scene_ogl_dim_props.gl_arrow_type
-    b_type = scene_ogl_dim_props.gl_arrow_type
+    units = g_props.gl_dim_units
+    fsize = g_props.gl_font_size    
+    a_size = g_props.gl_arrow_size
+    a_type = g_props.gl_arrow_type
+    b_type = g_props.gl_arrow_type
     
-    if opengl_dim.gl_color == 0:
-        rgb = scene_ogl_dim_props.gl_default_color
-    elif opengl_dim.gl_color == 1:
+    if i_dim.gl_color == 0:
+        rgb = g_props.gl_default_color
+    elif i_dim.gl_color == 1:
         #WHITE
         rgb = (0.8,0.8,0.8,1.0)
-    elif opengl_dim.gl_color == 2:
+    elif i_dim.gl_color == 2:
         #BLACK
         rgb = (0.1,0.1,0.1,1.0)        
-    elif opengl_dim.gl_color == 3:
+    elif i_dim.gl_color == 3:
         #RED
         rgb = (0.8,0.0,0.0,1.0)
-    elif opengl_dim.gl_color == 4:
+    elif i_dim.gl_color == 4:
         #GREEN
         rgb = (0.0,0.8,0.0,1.0)
-    elif opengl_dim.gl_color == 5:
+    elif i_dim.gl_color == 5:
         #BLUE
         rgb = (0.0,0.0,0.8,1.0)
-    elif opengl_dim.gl_color == 6:
+    elif i_dim.gl_color == 6:
         #YELLOW
         rgb = (0.8,0.8,0.0,1.0)          
-    elif opengl_dim.gl_color == 7:
+    elif i_dim.gl_color == 7:
         #AQUA
         rgb = (0.0,0.8,0.8,1.0) 
-    elif opengl_dim.gl_color == 8:
+    elif i_dim.gl_color == 8:
         #VIOLET
         rgb = (0.8,0.0,0.8,1.0)                               
  
@@ -191,36 +191,39 @@ def draw_dimensions(context, obj, opengl_dim, region, rv3d):
     if None in (screen_point_ap1,screen_point_bp1):
         return
       
-    bgl.glLineWidth(opengl_dim.gl_width)
+    bgl.glLineWidth(i_dim.gl_width)
     bgl.glColor4f(rgb[0], rgb[1], rgb[2], rgb[3])
           
     midpoint3d = interpolate3d(v1, v2, math.fabs(dist / 2))
     gap3d = (midpoint3d[0], midpoint3d[1], midpoint3d[2])
     txtpoint2d = get_2d_point(region, rv3d, gap3d)
+    
+    if not i_dim.line_only:
+        if i_dim.gl_label == "":
+            txt_dist = str(format_distance(fmt, units, dist))
+        else:
+            txt_dist = i_dim.gl_label
       
-    if opengl_dim.gl_label == "":
-        txt_dist = str(format_distance(fmt, units, dist))
-    else:
-        txt_dist = opengl_dim.gl_label
-  
-    draw_text(txtpoint2d[0], 
-              txtpoint2d[1],
-              txt_dist, 
-              rgb, 
-              fsize)
+        draw_text(txtpoint2d[0], 
+                  txtpoint2d[1],
+                  txt_dist, 
+                  rgb, 
+                  fsize)
   
     bgl.glEnable(bgl.GL_BLEND)
     bgl.glColor4f(rgb[0], rgb[1], rgb[2], rgb[3])      
-  
-    draw_arrow(screen_point_ap1, screen_point_bp1, a_size, a_type, b_type)  
-  
+
+    if not i_dim.line_only:
+        draw_arrow(screen_point_ap1, screen_point_bp1, a_size, a_type, b_type)  
+        draw_extension_lines(screen_point_ap1, screen_point_bp1, a_size)
+        
     draw_line(screen_point_ap1, screen_point_bp1)
       
     #TODO: FIGURE OUT HOW TO DRAW TWO LINES
 #     draw_line(screen_point_ap1, end_line_point1)
 #     draw_line(start_line_point1, screen_point_bp1)
       
-    draw_extension_lines(screen_point_ap1, screen_point_bp1, a_size)
+#     draw_extension_lines(screen_point_ap1, screen_point_bp1, a_size)
                        
 def draw_text(x_pos, y_pos, display_text, rgb, fsize):
     font_id = 0

@@ -615,6 +615,10 @@ class opengl_dim(PropertyGroup):
                         description="Show/Hide Dimension",
                         default=False)
     
+    line_only = BoolProperty(name="Dimension Line Only",
+                             description="Draw this dimension without text or arrows",
+                             default=False)
+    
     gl_color = IntProperty(name="gl_color",
                            default=0,
                            description="Color for the measure")  

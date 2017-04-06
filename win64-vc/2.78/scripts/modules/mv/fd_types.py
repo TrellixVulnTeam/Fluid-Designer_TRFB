@@ -1828,7 +1828,7 @@ class Dimension():
     label = ""   
     opengl_dim = None
     
-    def __init__(self):
+    def __init__(self, line_only=False):
         scene = bpy.context.scene
         self.draw()
  
@@ -1836,7 +1836,8 @@ class Dimension():
         self.opengl_dim.glpointa = 0
         self.opengl_dim.glpointb = 0  
         self.opengl_dim.gl_label = scene.mv.opengl_dim.gl_label
-        self.opengl_dim.gl_font_size = scene.mv.opengl_dim.gl_font_size     
+        self.opengl_dim.gl_font_size = scene.mv.opengl_dim.gl_font_size
+        self.opengl_dim.line_only = line_only
     
     def draw(self):
         context = bpy.context
