@@ -29,7 +29,7 @@ bl_info = {
 }
 
 import bpy
-from mv import utils, fd_types, unit
+from mv import utils, fd_types, unit, opengl_dim
 import math
 import os
 import time
@@ -333,7 +333,7 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
     def execute(self, context):
         context.window_manager.mv.use_opengl_dimensions = True
         
-        self.font = utils.get_custom_font()
+        self.font = opengl_dim.get_custom_font()
         
         bpy.ops.fd_scene.clear_2d_views()
         
@@ -379,7 +379,7 @@ class OPERATOR_render_2d_views(bpy.types.Operator):
         while not os.path.exists(bpy.path.abspath(scene.render.filepath) + ".jpg"):
             time.sleep(0.1)
         
-        img_result = utils.render_opengl(self,context)
+        img_result = opengl_dim.render_opengl(self,context)
         
         image_view = context.window_manager.mv.image_views.add()
         image_view.name = img_result.name
