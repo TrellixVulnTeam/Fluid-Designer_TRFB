@@ -130,6 +130,9 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
     bl_label = "Generate 2d Views"
     bl_description = "Generates 2D Views"
     bl_options = {'UNDO'}
+    
+    VISIBLE_LINESET_NAME = "Visible Lines"
+    HIDDEN_LINESET_NAME = "Hidden Lines"
 
     ev_pad = bpy.props.FloatProperty(name="Elevation View Padding",
                                      default=0.75)
@@ -149,6 +152,23 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
             world.horizon_color = (1.0, 1.0, 1.0) 
             return world
     
+    def create_linestyles(self):
+        linestyles = bpy.data.linestyles
+        linestyles.new(self.VISIBLE_LINESET_NAME)
+        linestyles.new(self.HIDDEN_LINESET_NAME)
+        
+    def create_linesets(self, scene):
+        f_settings = scene.render.layers[0].freestyle_settings
+        linestyles = bpy.data.linestyles
+        
+        f_settings.linesets.new(self.VISIBLE_LINESET_NAME).linestyle = linestyles[self.VISIBLE_LINESET_NAME]
+        f_settings.linesets.new(self.HIDDEN_LINESET_NAME).linestyle = linestyles[self.HIDDEN_LINESET_NAME]  
+    
+    def clear_unused_linestyles(self):
+        for linestyle in bpy.data.linestyles:
+            if linestyle.users == 0:
+                bpy.data.linestyles.remove(linestyle)
+    
     def create_camera(self,scene):
         camera_data = bpy.data.cameras.new(scene.name)
         camera_obj = bpy.data.objects.new(name=scene.name,object_data=camera_data)
@@ -156,35 +176,11 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
         scene.camera = camera_obj                        
         camera_obj.data.type = 'ORTHO'
         scene.render.resolution_y = 1280
-        
         scene.mv.ui.render_type_tabs = 'NPR'
-         
-        fs = scene.render.layers[0].freestyle_settings
-
-        lineset = fs.linesets.new("Visible")
-#         lineset.linestyle = lineset.linestyle
-        
-#         lineset = fs.linesets.new("Hidden")
-#         lineset.linestyle = lineset.linestyle
-#         lineset.visibility = 'HIDDEN'
-#         lineset.edge_type_combination = 'AND'
-#         lineset.select_edge_mark = True
-#         lineset.select_crease = False
-#         lineset.linestyle.name = "Dashed"
-#         lineset.linestyle.use_dashed_line = True
-#         lineset.linestyle.dash1 = 30
-#         lineset.linestyle.dash2 = 30
-#         lineset.linestyle.dash3 = 30
-#         lineset.linestyle.gap1 = 30
-#         lineset.linestyle.gap2 = 30
-#         lineset.linestyle.gap3 = 30
-        
-        #TODO: Create a new world and assign it to the new scenes
         scene.world = self.get_world()
         scene.render.display_mode = 'NONE'
         scene.render.use_lock_interface = True        
         scene.render.image_settings.file_format = 'JPEG'
-#         scene.mv.ui.render_type_tabs = 'NPR'
         
         return camera_obj
     
@@ -217,6 +213,7 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
         pv_scene.name = "Plan View"
         pv_scene.mv.name_scene = "Plan View"
         pv_scene.mv.plan_view_scene = True
+        self.create_linesets(pv_scene)
     
         for obj in self.main_scene.objects:
             if obj.mv.type == 'BPWALL':
@@ -295,6 +292,7 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
         new_scene.mv.elevation_img_name = wall.obj_bp.name
         new_scene.mv.plan_view_scene = False
         new_scene.mv.elevation_scene = True
+        self.create_linesets(new_scene)
         
         self.group_children(wall_group,wall.obj_bp)                    
         wall_mesh = utils.create_cube_mesh(wall.obj_bp.mv.name_object,(wall.obj_x.location.x,wall.obj_y.location.y,wall.obj_z.location.z))
@@ -332,21 +330,23 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
         
     def execute(self, context):
         context.window_manager.mv.use_opengl_dimensions = True
-        
         self.font = opengl_dim.get_custom_font()
-        
         bpy.ops.fd_scene.clear_2d_views()
+        
+        self.create_linestyles()
         
         self.main_scene = context.scene
         context.scene.name = "_Main"
         self.create_plan_view_scene(context)
+        
         
         for obj in self.main_scene.objects:
             if obj.mv.type == 'BPWALL':
                 wall = fd_types.Wall(obj_bp = obj)
                 if len(wall.get_wall_groups()) > 0:
                     self.create_elv_view_scene(context, wall)
-
+                    
+        self.clear_unused_linestyles()
         bpy.context.screen.scene = self.main_scene
         context.window_manager.mv.elevation_scene_index = 0
         return {'FINISHED'}
