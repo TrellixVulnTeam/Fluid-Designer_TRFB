@@ -133,6 +133,10 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
     
     VISIBLE_LINESET_NAME = "Visible Lines"
     HIDDEN_LINESET_NAME = "Hidden Lines"
+    ENV_2D_NAME = "2D Environment"
+    HIDDEN_LINE_DASH_PX = 5
+    HIDDEN_LINE_GAP_PX = 5
+    
 
     ev_pad = bpy.props.FloatProperty(name="Elevation View Padding",
                                      default=0.75)
@@ -145,24 +149,50 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
     ignore_obj_list = []
     
     def get_world(self):
-        if "2D Environment" in bpy.data.worlds:
-            return bpy.data.worlds["2D Environment"]
+        if self.ENV_2D_NAME in bpy.data.worlds:
+            return bpy.data.worlds[self.ENV_2D_NAME]
         else:
-            world = bpy.data.worlds.new("2D Environment")
+            world = bpy.data.worlds.new(self.ENV_2D_NAME)
             world.horizon_color = (1.0, 1.0, 1.0) 
             return world
     
     def create_linestyles(self):
         linestyles = bpy.data.linestyles
         linestyles.new(self.VISIBLE_LINESET_NAME)
-        linestyles.new(self.HIDDEN_LINESET_NAME)
+        
+        hidden_linestyle = linestyles.new(self.HIDDEN_LINESET_NAME)
+        hidden_linestyle.use_dashed_line = True
+        hidden_linestyle.dash1 = self.HIDDEN_LINE_DASH_PX
+        hidden_linestyle.dash2 = self.HIDDEN_LINE_DASH_PX
+        hidden_linestyle.dash3 = self.HIDDEN_LINE_DASH_PX
+        hidden_linestyle.gap1 = self.HIDDEN_LINE_GAP_PX
+        hidden_linestyle.gap2 = self.HIDDEN_LINE_GAP_PX
+        hidden_linestyle.gap3 = self.HIDDEN_LINE_GAP_PX
         
     def create_linesets(self, scene):
         f_settings = scene.render.layers[0].freestyle_settings
         linestyles = bpy.data.linestyles
         
         f_settings.linesets.new(self.VISIBLE_LINESET_NAME).linestyle = linestyles[self.VISIBLE_LINESET_NAME]
-        f_settings.linesets.new(self.HIDDEN_LINESET_NAME).linestyle = linestyles[self.HIDDEN_LINESET_NAME]  
+        
+        hidden_lineset = f_settings.linesets.new(self.HIDDEN_LINESET_NAME)
+        hidden_lineset.linestyle = linestyles[self.HIDDEN_LINESET_NAME]
+        
+        hidden_lineset.select_by_visibility = False
+        hidden_lineset.select_by_edge_types = True
+        hidden_lineset.select_by_face_marks = False
+        hidden_lineset.select_by_group = False
+        hidden_lineset.select_by_image_border = False
+        
+        hidden_lineset.select_silhouette = False
+        hidden_lineset.select_border = False
+        hidden_lineset.select_contour = False
+        hidden_lineset.select_suggestive_contour = False
+        hidden_lineset.select_ridge_valley = False
+        hidden_lineset.select_crease = False
+        hidden_lineset.select_edge_mark = True
+        hidden_lineset.select_external_contour = False
+        hidden_lineset.select_material_boundary = False
     
     def clear_unused_linestyles(self):
         for linestyle in bpy.data.linestyles:
