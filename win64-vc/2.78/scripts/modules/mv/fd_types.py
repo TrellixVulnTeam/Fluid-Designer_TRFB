@@ -2015,6 +2015,15 @@ class Prompts_Interface(bpy.types.Operator):
         self.width = math.fabs(product.obj_x.location.x)   
         return product
     
+    def get_insert(self):
+        obj = bpy.data.objects[self.object_name]
+        obj_product_bp = utils.get_bp(obj,'INSERT')
+        insert = Assembly(obj_product_bp)
+        self.depth = math.fabs(insert.obj_y.location.y)
+        self.height = math.fabs(insert.obj_z.location.z)
+        self.width = math.fabs(insert.obj_x.location.x)   
+        return insert    
+    
     def draw_product_size(self,layout):
         box = layout.box()
         row = box.row()
