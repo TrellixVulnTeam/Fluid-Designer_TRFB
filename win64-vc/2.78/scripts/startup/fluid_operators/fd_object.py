@@ -538,7 +538,7 @@ class OPS_add_room_lamp(Operator):
         obj_lamp.location.z = z
         obj_lamp.data.shape = 'RECTANGLE'
         obj_lamp.data.size = length + unit.inch(20)
-        obj_lamp.data.size_y = width + unit.inch(20)
+        obj_lamp.data.size_y = math.fabs(width) + unit.inch(20)
         for node in obj_lamp.data.node_tree.nodes:
             if node.type == 'EMISSION':
                 node.inputs[1].default_value = max(unit.meter_to_active_unit(largest_x),
