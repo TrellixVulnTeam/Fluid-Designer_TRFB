@@ -185,7 +185,80 @@ class Sliding_Doors(fd_types.Assembly):
         door_panel_right.assign_material("Glass",MATERIAL_FILE,"Glass")  
         door_panel_right.assign_material("Hinge",MATERIAL_FILE,"Stainless Steel")  
                 
-        self.update()    
+        self.update()
+        
+class Pocket_Doors(fd_types.Assembly):
+    library_name = "Entry Doors"
+    category_name = ""
+    assembly_name = ""
+    property_id = "cabinetlib.entry_door_prompts"
+    type_assembly = "PRODUCT"
+    mirror_z = False
+    mirror_y = False
+    width = 0
+    height = 0
+    depth = 0
+    
+    door_frame = ""
+    door_panel = ""
+    
+    double_door = False
+    
+    def draw(self):
+        self.create_assembly()
+            
+        self.add_tab(name='Main Options', tab_type='VISIBLE')
+        self.add_tab(name='Formulas', tab_type='HIDDEN')
+        
+        self.add_prompt(name="Open Door", prompt_type='PERCENTAGE', value=0, tab_index=0)
+        self.add_prompt(name="Frame Width", prompt_type='DISTANCE', value=unit.inch(3.25), tab_index=1)
+        self.add_prompt(name="Panel Depth",prompt_type='DISTANCE',value=unit.inch(1.75), tab_index=1)
+        
+        Width = self.get_var('dim_x','Width')
+        Height = self.get_var('dim_z','Height')
+        Depth = self.get_var('dim_y','Depth')
+        Open_Door = self.get_var('Open Door')
+        Frame_Width = self.get_var('Frame Width')
+        Panel_Depth = self.get_var('Panel Depth')
+
+        door_frame = self.add_assembly(os.path.join(DOOR_FRAME_PATH,self.door_frame))
+        door_frame.set_name("Door Frame")
+        door_frame.x_dim('Width', [Width])
+        door_frame.y_dim('Depth', [Depth])
+        door_frame.z_dim('Height', [Height])
+        door_frame.assign_material("Frame", MATERIAL_FILE, "White")   
+        
+        door_panel = self.add_assembly(os.path.join(DOOR_PANEL,self.door_panel))
+        door_panel.set_name("Door Panel")
+        door_panel.y_loc('Depth*0.5+Panel_Depth*0.5', [Depth, Panel_Depth])
+        door_panel.z_dim('Height-INCH(3.25)', [Height])
+        door_panel.prompt('No Hardware', value=True)
+        
+        if not self.double_door:
+            door_panel.x_loc('Frame_Width-Open_Door*(Width-Frame_Width*2)', [Width, Frame_Width, Open_Door])
+            door_panel.x_dim('(Width-Frame_Width*2)',[Width, Frame_Width])
+        else:
+            door_panel.x_loc('Frame_Width-Open_Door*((Width-Frame_Width*2)*0.5)', [Width, Frame_Width, Open_Door])
+            door_panel.x_dim('(Width-Frame_Width*2)*0.5',[Width, Frame_Width])
+        
+        door_panel.assign_material("Door", MATERIAL_FILE, "White")
+        door_panel.assign_material("Glass", MATERIAL_FILE, "Glass")
+        door_panel.assign_material("Hinge", MATERIAL_FILE, "Stainless Steel")
+        
+        if self.double_door:
+            door_panel_right = self.add_assembly(os.path.join(DOOR_PANEL,self.door_panel))
+            door_panel_right.set_name("Door Panel Right")
+            door_panel_right.x_loc('Width*0.5+(Open_Door*(Width*0.5-Frame_Width))',
+                                   [Width, Frame_Width, Open_Door])
+            door_panel_right.y_loc('Depth*0.5+Panel_Depth*0.5', [Depth, Panel_Depth])
+            door_panel_right.x_dim('(Width-Frame_Width*2)*0.5',[Width, Frame_Width])
+            door_panel_right.z_dim('Height-INCH(3.25)',[Height])
+            door_panel_right.prompt('No Hardware', value=True)
+            door_panel_right.assign_material("Door",MATERIAL_FILE,"White")   
+            door_panel_right.assign_material("Glass",MATERIAL_FILE,"Glass")  
+            door_panel_right.assign_material("Hinge",MATERIAL_FILE,"Stainless Steel")
+                
+        self.update()         
   
 class PRODUCT_Entry_Door_Frame(Entry_Door):
     
@@ -333,6 +406,29 @@ class PRODUCT_Sliding_Door_Inset_Panel(Sliding_Doors):
         self.depth = DOOR_DEPTH
         self.door_frame = "Door_Frame.blend"
         self.door_panel = "Door_Panel_Inset.blend"      
+        
+class PRODUCT_Pocket_Door_Inset_Panel(Pocket_Doors):
+    
+    def __init__(self):
+        self.category_name = "Entry Doors"
+        self.assembly_name = "Pocket Door Inset Panel"
+        self.width = SINGLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.door_frame = "Pocket_Door_Frame.blend"
+        self.door_panel = "Door_Panel_Inset.blend"
+        
+class PRODUCT_Pocket_Double_Door_Inset_Panel(Pocket_Doors):
+    
+    def __init__(self):
+        self.category_name = "Entry Doors"
+        self.assembly_name = "Pocket Double Door Inset Panel"
+        self.width = SINGLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.double_door = True
+        self.door_frame = "Pocket_Door_Frame_Double.blend"
+        self.door_panel = "Door_Panel_Inset.blend"        
         
 class PROMPTS_Entry_Door_Prompts(bpy.types.Operator):
     bl_idname = "cabinetlib.entry_door_prompts"
