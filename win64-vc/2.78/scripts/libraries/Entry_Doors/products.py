@@ -332,7 +332,7 @@ class Bi_Fold_Doors(fd_types.Assembly):
 class PRODUCT_Entry_Door_Frame(Entry_Door):
     
     def __init__(self):
-        self.category_name = "Entry Doors"
+        self.category_name = "Open Entry Ways"
         self.assembly_name = "Entry Door Frame"
         self.width = SINGLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
@@ -343,7 +343,7 @@ class PRODUCT_Entry_Door_Frame(Entry_Door):
 class PRODUCT_Entry_Door_Double_Panel(Entry_Door):
     
     def __init__(self):
-        self.category_name = "Entry Doors"
+        self.category_name = "Single Doors"
         self.assembly_name = "Entry Door Double Panel"
         self.width = SINGLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
@@ -355,7 +355,7 @@ class PRODUCT_Entry_Door_Double_Panel(Entry_Door):
 class PRODUCT_Entry_Door_Inset_Panel(Entry_Door):
     
     def __init__(self):
-        self.category_name = "Entry Doors"
+        self.category_name = "Single Doors"
         self.assembly_name = "Entry Door Inset Panel"
         self.width = SINGLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
@@ -367,7 +367,7 @@ class PRODUCT_Entry_Door_Inset_Panel(Entry_Door):
 class PRODUCT_Entry_Door_Glass_Panel(Entry_Door):
     
     def __init__(self):
-        self.category_name = "Entry Doors"
+        self.category_name = "Single Doors"
         self.assembly_name = "Entry Door Glass Panel"
         self.width = SINGLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
@@ -379,7 +379,7 @@ class PRODUCT_Entry_Door_Glass_Panel(Entry_Door):
 class PRODUCT_Entry_Door_Glass_Georgian_Panel(Entry_Door):
     
     def __init__(self):
-        self.category_name = "Entry Doors"
+        self.category_name = "Single Doors"
         self.assembly_name = "Entry Door Glass Georgian Panel"
         self.width = SINGLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
@@ -391,7 +391,7 @@ class PRODUCT_Entry_Door_Glass_Georgian_Panel(Entry_Door):
 class PRODUCT_Entry_Door_Glass_Border_Panel(Entry_Door):
     
     def __init__(self):
-        self.category_name = "Entry Doors"
+        self.category_name = "Single Doors"
         self.assembly_name = "Entry Door Glass Border Panel"
         self.width = SINGLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
@@ -403,7 +403,7 @@ class PRODUCT_Entry_Door_Glass_Border_Panel(Entry_Door):
 class PRODUCT_Entry_Double_Door_Double_Panel(Entry_Door):
     
     def __init__(self):
-        self.category_name = "Entry Doors"
+        self.category_name = "Double Doors"
         self.assembly_name = "Entry Double Door Double Panel"
         self.width = DOUBLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
@@ -416,7 +416,7 @@ class PRODUCT_Entry_Double_Door_Double_Panel(Entry_Door):
 class PRODUCT_Entry_Double_Door_Inset_Panel(Entry_Door):
     
     def __init__(self):
-        self.category_name = "Entry Doors"
+        self.category_name = "Double Doors"
         self.assembly_name = "Entry Double Door Inset Panel"
         self.width = DOUBLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
@@ -429,7 +429,7 @@ class PRODUCT_Entry_Double_Door_Inset_Panel(Entry_Door):
 class PRODUCT_Entry_Double_Door_Glass_Panel(Entry_Door):
     
     def __init__(self):
-        self.category_name = "Entry Doors"
+        self.category_name = "Double Doors"
         self.assembly_name = "Entry Double Door Glass Panel"
         self.width = DOUBLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
@@ -442,7 +442,7 @@ class PRODUCT_Entry_Double_Door_Glass_Panel(Entry_Door):
 class PRODUCT_Entry_Double_Door_Glass_Georgian_Panel(Entry_Door):
     
     def __init__(self):
-        self.category_name = "Entry Doors"
+        self.category_name = "Double Doors"
         self.assembly_name = "Entry Double Door Glass Georgian Panel"
         self.width = DOUBLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
@@ -455,7 +455,7 @@ class PRODUCT_Entry_Double_Door_Glass_Georgian_Panel(Entry_Door):
 class PRODUCT_Entry_Double_Door_Glass_Border_Panel(Entry_Door):
     
     def __init__(self):
-        self.category_name = "Entry Doors"
+        self.category_name = "Double Doors"
         self.assembly_name = "Entry Double Door Glass Border Panel"
         self.width = DOUBLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
@@ -468,13 +468,13 @@ class PRODUCT_Entry_Double_Door_Glass_Border_Panel(Entry_Door):
 class PRODUCT_Sliding_Door_Inset_Panel(Sliding_Doors):
     
     def __init__(self):
-        self.category_name = "Entry Doors"
+        self.category_name = "Sliding Doors"
         self.assembly_name = "Sliding Door Inset Panel"
         self.width = DOUBLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
         self.depth = DOOR_DEPTH
         self.door_frame = "Door_Frame.blend"
-        self.door_panel = "Door_Panel_Inset.blend"      
+        self.door_panel = "Door_Panel_Inset.blend"
         
 class PRODUCT_Pocket_Door_Inset_Panel(Pocket_Doors):
     
@@ -485,7 +485,7 @@ class PRODUCT_Pocket_Door_Inset_Panel(Pocket_Doors):
         self.height = DOOR_HEIGHT
         self.depth = DOOR_DEPTH
         self.door_frame = "Pocket_Door_Frame.blend"
-        self.door_panel = "Door_Panel_Inset.blend"
+        self.door_panel = "Door_Panel_Inset.blend"        
         
 class PRODUCT_Pocket_Double_Door_Inset_Panel(Pocket_Doors):
     
