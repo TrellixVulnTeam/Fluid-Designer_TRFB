@@ -33,6 +33,7 @@ from mv import fd_types, utils, unit
 import math
 from mathutils import Vector
 import os
+import inspect
 from bpy.types import PropertyGroup, UIList, Panel, Operator
 from bpy.props import (StringProperty,
                        BoolProperty,
@@ -163,6 +164,19 @@ def update_obstacle_index(self,context):
             child.hide_select = False
             child.select = True
             context.scene.objects.active = child
+            
+def get_entry_door_product_class(self, category_name, product_name):
+    pkg = __import__("Entry_Doors")
+    
+    for modname, modobj in inspect.getmembers(pkg):
+        for name, obj in inspect.getmembers(modobj):
+            if "PRODUCT_" in name and inspect.isclass(obj):
+                product = obj()
+                if product.category_name == category_name and product.assembly_name == product_name:
+                    product.package_name = "Entry_Doors"
+                    product.module_name = modname
+                    return product    
+                
             
 class Obstacle(PropertyGroup):
     
@@ -1131,8 +1145,13 @@ class OPERATOR_Build_Room(Operator):
         entry_wall.data.vertices[6].co[0] += self.wall_thickness 
         
         #TODO: Develop a way for users to change entry door style. (Sliding, Bifold, Single, Double)
-        bp = utils.get_group(os.path.join(os.path.dirname(__file__),"Entry Doors","Entry Door Frame.blend"))
-        self.door = fd_types.Assembly(bp)
+        #bp = utils.get_group(os.path.join(os.path.dirname(__file__),"Entry Doors","Entry Door Frame.blend"))
+        #self.door = fd_types.Assembly(bp)
+        self.door = get_entry_door_product_class(self, "Single Doors", "Entry Door Inset Panel")
+        self.door.draw()
+        self.door.update()
+        utils.init_objects(self.door.obj_bp)
+        
         self.door.obj_bp.mv.mirror_y = False
         self.door.obj_bp.mv.type_group = 'PRODUCT'
         self.door.obj_bp.parent = self.entry_wall.obj_bp
