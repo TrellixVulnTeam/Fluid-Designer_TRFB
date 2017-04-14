@@ -165,6 +165,15 @@ def update_obstacle_index(self,context):
             child.select = True
             context.scene.objects.active = child
             
+def get_door_type_enum_list():
+    items = []
+    
+    for cat in os.listdir(os.path.join(utils.get_library_scripts_dir(bpy.context)[0], DOOR_LIBRARY_PATH)):
+        cat_item = (cat.upper(), cat, cat)
+        items.append(cat_item)
+    
+    return items        
+            
 def get_entry_door_product_class(self, category_name, product_name):
     pkg = __import__("Entry_Doors")
     
@@ -175,8 +184,7 @@ def get_entry_door_product_class(self, category_name, product_name):
                 if product.category_name == category_name and product.assembly_name == product_name:
                     product.package_name = "Entry_Doors"
                     product.module_name = modname
-                    return product    
-                
+                    return product
             
 class Obstacle(PropertyGroup):
     
@@ -229,13 +237,8 @@ class Scene_Props(PropertyGroup):
                               default='TEXTURED')
     
     entry_door_type = EnumProperty(name="Door Type",
-                                   items=[('OPEN', 'Open Entry Way', 'Open Entry Way'),
-                                          ('SINGLE', 'Single Door', 'Single Door'),
-                                          ('DOUBLE', 'Double Door', 'Double Door'),
-                                          ('SLIDING', 'Sliding Door', 'Sliding Door'),
-                                          ('BIFOLD', 'Bi-Fold Door', 'Bi-Fold Door'),
-                                          ('POCKET', 'Pocket Door', 'Pocket Door')],
-                                   default='OPEN')
+                                   items=get_door_type_enum_list(),
+                                   default=get_door_type_enum_list()[0][0])
     
     open_door = EnumProperty(name="Open Entry Way", items=enum_open_door)
     single_door = EnumProperty(name="Single Door", items=enum_single_door)
@@ -1144,9 +1147,6 @@ class OPERATOR_Build_Room(Operator):
         entry_wall.data.vertices[5].co[0] -= self.wall_thickness 
         entry_wall.data.vertices[6].co[0] += self.wall_thickness 
         
-        #TODO: Develop a way for users to change entry door style. (Sliding, Bifold, Single, Double)
-        #bp = utils.get_group(os.path.join(os.path.dirname(__file__),"Entry Doors","Entry Door Frame.blend"))
-        #self.door = fd_types.Assembly(bp)
         self.door = get_entry_door_product_class(self, "Single Doors", "Entry Door Inset Panel")
         self.door.draw()
         self.door.update()
