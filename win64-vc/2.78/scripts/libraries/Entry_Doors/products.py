@@ -284,6 +284,7 @@ class Bi_Fold_Doors(fd_types.Assembly):
         self.add_tab(name='Formulas', tab_type='HIDDEN')
         
         self.add_prompt(name="Open Door", prompt_type='PERCENTAGE', value=0, tab_index=0)
+        self.add_prompt(name="Reverse Swing", prompt_type='CHECKBOX', tab_index=0)
         self.add_prompt(name="Frame Width", prompt_type='DISTANCE', value=unit.inch(3.25), tab_index=1)
         self.add_prompt(name="Panel Depth", prompt_type='DISTANCE', value=unit.inch(1.75), tab_index=1)
         self.add_prompt(name="Door Gap", prompt_type='DISTANCE', value=unit.inch(0.125), tab_index=1)
@@ -295,6 +296,7 @@ class Bi_Fold_Doors(fd_types.Assembly):
         Frame_Width = self.get_var('Frame Width')
         Panel_Depth = self.get_var('Panel Depth')
         Door_Gap = self.get_var('Door Gap')
+        Reverse_Swing = self.get_var('Reverse Swing')
 
         door_frame = self.add_assembly(os.path.join(DOOR_FRAME_PATH,self.door_frame))
         door_frame.set_name("Door Frame")
@@ -305,11 +307,12 @@ class Bi_Fold_Doors(fd_types.Assembly):
         
         door_panel_1_left = self.add_assembly(os.path.join(DOOR_PANEL, self.door_panel))
         door_panel_1_left.set_name("Door Panel Left")
-        door_panel_1_left.x_loc('Frame_Width+Panel_Depth*Open_Door', [Frame_Width, Open_Door,Panel_Depth])
-        door_panel_1_left.y_loc('Depth*0.5+Panel_Depth*0.5', [Depth, Panel_Depth])
+        door_panel_1_left.x_loc('IF(Reverse_Swing,Width-Frame_Width-Panel_Depth*Open_Door,Frame_Width+Panel_Depth*Open_Door)',
+                                [Frame_Width, Open_Door, Panel_Depth, Reverse_Swing, Width])
+        door_panel_1_left.y_loc('Depth*0.5+IF(Reverse_Swing,-Panel_Depth*0.5,Panel_Depth*0.5)', [Depth, Panel_Depth, Reverse_Swing])
         door_panel_1_left.x_dim('(Width-Frame_Width*2)*0.5', [Width, Frame_Width])
         door_panel_1_left.z_dim('Height-INCH(3.25)', [Height])
-        door_panel_1_left.z_rot('radians(-90)*Open_Door', [Open_Door])
+        door_panel_1_left.z_rot('IF(Reverse_Swing,radians(180),0)+radians(-90)*Open_Door', [Open_Door, Reverse_Swing])
         door_panel_1_left.prompt('Hardware Config', value='Right')
         door_panel_1_left.assign_material("Door", MATERIAL_FILE, "White")
         door_panel_1_left.assign_material("Glass", MATERIAL_FILE, "Glass")
@@ -821,6 +824,8 @@ class PROMPTS_Entry_Door_Prompts(bpy.types.Operator):
             door_swing = self.product.get_prompt("Door Swing")
             reverse_swing = self.product.get_prompt("Reverse Swing")
             open_door = self.product.get_prompt("Open Door")
+            open_left_door = self.product.get_prompt("Open Left Door")
+            open_right_door = self.product.get_prompt("Open Right Door")
             
             box = layout.box()
             col = box.column(align=True)
@@ -830,6 +835,9 @@ class PROMPTS_Entry_Door_Prompts(bpy.types.Operator):
             
             if open_door:
                 row.prop(open_door, "PercentageValue", text="")
+            elif open_left_door:
+                row.prop(open_left_door, "PercentageValue", text="Panel 1")
+                row.prop(open_right_door, "PercentageValue", text="Panel 2")
             else:
                 row.prop(self,'door_rotation',text="",slider=True)
                  
