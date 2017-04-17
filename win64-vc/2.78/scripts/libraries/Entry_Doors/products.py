@@ -340,6 +340,17 @@ class PRODUCT_Entry_Door_Frame(Entry_Door):
         
         self.door_frame = "Door_Frame.blend"   
   
+class PRODUCT_Entry_Door_Flat_Panel(Entry_Door):
+    
+    def __init__(self):
+        self.category_name = "Single Doors"
+        self.assembly_name = "Entry Door Flat Panel"
+        self.width = SINGLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.door_frame = "Door_Frame.blend"
+        self.door_panel = "Door_Panel_Flat.blend"
+  
 class PRODUCT_Entry_Door_Double_Panel(Entry_Door):
     
     def __init__(self):
@@ -348,7 +359,6 @@ class PRODUCT_Entry_Door_Double_Panel(Entry_Door):
         self.width = SINGLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
         self.depth = DOOR_DEPTH
-        
         self.door_frame = "Door_Frame.blend"
         self.door_panel = "Door_Panel_Double.blend"
  
@@ -360,7 +370,6 @@ class PRODUCT_Entry_Door_Inset_Panel(Entry_Door):
         self.width = SINGLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
         self.depth = DOOR_DEPTH
-        
         self.door_frame = "Door_Frame.blend"
         self.door_panel = "Door_Panel_Inset.blend"
  
@@ -372,7 +381,6 @@ class PRODUCT_Entry_Door_Glass_Panel(Entry_Door):
         self.width = SINGLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
         self.depth = DOOR_DEPTH
-        
         self.door_frame = "Door_Frame.blend"
         self.door_panel = "Door_Panel_Glass.blend"
         
@@ -384,7 +392,6 @@ class PRODUCT_Entry_Door_Glass_Georgian_Panel(Entry_Door):
         self.width = SINGLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
         self.depth = DOOR_DEPTH
-        
         self.door_frame = "Door_Frame.blend"
         self.door_panel = "Door_Panel_Glass_Georgian.blend"
         
@@ -396,7 +403,6 @@ class PRODUCT_Entry_Door_Glass_Border_Panel(Entry_Door):
         self.width = SINGLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
         self.depth = DOOR_DEPTH
-        
         self.door_frame = "Door_Frame.blend"
         self.door_panel = "Door_Panel_Glass_Marginal_Border.blend"
         
@@ -408,10 +414,21 @@ class PRODUCT_Entry_Double_Door_Double_Panel(Entry_Door):
         self.width = DOUBLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
         self.depth = DOOR_DEPTH
-        
         self.double_door = True
         self.door_frame = "Door_Frame.blend"
         self.door_panel = "Door_Panel_Double.blend"
+        
+class PRODUCT_Entry_Double_Door_Flat_Panel(Entry_Door):
+    
+    def __init__(self):
+        self.category_name = "Double Doors"
+        self.assembly_name = "Entry Double Door Flat Panel"
+        self.width = DOUBLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.double_door = True
+        self.door_frame = "Door_Frame.blend"
+        self.door_panel = "Door_Panel_Flat.blend"        
         
 class PRODUCT_Entry_Double_Door_Inset_Panel(Entry_Door):
     
@@ -421,7 +438,6 @@ class PRODUCT_Entry_Double_Door_Inset_Panel(Entry_Door):
         self.width = DOUBLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
         self.depth = DOOR_DEPTH
-        
         self.double_door = True
         self.door_frame = "Door_Frame.blend"
         self.door_panel = "Door_Panel_Inset.blend"
@@ -434,7 +450,6 @@ class PRODUCT_Entry_Double_Door_Glass_Panel(Entry_Door):
         self.width = DOUBLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
         self.depth = DOOR_DEPTH
-        
         self.double_door = True
         self.door_frame = "Door_Frame.blend"
         self.door_panel = "Door_Panel_Glass.blend"
@@ -447,7 +462,6 @@ class PRODUCT_Entry_Double_Door_Glass_Georgian_Panel(Entry_Door):
         self.width = DOUBLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
         self.depth = DOOR_DEPTH
-        
         self.double_door = True
         self.door_frame = "Door_Frame.blend"
         self.door_panel = "Door_Panel_Glass_Georgian.blend"
@@ -460,10 +474,20 @@ class PRODUCT_Entry_Double_Door_Glass_Border_Panel(Entry_Door):
         self.width = DOUBLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
         self.depth = DOOR_DEPTH
-        
         self.double_door = True
         self.door_frame = "Door_Frame.blend"
         self.door_panel = "Door_Panel_Glass_Marginal_Border.blend"
+        
+class PRODUCT_Sliding_Door_Flat_Panel(Sliding_Doors):
+    
+    def __init__(self):
+        self.category_name = "Sliding Doors"
+        self.assembly_name = "Sliding Door Flat Panel"
+        self.width = DOUBLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.door_frame = "Door_Frame.blend"
+        self.door_panel = "Door_Panel_Flat.blend"        
         
 class PRODUCT_Sliding_Door_Inset_Panel(Sliding_Doors):
     
@@ -476,21 +500,132 @@ class PRODUCT_Sliding_Door_Inset_Panel(Sliding_Doors):
         self.door_frame = "Door_Frame.blend"
         self.door_panel = "Door_Panel_Inset.blend"
         
+class PRODUCT_Sliding_Door_Double_Panel(Sliding_Doors):
+    
+    def __init__(self):
+        self.category_name = "Sliding Doors"
+        self.assembly_name = "Sliding Door Double Panel"
+        self.width = DOUBLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.door_frame = "Door_Frame.blend"
+        self.door_panel = "Door_Panel_Double.blend"
+        
+class PRODUCT_Sliding_Door_Glass_Panel(Sliding_Doors):
+    
+    def __init__(self):
+        self.category_name = "Sliding Doors"
+        self.assembly_name = "Sliding Door Glass Panel"
+        self.width = DOUBLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.door_frame = "Door_Frame.blend"
+        self.door_panel = "Door_Panel_Glass.blend"        
+        
+class PRODUCT_Sliding_Door_Glass_Georgian_Panel(Sliding_Doors):
+    
+    def __init__(self):
+        self.category_name = "Sliding Doors"
+        self.assembly_name = "Sliding Door Georgian Panel"
+        self.width = DOUBLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.door_frame = "Door_Frame.blend"
+        self.door_panel = "Door_Panel_Glass_Georgian.blend"
+        
+class PRODUCT_Sliding_Door_Glass_Border_Panel(Sliding_Doors):
+    
+    def __init__(self):
+        self.category_name = "Sliding Doors"
+        self.assembly_name = "Sliding Door Glass Border Panel"
+        self.width = DOUBLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.door_frame = "Door_Frame.blend"
+        self.door_panel = "Door_Panel_Glass_Marginal_Border.blend"
+        
+class PRODUCT_Pocket_Door_Flat_Panel(Pocket_Doors):
+    
+    def __init__(self):
+        self.category_name = "Pocket Doors"
+        self.assembly_name = "Pocket Door Flat Panel"
+        self.width = SINGLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.door_frame = "Pocket_Door_Frame.blend"
+        self.door_panel = "Door_Panel_Flat.blend"                
+        
 class PRODUCT_Pocket_Door_Inset_Panel(Pocket_Doors):
     
     def __init__(self):
-        self.category_name = "Entry Doors"
+        self.category_name = "Pocket Doors"
         self.assembly_name = "Pocket Door Inset Panel"
         self.width = SINGLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
         self.depth = DOOR_DEPTH
         self.door_frame = "Pocket_Door_Frame.blend"
-        self.door_panel = "Door_Panel_Inset.blend"        
+        self.door_panel = "Door_Panel_Inset.blend"
+        
+class PRODUCT_Pocket_Door_Double_Panel(Pocket_Doors):
+    
+    def __init__(self):
+        self.category_name = "Pocket Doors"
+        self.assembly_name = "Pocket Door Double Panel"
+        self.width = SINGLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.door_frame = "Pocket_Door_Frame.blend"
+        self.door_panel = "Door_Panel_Double.blend" 
+        
+class PRODUCT_Pocket_Door_Glass_Panel(Pocket_Doors):
+    
+    def __init__(self):
+        self.category_name = "Pocket Doors"
+        self.assembly_name = "Pocket Door Glass Panel"
+        self.width = SINGLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.door_frame = "Pocket_Door_Frame.blend"
+        self.door_panel = "Door_Panel_Glass.blend" 
+        
+class PRODUCT_Pocket_Door_Glass_Georgian_Panel(Pocket_Doors):
+    
+    def __init__(self):
+        self.category_name = "Pocket Doors"
+        self.assembly_name = "Pocket Door Glass Georgian Panel"
+        self.width = SINGLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.door_frame = "Pocket_Door_Frame.blend"
+        self.door_panel = "Door_Panel_Glass_Georgian.blend" 
+        
+class PRODUCT_Pocket_Door_Glass_Border_Panel(Pocket_Doors):
+    
+    def __init__(self):
+        self.category_name = "Pocket Doors"
+        self.assembly_name = "Pocket Door Glass Border Panel"
+        self.width = SINGLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.door_frame = "Pocket_Door_Frame.blend"
+        self.door_panel = "Door_Panel_Glass_Marginal_Border.blend"
+        
+class PRODUCT_Pocket_Double_Door_Flat_Panel(Pocket_Doors):
+    
+    def __init__(self):
+        self.category_name = "Pocket Doors"
+        self.assembly_name = "Pocket Double Door Flat Panel"
+        self.width = SINGLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.double_door = True
+        self.door_frame = "Pocket_Door_Frame_Double.blend"
+        self.door_panel = "Door_Panel_Flat.blend"        
         
 class PRODUCT_Pocket_Double_Door_Inset_Panel(Pocket_Doors):
     
     def __init__(self):
-        self.category_name = "Entry Doors"
+        self.category_name = "Pocket Doors"
         self.assembly_name = "Pocket Double Door Inset Panel"
         self.width = SINGLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
@@ -499,10 +634,70 @@ class PRODUCT_Pocket_Double_Door_Inset_Panel(Pocket_Doors):
         self.door_frame = "Pocket_Door_Frame_Double.blend"
         self.door_panel = "Door_Panel_Inset.blend"
         
+class PRODUCT_Pocket_Double_Door_Double_Panel(Pocket_Doors):
+    
+    def __init__(self):
+        self.category_name = "Pocket Doors"
+        self.assembly_name = "Pocket Double Door Double Panel"
+        self.width = SINGLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.double_door = True
+        self.door_frame = "Pocket_Door_Frame_Double.blend"
+        self.door_panel = "Door_Panel_Double.blend"
+        
+class PRODUCT_Pocket_Double_Door_Glass_Panel(Pocket_Doors):
+    
+    def __init__(self):
+        self.category_name = "Pocket Doors"
+        self.assembly_name = "Pocket Double Door Glass Panel"
+        self.width = SINGLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.double_door = True
+        self.door_frame = "Pocket_Door_Frame_Double.blend"
+        self.door_panel = "Door_Panel_Glass.blend"
+        
+class PRODUCT_Pocket_Double_Door_Glass_Georgian_Panel(Pocket_Doors):
+    
+    def __init__(self):
+        self.category_name = "Pocket Doors"
+        self.assembly_name = "Pocket Double Door Glass Georgian Panel"
+        self.width = SINGLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.double_door = True
+        self.door_frame = "Pocket_Door_Frame_Double.blend"
+        self.door_panel = "Door_Panel_Glass_Georgian.blend"
+        
+class PRODUCT_Pocket_Double_Door_Glass_Border_Panel(Pocket_Doors):
+    
+    def __init__(self):
+        self.category_name = "Pocket Doors"
+        self.assembly_name = "Pocket Double Door Glass Border Panel"
+        self.width = SINGLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.double_door = True
+        self.door_frame = "Pocket_Door_Frame_Double.blend"
+        self.door_panel = "Door_Panel_Glass_Marginal_Border.blend"
+
+#TODO create bi-fold flat panel assembly
+# class PRODUCT_Bi_Fold_Door_Flat_Panel(Bi_Fold_Doors):
+#     
+#     def __init__(self):
+#         self.category_name = "Bi-Fold Doors"
+#         self.assembly_name = "Bi-Fold Door Inset Panel"
+#         self.width = SINGLE_PANEL_WIDTH
+#         self.height = DOOR_HEIGHT
+#         self.depth = DOOR_DEPTH
+#         self.door_frame = "Door_Frame.blend"
+#         self.door_panel = "Bi-Fold_Door_Panel_Inset.blend"       
+        
 class PRODUCT_Bi_Fold_Door_Inset_Panel(Bi_Fold_Doors):
     
     def __init__(self):
-        self.category_name = "Entry Doors"
+        self.category_name = "Bi-Fold Doors"
         self.assembly_name = "Bi-Fold Door Inset Panel"
         self.width = SINGLE_PANEL_WIDTH
         self.height = DOOR_HEIGHT
