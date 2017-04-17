@@ -52,15 +52,6 @@ CARPET_CATEGORY_NAME = "Carpet"
 TILE_CATEGORY_NAME = "Tile"
 HARDWOOD_CATEGORY_NAME = "Wood Flooring"
 
-DOOR_LIBRARY_PATH = os.path.join("Entry_Doors", "products", "Entry Doors")
-
-OPEN_ENTRY_CATEGORY_NAME = "Open Entry Ways"
-SINGLE_DOOR_CATEGORY_NAME = "Single Doors"
-DOUBLE_DOOR_CATEGORY_NAME = "Double Doors"
-SLIDING_DOOR_CATEGORY_NAME = "Sliding Doors"
-BI_FOLD_DOOR_CATEGORY_NAME = "Bi-Fold Doors"
-POCKET_DOOR_CATEGORY_NAME = "Pocket Doors"
-
 preview_collections = {}
 
 def enum_carpet(self,context):
@@ -95,54 +86,6 @@ def enum_wall_material(self,context):
     pcoll = preview_collections["paint"]
     return utils.get_image_enum_previews(icon_dir,pcoll)
 
-def enum_open_door(self,context):
-    if context is None:
-        return []
-
-    icon_dir = os.path.join(utils.get_library_scripts_dir(context)[0], DOOR_LIBRARY_PATH, OPEN_ENTRY_CATEGORY_NAME)
-    pcoll = preview_collections["open door"]
-    return utils.get_image_enum_previews(icon_dir,pcoll)
-
-def enum_single_door(self,context):
-    if context is None:
-        return []
-    
-    icon_dir = os.path.join(utils.get_library_scripts_dir(context)[0], DOOR_LIBRARY_PATH, SINGLE_DOOR_CATEGORY_NAME)
-    pcoll = preview_collections["single door"]
-    return utils.get_image_enum_previews(icon_dir,pcoll)
-
-def enum_double_door(self,context):
-    if context is None:
-        return []
-
-    icon_dir = os.path.join(utils.get_library_scripts_dir(context)[0], DOOR_LIBRARY_PATH, DOUBLE_DOOR_CATEGORY_NAME)
-    pcoll = preview_collections["double door"]
-    return utils.get_image_enum_previews(icon_dir,pcoll)
-
-def enum_sliding_door(self,context):
-    if context is None:
-        return []
-
-    icon_dir = os.path.join(utils.get_library_scripts_dir(context)[0], DOOR_LIBRARY_PATH, SLIDING_DOOR_CATEGORY_NAME)
-    pcoll = preview_collections["sliding door"]
-    return utils.get_image_enum_previews(icon_dir,pcoll)
-
-def enum_bi_fold_door(self,context):
-    if context is None:
-        return []
-
-    icon_dir = os.path.join(utils.get_library_scripts_dir(context)[0], DOOR_LIBRARY_PATH, BI_FOLD_DOOR_CATEGORY_NAME)
-    pcoll = preview_collections["bi fold door"]
-    return utils.get_image_enum_previews(icon_dir,pcoll)
-
-def enum_pocket_door(self,context):
-    if context is None:
-        return []
-
-    icon_dir = os.path.join(utils.get_library_scripts_dir(context)[0], DOOR_LIBRARY_PATH, POCKET_DOOR_CATEGORY_NAME)
-    pcoll = preview_collections["pocket door"]
-    return utils.get_image_enum_previews(icon_dir,pcoll)
-
 def update_wall_index(self,context): 
     bpy.ops.object.select_all(action='DESELECT')
     wall = self.walls[self.wall_index]
@@ -163,29 +106,8 @@ def update_obstacle_index(self,context):
         if child.type == 'MESH' and child.mv.type!= 'BPASSEMBLY':
             child.hide_select = False
             child.select = True
-            context.scene.objects.active = child
-            
-def get_door_type_enum_list():
-    items = []
-    
-    for cat in os.listdir(os.path.join(utils.get_library_scripts_dir(bpy.context)[0], DOOR_LIBRARY_PATH)):
-        cat_item = (cat.upper(), cat, cat)
-        items.append(cat_item)
-    
-    return items        
-            
-def get_entry_door_product_class(self, category_name, product_name):
-    pkg = __import__("Entry_Doors")
-    
-    for modname, modobj in inspect.getmembers(pkg):
-        for name, obj in inspect.getmembers(modobj):
-            if "PRODUCT_" in name and inspect.isclass(obj):
-                product = obj()
-                if product.category_name == category_name and product.assembly_name == product_name:
-                    product.package_name = "Entry_Doors"
-                    product.module_name = modname
-                    return product
-            
+            context.scene.objects.active = child 
+                       
 class Obstacle(PropertyGroup):
     
     bp_name = StringProperty("BP Name")
@@ -237,15 +159,14 @@ class Scene_Props(PropertyGroup):
                               default='TEXTURED')
     
     entry_door_type = EnumProperty(name="Door Type",
-                                   items=get_door_type_enum_list(),
-                                   default=get_door_type_enum_list()[0][0])
-    
-    open_door = EnumProperty(name="Open Entry Way", items=enum_open_door)
-    single_door = EnumProperty(name="Single Door", items=enum_single_door)
-    double_door = EnumProperty(name="Double Door", items=enum_double_door)
-    sliding_door = EnumProperty(name="Single Door", items=enum_sliding_door)
-    bi_fold_door = EnumProperty(name="Bi-Fold Door", items=enum_bi_fold_door)
-    pocket_door = EnumProperty(name="Pocket Door", items=enum_pocket_door)
+                                   items=[('OPEN', 'Open Entry Way', 'Open Entry Way'),
+                                          ('SINGLE', 'Single Door', 'Single Door'),
+                                          ('DOUBLE', 'Double Door', 'Double Door'),
+                                          ('POCKET', 'Pocket Door', 'Pocket Door'),
+                                          ('POCKET_DOUBLE', 'Pocket Double Door', 'Pocket Double Door'),
+                                          ('SLIDING', 'Sliding Door', 'Sliding Door'),
+                                          ('BIFOLD', 'Bi-Fold Door', 'Bi-Fold Door')],
+                                   default='OPEN')
     
     carpet_material = EnumProperty(name="Carpet Material",items=enum_carpet)
     wood_floor_material = EnumProperty(name="Wood Floor Material",items=enum_wood_floor)
@@ -290,23 +211,9 @@ class PANEL_Room_Builder(Panel):
         row.prop(props,'paint_type',text="Walls",icon='FILE_FOLDER')
         row.prop(props,'wall_material',text="")
 
-        #W-------------------------------------------------------------------
         if props.room_type == 'SQUARE':
             row = box.row(align=True)
-            row.prop(props, 'entry_door_type', text="Door", icon='FILE_FOLDER')
-            
-            if props.entry_door_type == 'OPEN':
-                row.prop(props, 'open_door', text="")
-            if props.entry_door_type == 'SINGLE':
-                row.prop(props, 'single_door', text="")
-            if props.entry_door_type == 'DOUBLE':
-                row.prop(props, 'double_door', text="")
-            if props.entry_door_type == 'SLIDING':
-                row.prop(props, 'sliding_door', text="")
-            if props.entry_door_type == 'BIFOLD':
-                row.prop(props, 'bi_fold_door', text="")
-            if props.entry_door_type == 'POCKET':
-                row.prop(props, 'pocket_door', text="")                                              
+            row.prop(props, 'entry_door_type', text="Door", icon='FILE_FOLDER')                                            
 
         row = box.row(align=True)
         row.prop(mv,'default_wall_height')
@@ -977,6 +884,14 @@ class OPERATOR_Build_Room(Operator):
     
     clicked_ok = False
     
+    doors = {'OPEN': "Entry Door Frame.blend",
+             'SINGLE': "Single Door.blend",
+             'DOUBLE': "Double  Door.blend",
+             'POCKET': "Pocket Door.blend",
+             'POCKET_DOUBLE': "Pocket Double Door.blend",
+             'SLIDING': "Sliding Door.blend",
+             'BIFOLD': "Bi-Fold Door.blend",}
+    
     def check(self, context):
         self.update_wall_properties(context)
         self.set_camera_position(context)
@@ -1147,10 +1062,11 @@ class OPERATOR_Build_Room(Operator):
         entry_wall.data.vertices[5].co[0] -= self.wall_thickness 
         entry_wall.data.vertices[6].co[0] += self.wall_thickness 
         
-        self.door = get_entry_door_product_class(self, "Single Doors", "Entry Door Inset Panel")
-        self.door.draw()
-        self.door.update()
-        utils.init_objects(self.door.obj_bp)
+        bp = utils.get_group(os.path.join(os.path.dirname(__file__),
+                                          "Entry Doors",
+                                          self.doors[context.scene.fd_roombuilder.entry_door_type]))
+        
+        self.door = fd_types.Assembly(bp)
         
         self.door.obj_bp.mv.mirror_y = False
         self.door.obj_bp.mv.type_group = 'PRODUCT'
@@ -1582,44 +1498,12 @@ def register():
 
     paint_coll = bpy.utils.previews.new()
     paint_coll.my_previews_dir = ""
-    paint_coll.my_previews = ()
-    
-    open_door_coll = bpy.utils.previews.new()
-    open_door_coll.my_previews_dir = ""
-    open_door_coll.my_previews = ()    
-    
-    single_door_coll = bpy.utils.previews.new()
-    single_door_coll.my_previews_dir = ""
-    single_door_coll.my_previews = ()
-    
-    double_door_coll = bpy.utils.previews.new()
-    double_door_coll.my_previews_dir = ""
-    double_door_coll.my_previews = ()
-    
-    sliding_door_coll = bpy.utils.previews.new()
-    sliding_door_coll.my_previews_dir = ""
-    sliding_door_coll.my_previews = ()
-    
-    bi_fold_door_coll = bpy.utils.previews.new()
-    bi_fold_door_coll.my_previews_dir = ""
-    bi_fold_door_coll.my_previews = ()
-    
-    pocket_door_coll = bpy.utils.previews.new()
-    pocket_door_coll.my_previews_dir = ""
-    pocket_door_coll.my_previews = ()         
+    paint_coll.my_previews = ()   
     
     preview_collections["carpet"] = carpet_coll
     preview_collections["wood_floor"] = wood_floor_coll
     preview_collections["tile"] = tile_floor_coll
     preview_collections["paint"] = paint_coll
-    
-    preview_collections["open door"] = open_door_coll
-    preview_collections["single door"] = single_door_coll
-    preview_collections["double door"] = double_door_coll
-    preview_collections["sliding door"] = sliding_door_coll
-    preview_collections["bi fold door"] = bi_fold_door_coll
-    preview_collections["pocket door"] = pocket_door_coll
-    
 
 def unregister():
     bpy.utils.unregister_class(Scene_Props)
