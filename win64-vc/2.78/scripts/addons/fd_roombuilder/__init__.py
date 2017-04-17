@@ -168,6 +168,14 @@ class Scene_Props(PropertyGroup):
                                           ('BIFOLD', 'Bi-Fold Door', 'Bi-Fold Door')],
                                    default='OPEN')
     
+    entry_door_fn = {'OPEN': "Entry Door Frame.blend",
+                     'SINGLE': "Single Door.blend",
+                     'DOUBLE': "Double  Door.blend",
+                     'POCKET': "Pocket Door.blend",
+                     'POCKET_DOUBLE': "Pocket Double Door.blend",
+                     'SLIDING': "Sliding Door.blend",
+                     'BIFOLD': "Bi-Fold Door.blend"}
+    
     carpet_material = EnumProperty(name="Carpet Material",items=enum_carpet)
     wood_floor_material = EnumProperty(name="Wood Floor Material",items=enum_wood_floor)
     tile_material = EnumProperty(name="Tile Material",items=enum_tile_floor)
@@ -884,14 +892,6 @@ class OPERATOR_Build_Room(Operator):
     
     clicked_ok = False
     
-    doors = {'OPEN': "Entry Door Frame.blend",
-             'SINGLE': "Single Door.blend",
-             'DOUBLE': "Double  Door.blend",
-             'POCKET': "Pocket Door.blend",
-             'POCKET_DOUBLE': "Pocket Double Door.blend",
-             'SLIDING': "Sliding Door.blend",
-             'BIFOLD': "Bi-Fold Door.blend",}
-    
     def check(self, context):
         self.update_wall_properties(context)
         self.set_camera_position(context)
@@ -1062,9 +1062,10 @@ class OPERATOR_Build_Room(Operator):
         entry_wall.data.vertices[5].co[0] -= self.wall_thickness 
         entry_wall.data.vertices[6].co[0] += self.wall_thickness 
         
+        props = context.scene.fd_roombuilder
         bp = utils.get_group(os.path.join(os.path.dirname(__file__),
                                           "Entry Doors",
-                                          self.doors[context.scene.fd_roombuilder.entry_door_type]))
+                                          props.entry_door_fn[props.entry_door_type]))
         
         self.door = fd_types.Assembly(bp)
         
