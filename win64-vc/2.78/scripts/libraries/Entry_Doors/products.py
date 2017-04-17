@@ -820,22 +820,30 @@ class PROMPTS_Entry_Door_Prompts(bpy.types.Operator):
         if "Main Options" in self.product.obj_bp.mv.PromptPage.COL_MainTab:
             door_swing = self.product.get_prompt("Door Swing")
             reverse_swing = self.product.get_prompt("Reverse Swing")
+            open_door = self.product.get_prompt("Open Door")
             
             box = layout.box()
             col = box.column(align=True)
             col.label("Main Options:")
             row = col.row()
             row.label("Open Door")
-            row.prop(self,'door_rotation',text="",slider=True)   
+            
+            if open_door:
+                row.prop(open_door, "PercentageValue", text="")
+            else:
+                row.prop(self,'door_rotation',text="",slider=True)
+                 
             if door_swing:
                 col = box.column()
                 row = col.row()                
                 row.label("Door Swing")
                 row.prop(self, 'door_swing',text="")
             col = box.column()
-            row = col.row()                
-            row.label("Reverse Swing")
-            row.prop(reverse_swing,'CheckBoxValue',text="")            
+            
+            if reverse_swing:
+                row = col.row()                
+                row.label("Reverse Swing")                
+                row.prop(reverse_swing,'CheckBoxValue',text="")            
     
     def draw_product_placment(self,layout):
         box = layout.box()
