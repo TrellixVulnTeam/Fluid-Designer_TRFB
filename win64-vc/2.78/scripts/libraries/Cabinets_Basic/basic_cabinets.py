@@ -841,38 +841,23 @@ class PROMPTS_Basic_Cabinet_Prompts(fd_types.Prompts_Interface):
     depth = bpy.props.FloatProperty(name="Depth",unit='LENGTH',precision=4)    
     
     product = None
+    insert = None
     
     prompts = {}
 
     def check(self, context):
         self.update_product_size()
+        if self.insert and self.insert.obj_bp:
+            utils.run_calculators(self.insert.obj_bp)
         return True
 
     def execute(self, context):
         self.update_product_size()
         return {'FINISHED'}
 
-    def add_prompt(self,prompt_name):
-        prompt = self.product.get_prompt(prompt_name)
-        if prompt:
-            self.prompts[prompt_name] = prompt
-
     def invoke(self,context,event):
         self.product = self.get_product()
-        self.add_prompt("Left Fin End")
-        self.add_prompt("Right Fin End")
-        self.add_prompt("Base Inset Front")
-        self.add_prompt("Base Inset Rear")
-        self.add_prompt("Base Inset Left")
-        self.add_prompt("Base Inset Right")
-        self.add_prompt("Left Side Wall Filler")
-        self.add_prompt("Right Side Wall Filler")
-        self.add_prompt("Toe Kick Height")
-        self.add_prompt("Toe Kick Setback")
-        self.add_prompt("Add Backsplash")
-        self.add_prompt("Add Left Backsplash")
-        self.add_prompt("Add Right Backsplash")
-        self.add_prompt("Side Splash Setback")
+        self.insert = self.get_insert()
         wm = context.window_manager
         return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(500))
         
@@ -884,69 +869,98 @@ class PROMPTS_Basic_Cabinet_Prompts(fd_types.Prompts_Interface):
         
         box = col.box()
         row = box.row()
-        row.label("Finished Ends:")
-        if "Left Fin End" in self.prompts:
-            prompt = self.prompts["Left Fin End"]
-            row.prop(prompt,prompt.prompt_type,text=prompt.name)
-            
-        if "Right Fin End" in self.prompts:
-            prompt = self.prompts["Right Fin End"]
-            row.prop(prompt,prompt.prompt_type,text=prompt.name)
-        
-        box = col.box()
-        row = box.row()
-        row.label("Fillers:")
-        if "Left Side Wall Filler" in self.prompts:
-            prompt = self.prompts["Left Side Wall Filler"]
-            row.prop(prompt,prompt.prompt_type,text="Left")
-            
-        if "Right Side Wall Filler" in self.prompts:
-            prompt = self.prompts["Right Side Wall Filler"]
-            row.prop(prompt,prompt.prompt_type,text="Right")
-        
-        box = col.box()
-        row = box.row()
-        row.label("Countertop:")
-        if "Add Backsplash" in self.prompts:
-            prompt = self.prompts["Add Backsplash"]
-            row.prop(prompt,prompt.prompt_type,text="Back")
-        if "Add Left Backsplash" in self.prompts:
-            prompt = self.prompts["Add Left Backsplash"]
-            row.prop(prompt,prompt.prompt_type,text="Left")        
-        if "Add Right Backsplash" in self.prompts:
-            prompt = self.prompts["Add Right Backsplash"]
-            row.prop(prompt,prompt.prompt_type,text="Right") 
-        if "Side Splash Setback" in self.prompts:
-            prompt = self.prompts["Side Splash Setback"]
-            row.prop(prompt,prompt.prompt_type,text="Setback")
-        
-        box = col.box()
-        row = box.row()
-        row.label("Base Assembly:")
-        if "Base Inset Front" in self.prompts:
-            prompt = self.prompts["Base Inset Front"]
-            row.prop(prompt,prompt.prompt_type,text="Front")     
-        
-        if "Base Inset Rear" in self.prompts:
-            prompt = self.prompts["Base Inset Rear"]
-            row.prop(prompt,prompt.prompt_type,text="Rear")   
-            
-        if "Base Inset Left" in self.prompts:
-            prompt = self.prompts["Base Inset Left"]
-            row.prop(prompt,prompt.prompt_type,text="Left")   
-            
-        if "Base Inset Right" in self.prompts:
-            prompt = self.prompts["Base Inset Right"]
-            row.prop(prompt,prompt.prompt_type,text="Right")      
 
-        row = box.row()
-        row.label(" ")
-        if "Toe Kick Height" in self.prompts:
-            prompt = self.prompts["Toe Kick Height"]
-            row.prop(prompt,prompt.prompt_type,text=prompt.name)   
-            
-        if "Toe Kick Setback" in self.prompts:
-            prompt = self.prompts["Toe Kick Setback"]
-            row.prop(prompt,prompt.prompt_type,text=prompt.name)               
+        left_fin_end = self.product.get_prompt("Left Fin End")
+        right_fin_end = self.product.get_prompt("Right Fin End")        
+        if left_fin_end and right_fin_end:
+            row.label("Finished Ends:")
+            left_fin_end.draw_prompt(row,split_text=False)
+            right_fin_end.draw_prompt(row,split_text=False)
+
+        left_side_wall_filler = self.product.get_prompt("Left Side Wall Filler")
+        right_side_wall_filler = self.product.get_prompt("Right Side Wall Filler")
+        if left_side_wall_filler and right_side_wall_filler:
+            box = col.box()
+            row = box.row()
+            row.label("Fillers:")    
+            left_side_wall_filler.draw_prompt(row)
+            row = box.row()
+            row.label(" ")
+            right_side_wall_filler.draw_prompt(row)                    
+
+        add_backsplash = self.product.get_prompt("Add Backsplash")
+        add_left_backsplash = self.product.get_prompt("Add Left Backsplash")
+        add_right_backsplash = self.product.get_prompt("Add Right Backsplash")
+        side_splash_setback = self.product.get_prompt("Side Splash Setback")
+        if add_backsplash:
+            box = col.box()
+            row = box.row()
+            row.label("Countertop:")    
+            row = box.row()
+            add_backsplash.draw_prompt(row,split_text=False)
+            add_left_backsplash.draw_prompt(row,text="Add Left",split_text=False)
+            add_right_backsplash.draw_prompt(row,text="Add Right",split_text=False)
+            side_splash_setback.draw_prompt(row,text="Setback",split_text=False)
+        
+        base_inset_front = self.product.get_prompt("Base Inset Front")
+        base_inset_rear = self.product.get_prompt("Base Inset Rear")
+        base_inset_left = self.product.get_prompt("Base Inset Left")
+        base_inset_right = self.product.get_prompt("Base Inset Right")
+        toe_kick_height = self.product.get_prompt("Toe Kick Height")
+        toe_kick_setback = self.product.get_prompt("Toe Kick Setback")        
+        if toe_kick_height:
+            box = col.box()
+            row = box.row()            
+            row.label("Base Assembly:")
+            base_inset_front.draw_prompt(row,text="Front",split_text=False)
+            base_inset_rear.draw_prompt(row,text="Rear",split_text=False)
+            base_inset_left.draw_prompt(row,text="Left",split_text=False)
+            base_inset_right.draw_prompt(row,text="Right",split_text=False)
+            row = box.row()
+            row.label(" ")
+            toe_kick_height.draw_prompt(row,split_text=False)
+            toe_kick_setback.draw_prompt(row,split_text=False)
+
+        col.separator()    
+        
+        if self.insert and self.insert.obj_bp:
+            box = col.box()
+            row = box.row()              
+            row.label("Front Options:")     
+                   
+            inset_front = self.insert.get_prompt("Inset Front")
+            door_swing = self.insert.get_prompt("Door Swing")
+            no_pulls = self.insert.get_prompt("No Pulls")
+            if door_swing:
+                door_swing.draw_prompt(row)
+            if inset_front:
+                row = box.row()
+                inset_front.draw_prompt(row,split_text=False)
+            if no_pulls:
+                no_pulls.draw_prompt(row,split_text=False)                
+                
+            drawer_front_height = self.insert.get_prompt("Drawer Front Height")                
+            if drawer_front_height:
+                drawer_front_height.draw_prompt(row)                           
+                
+            top_door_height = self.insert.get_prompt("Top Door Height")                
+            if top_door_height:
+                top_door_height.draw_prompt(row)                   
+                
+            col = box.column(align=True)
+            for i in range(1,7):
+                drawer_front_height = self.insert.get_prompt("Drawer Front " + str(i) + " Height")
+                if drawer_front_height:
+                    row = col.row()
+                    if drawer_front_height.equal:
+                        row.label("Drawer Front " + str(i) + " Height")
+                        row.label(str(unit.meter_to_active_unit(drawer_front_height.value())) + '"')
+                    else:
+                        drawer_front_height.draw_prompt(row)
+                    row.prop(drawer_front_height,'equal',text="")
+                        
+                
+                
+#             row.prop(inset_front,inset_front.prompt_type,text=inset_front.name)
 
 bpy.utils.register_class(PROMPTS_Basic_Cabinet_Prompts)
