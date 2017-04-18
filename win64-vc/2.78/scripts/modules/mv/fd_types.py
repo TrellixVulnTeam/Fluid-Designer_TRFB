@@ -2019,9 +2019,6 @@ class Prompts_Interface(bpy.types.Operator):
         obj = bpy.data.objects[self.object_name]
         obj_product_bp = utils.get_bp(obj,'INSERT')
         insert = Assembly(obj_product_bp)
-        self.depth = math.fabs(insert.obj_y.location.y)
-        self.height = math.fabs(insert.obj_z.location.z)
-        self.width = math.fabs(insert.obj_x.location.x)   
         return insert    
     
     def draw_product_size(self,layout):
@@ -2067,7 +2064,7 @@ class Prompts_Interface(bpy.types.Operator):
     
     def update_product_size(self):
         self.product.obj_x.location.x = self.width
-        
+
         if self.product.obj_bp.mv.mirror_y:
             self.product.obj_y.location.y = -self.depth
         else:
