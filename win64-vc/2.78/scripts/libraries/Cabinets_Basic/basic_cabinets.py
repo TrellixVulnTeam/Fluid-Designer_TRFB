@@ -891,17 +891,41 @@ class PROMPTS_Basic_Cabinet_Prompts(fd_types.Prompts_Interface):
         add_backsplash = self.product.get_prompt("Add Backsplash")
         add_left_backsplash = self.product.get_prompt("Add Left Backsplash")
         add_right_backsplash = self.product.get_prompt("Add Right Backsplash")
+        ctop_overhang_front = self.product.get_prompt("Countertop Overhang Front")
+        ctop_overhang_back = self.product.get_prompt("Countertop Overhang Back")
+        ctop_overhang_left = self.product.get_prompt("Countertop Overhang Left")
+        ctop_overhang_right = self.product.get_prompt("Countertop Overhang Right")
+        ctop_overhang_left_back = self.product.get_prompt("Countertop Overhang Left Back") 
+        ctop_overhang_right_back = self.product.get_prompt("Countertop Overhang Right Back") 
         side_splash_setback = self.product.get_prompt("Side Splash Setback")
-        if add_backsplash:
+        if ctop_overhang_front:
             box = col.box()
             row = box.row()
             row.label("Countertop:")    
             row = box.row()
-            add_backsplash.draw_prompt(row,split_text=False)
-            add_left_backsplash.draw_prompt(row,text="Add Left",split_text=False)
-            add_right_backsplash.draw_prompt(row,text="Add Right",split_text=False)
-            side_splash_setback.draw_prompt(row,text="Setback",split_text=False)
-        
+            if add_backsplash:
+                add_backsplash.draw_prompt(row,split_text=False)
+            if add_left_backsplash:
+                add_left_backsplash.draw_prompt(row,text="Add Left",split_text=False)
+            if add_right_backsplash:
+                add_right_backsplash.draw_prompt(row,text="Add Right",split_text=False)
+            if side_splash_setback:
+                side_splash_setback.draw_prompt(row,text="Setback",split_text=False)
+            row = box.row(align=True)
+            row.label("Overhang:")
+            ctop_overhang_front.draw_prompt(row,text="Front",split_text=False)
+            if ctop_overhang_back:
+                ctop_overhang_back.draw_prompt(row,text="Back",split_text=False)
+            if ctop_overhang_left:
+                ctop_overhang_left.draw_prompt(row,text="Left",split_text=False)
+            if ctop_overhang_right:
+                ctop_overhang_right.draw_prompt(row,text="Right",split_text=False)
+            if ctop_overhang_left_back:
+                row = box.row(align=True)
+                ctop_overhang_left_back.draw_prompt(row,text="Back Left",split_text=False)
+            if ctop_overhang_right_back:
+                ctop_overhang_right_back.draw_prompt(row,text="Back Right",split_text=False)                
+
         base_inset_front = self.product.get_prompt("Base Inset Front")
         base_inset_rear = self.product.get_prompt("Base Inset Rear")
         base_inset_left = self.product.get_prompt("Base Inset Left")
@@ -958,9 +982,5 @@ class PROMPTS_Basic_Cabinet_Prompts(fd_types.Prompts_Interface):
                     else:
                         drawer_front_height.draw_prompt(row)
                     row.prop(drawer_front_height,'equal',text="")
-                        
-                
-                
-#             row.prop(inset_front,inset_front.prompt_type,text=inset_front.name)
 
 bpy.utils.register_class(PROMPTS_Basic_Cabinet_Prompts)
