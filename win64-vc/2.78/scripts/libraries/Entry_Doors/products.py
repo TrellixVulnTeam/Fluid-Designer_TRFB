@@ -50,12 +50,14 @@ class Entry_Door(fd_types.Assembly):
         hinge_bottom.set_name("Bottom Hinge")
         hinge_bottom.z_loc("Hinge_Offset", [Hinge_Offset])
         hinge_bottom.y_rot(value=-90)
+        hinge_bottom.assign_material("Hinge Color", MATERIAL_FILE, "Chrome")
         
         hinge_top = self.add_object(HINGE)
         hinge_top.obj.parent = panel_assembly.obj_bp
         hinge_top.set_name("Top Hinge")
         hinge_top.z_loc("Height-Hinge_Offset", [Hinge_Offset, Height])
         hinge_top.y_rot(value=-90)
+        hinge_top.assign_material("Hinge Color", MATERIAL_FILE, "Chrome")
         
         if not no_latch:
             latch = self.add_object(LATCH)
@@ -65,6 +67,7 @@ class Entry_Door(fd_types.Assembly):
             latch.y_loc("Depth*0.5", [Depth])
             latch.z_loc(value=HANDLE_HEIGHT)
             latch.y_rot(value=90)
+            latch.assign_material("Latch Color", MATERIAL_FILE, "Chrome")
     
     def draw(self):
         self.create_assembly()
@@ -90,10 +93,10 @@ class Entry_Door(fd_types.Assembly):
 
         door_frame = self.add_assembly(os.path.join(DOOR_FRAME_PATH,self.door_frame))
         door_frame.set_name("Door Frame")
-        door_frame.x_dim('Width',[Width])
-        door_frame.y_dim('Depth',[Depth])
-        door_frame.z_dim('Height',[Height])
-        door_frame.assign_material("Frame",MATERIAL_FILE,"White")   
+        door_frame.x_dim('Width', [Width])
+        door_frame.y_dim('Depth', [Depth])
+        door_frame.z_dim('Height', [Height])
+        door_frame.assign_material("Frame", MATERIAL_FILE, "White")   
         
         if self.door_panel != "":
             door_panel = self.add_assembly(os.path.join(DOOR_PANEL,self.door_panel))
@@ -112,9 +115,8 @@ class Entry_Door(fd_types.Assembly):
 
             door_panel.x_dim('Width-INCH(6)',[Width])
             door_panel.z_dim('Height-INCH(3.25)',[Height])
-            door_panel.assign_material("Door",MATERIAL_FILE,"White")
-            door_panel.assign_material("Glass",MATERIAL_FILE,"Glass")
-            door_panel.assign_material("Hinge",MATERIAL_FILE,"Stainless Steel")
+            door_panel.assign_material("Door", MATERIAL_FILE, "White")
+            door_panel.assign_material("Glass", MATERIAL_FILE, "Glass")
             self.add_hardware(door_panel)
             
             door_handle = self.add_object(DOOR_HANDLE)
@@ -123,7 +125,7 @@ class Entry_Door(fd_types.Assembly):
             door_handle.x_loc('Width-INCH(9)',[Width])
             door_handle.y_loc(value = unit.inch(-0.875))
             door_handle.z_loc(value = HANDLE_HEIGHT)
-            door_handle.assign_material("Stainless Steel",MATERIAL_FILE,"Stainless Steel")
+            door_handle.assign_material("Handle Color", MATERIAL_FILE, "Chrome")
 
         if self.double_door == True:
             door_panel.x_dim('(Width-INCH(6))*0.5',[Width])
@@ -136,9 +138,8 @@ class Entry_Door(fd_types.Assembly):
             door_panel_right.z_rot('radians(180)+IF(Reverse_Swing,Door_Rotation,-Door_Rotation)',[Door_Rotation, Reverse_Swing])
             door_panel_right.x_dim('(Width-INCH(6))*0.5',[Width])
             door_panel_right.z_dim('Height-INCH(3.25)',[Height])     
-            door_panel_right.assign_material("Door",MATERIAL_FILE,"White")   
-            door_panel_right.assign_material("Glass",MATERIAL_FILE,"Glass")  
-            door_panel_right.assign_material("Hinge",MATERIAL_FILE,"Stainless Steel")
+            door_panel_right.assign_material("Door", MATERIAL_FILE, "White")   
+            door_panel_right.assign_material("Glass", MATERIAL_FILE, "Glass")
             self.add_hardware(door_panel_right, no_latch=True)  
                 
             Dpr_Width = door_panel_right.get_var('dim_x','Dpr_Width')
@@ -149,7 +150,7 @@ class Entry_Door(fd_types.Assembly):
             door_handle_right.x_loc('Dpr_Width-INCH(3)', [Dpr_Width])
             door_handle_right.y_loc(value = unit.inch(-0.875))
             door_handle_right.z_loc(value = HANDLE_HEIGHT)
-            door_handle_right.assign_material("Stainless Steel",MATERIAL_FILE,"Stainless Steel")
+            door_handle_right.assign_material("Handle Color", MATERIAL_FILE, "Chrome")
                 
         self.update()       
   
@@ -196,7 +197,7 @@ class Sliding_Doors(fd_types.Assembly):
         door_frame.x_dim('Width',[Width])
         door_frame.y_dim('Depth',[Depth])
         door_frame.z_dim('Height',[Height])
-        door_frame.assign_material("Frame",MATERIAL_FILE,"White")   
+        door_frame.assign_material("Frame", MATERIAL_FILE, "White")   
         
         door_panel = self.add_assembly(os.path.join(DOOR_PANEL,self.door_panel))
         door_panel.set_name("Door Panel")
@@ -205,9 +206,8 @@ class Sliding_Doors(fd_types.Assembly):
         door_panel.x_dim('(Width-Frame_Width*2)/2+Panel_Overlap*0.5',[Width, Frame_Width, Panel_Overlap])
         door_panel.z_dim('Height-INCH(3.25)',[Height])
         door_panel.prompt('No Hardware', value=True)
-        door_panel.assign_material("Door",MATERIAL_FILE,"White")
-        door_panel.assign_material("Glass",MATERIAL_FILE,"Glass")
-        door_panel.assign_material("Hinge",MATERIAL_FILE,"Stainless Steel")
+        door_panel.assign_material("Door", MATERIAL_FILE, "White")
+        door_panel.assign_material("Glass", MATERIAL_FILE, "Glass")
         
         door_panel_right = self.add_assembly(os.path.join(DOOR_PANEL,self.door_panel))
         door_panel_right.set_name("Door Panel Right")
@@ -219,7 +219,6 @@ class Sliding_Doors(fd_types.Assembly):
         door_panel_right.prompt('No Hardware', value=True)
         door_panel_right.assign_material("Door",MATERIAL_FILE,"White")   
         door_panel_right.assign_material("Glass",MATERIAL_FILE,"Glass")  
-        door_panel_right.assign_material("Hinge",MATERIAL_FILE,"Stainless Steel")  
                 
         self.update()
         
@@ -279,7 +278,6 @@ class Pocket_Doors(fd_types.Assembly):
         
         door_panel.assign_material("Door", MATERIAL_FILE, "White")
         door_panel.assign_material("Glass", MATERIAL_FILE, "Glass")
-        door_panel.assign_material("Hinge", MATERIAL_FILE, "Stainless Steel")
         
         if self.double_door:
             door_panel_right = self.add_assembly(os.path.join(DOOR_PANEL,self.door_panel))
@@ -291,8 +289,7 @@ class Pocket_Doors(fd_types.Assembly):
             door_panel_right.z_dim('Height-INCH(3.25)', [Height])
             door_panel_right.prompt('No Hardware', value=True)
             door_panel_right.assign_material("Door", MATERIAL_FILE, "White")   
-            door_panel_right.assign_material("Glass", MATERIAL_FILE, "Glass")  
-            door_panel_right.assign_material("Hinge", MATERIAL_FILE, "Stainless Steel")
+            door_panel_right.assign_material("Glass", MATERIAL_FILE, "Glass")
                 
         self.update()
         
@@ -316,7 +313,6 @@ class Bi_Fold_Doors(fd_types.Assembly):
     def set_materials(self, assembly):
         assembly.assign_material("Door", MATERIAL_FILE, "White")
         assembly.assign_material("Glass", MATERIAL_FILE, "Glass")
-        assembly.assign_material("Hinge", MATERIAL_FILE, "Stainless Steel")
         
     def set_mirror_modifier(self, assembly, mod_name, mirror_obj):
         for child in assembly.obj_bp.children:
