@@ -310,6 +310,34 @@ class Bi_Fold_Doors(fd_types.Assembly):
     
     double_door = False
     
+    def add_hardware(self, panel_assembly, placement='left'):
+        
+        assert placement in ('left', 'right'), "Invalid arg - '{}'".format(placement)
+        
+        Width = panel_assembly.get_var("dim_x", "Width")
+        Height = panel_assembly.get_var("dim_z", "Height")
+        Hinge_Offset = self.get_var("Hinge Placement", 'Hinge_Offset')
+        
+        hinge_bottom = self.add_object(HINGE)
+        hinge_bottom.obj.parent = panel_assembly.obj_bp
+        hinge_bottom.set_name("Bottom Hinge")
+        hinge_bottom.z_loc("Hinge_Offset", [Hinge_Offset])
+        hinge_bottom.y_rot(value=-90)
+        hinge_bottom.assign_material("Hinge Color", MATERIAL_FILE, "Chrome")
+        
+        hinge_top = self.add_object(HINGE)
+        hinge_top.obj.parent = panel_assembly.obj_bp
+        hinge_top.set_name("Top Hinge")
+        hinge_top.z_loc("Height-Hinge_Offset", [Hinge_Offset, Height])
+        hinge_top.y_rot(value=-90)
+        hinge_top.assign_material("Hinge Color", MATERIAL_FILE, "Chrome")
+        
+        if placement == 'right':
+            hinge_bottom.x_loc("Width", [Width])
+            hinge_bottom.y_rot(value=90)
+            hinge_top.x_loc("Width", [Width])
+            hinge_top.y_rot(value=90)     
+    
     def set_materials(self, assembly):
         assembly.assign_material("Door", MATERIAL_FILE, "White")
         assembly.assign_material("Glass", MATERIAL_FILE, "Glass")
@@ -331,6 +359,7 @@ class Bi_Fold_Doors(fd_types.Assembly):
         self.add_prompt(name="Frame Width", prompt_type='DISTANCE', value=unit.inch(3.25), tab_index=1)
         self.add_prompt(name="Panel Depth", prompt_type='DISTANCE', value=unit.inch(1.75), tab_index=1)
         self.add_prompt(name="Door Gap", prompt_type='DISTANCE', value=unit.inch(0.125), tab_index=1)
+        self.add_prompt(name="Hinge Placement", prompt_type='DISTANCE', value=unit.inch(18.0), tab_index=1)
         
         Width = self.get_var('dim_x','Width')
         Height = self.get_var('dim_z','Height')
@@ -357,6 +386,7 @@ class Bi_Fold_Doors(fd_types.Assembly):
         door_panel_left_1.z_rot('IF(Reverse_Swing,radians(180),0)+radians(-90)*Open_Door', [Open_Door, Reverse_Swing])
         door_panel_left_1.prompt('Hardware Config', value='Right')
         self.set_materials(door_panel_left_1)
+        self.add_hardware(door_panel_left_1, placement='right')
         
         if self.double_door:
             mirror_obj = self.add_empty()
@@ -374,6 +404,7 @@ class Bi_Fold_Doors(fd_types.Assembly):
         door_panel_left_2.z_rot('radians(180)-(radians(180)-(radians(90)*Open_Door)*2)', [Open_Door])
         door_panel_left_2.prompt('Hardware Config', value='Left')
         self.set_materials(door_panel_left_2)
+        self.add_hardware(door_panel_left_2)
 
         if self.double_door:
             self.set_mirror_modifier(door_panel_left_2, "Mirror X", mirror_obj.obj)
@@ -759,7 +790,7 @@ class PRODUCT_Bi_Fold_Door_Inset_Panel(Bi_Fold_Doors):
         self.height = DOOR_HEIGHT
         self.depth = DOOR_DEPTH
         self.door_frame = "Door_Frame.blend"
-        self.door_panel = "Bi-Fold_Door_Panel_Inset.blend"
+        self.door_panel = "Door_Panel_Inset.blend"
         
 class PRODUCT_Bi_Fold_Double_Door_Inset_Panel(Bi_Fold_Doors):
     
@@ -771,7 +802,7 @@ class PRODUCT_Bi_Fold_Double_Door_Inset_Panel(Bi_Fold_Doors):
         self.depth = DOOR_DEPTH
         self.double_door = True
         self.door_frame = "Door_Frame.blend"
-        self.door_panel = "Bi-Fold_Door_Panel_Inset.blend"
+        self.door_panel = "Door_Panel_Inset.blend"
         
 class PROMPTS_Entry_Door_Prompts(bpy.types.Operator):
     bl_idname = "cabinetlib.entry_door_prompts"
