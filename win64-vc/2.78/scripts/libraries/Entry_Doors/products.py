@@ -346,7 +346,7 @@ class Bi_Fold_Doors(fd_types.Assembly):
         for child in assembly.obj_bp.children:
             if child.type == 'MESH':
                 child.modifiers.new(mod_name, 'MIRROR')
-                child.modifiers[mod_name].mirror_object = mirror_obj             
+                child.modifiers[mod_name].mirror_object = mirror_obj       
     
     def draw(self):
         self.create_assembly()
@@ -781,6 +781,17 @@ class PRODUCT_Pocket_Double_Door_Glass_Border_Panel(Pocket_Doors):
 #         self.door_frame = "Door_Frame.blend"
 #         self.door_panel = "Bi-Fold_Door_Panel_Inset.blend"       
         
+class PRODUCT_Bi_Fold_Door_Flat_Panel(Bi_Fold_Doors):
+    
+    def __init__(self):
+        self.category_name = "Bi-Fold Doors"
+        self.assembly_name = "Bi-Fold Door Flat Panel"
+        self.width = SINGLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.door_frame = "Door_Frame.blend"
+        self.door_panel = "Door_Panel_Flat.blend"        
+        
 class PRODUCT_Bi_Fold_Door_Inset_Panel(Bi_Fold_Doors):
     
     def __init__(self):
@@ -791,6 +802,40 @@ class PRODUCT_Bi_Fold_Door_Inset_Panel(Bi_Fold_Doors):
         self.depth = DOOR_DEPTH
         self.door_frame = "Door_Frame.blend"
         self.door_panel = "Door_Panel_Inset.blend"
+        
+class PRODUCT_Bi_Fold_Door_Double_Panel(Bi_Fold_Doors):
+    
+    def __init__(self):
+        self.category_name = "Bi-Fold Doors"
+        self.assembly_name = "Bi-Fold Door Double Panel"
+        self.width = SINGLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.door_frame = "Door_Frame.blend"
+        self.door_panel = "Door_Panel_Double.blend"        
+        
+class PRODUCT_Bi_Fold_Door_Glass_Panel(Bi_Fold_Doors):
+    
+    def __init__(self):
+        self.category_name = "Bi-Fold Doors"
+        self.assembly_name = "Bi-Fold Door Glass Panel"
+        self.width = SINGLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.door_frame = "Door_Frame.blend"
+        self.door_panel = "Door_Panel_Glass.blend"
+                       
+class PRODUCT_Bi_Fold_Double_Door_Flat_Panel(Bi_Fold_Doors):
+    
+    def __init__(self):
+        self.category_name = "Bi-Fold Doors"
+        self.assembly_name = "Bi-Fold Double Door Flat Panel"
+        self.width = DOUBLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.double_door = True
+        self.door_frame = "Door_Frame.blend"
+        self.door_panel = "Door_Panel_Flat.blend"   
         
 class PRODUCT_Bi_Fold_Double_Door_Inset_Panel(Bi_Fold_Doors):
     
@@ -804,6 +849,30 @@ class PRODUCT_Bi_Fold_Double_Door_Inset_Panel(Bi_Fold_Doors):
         self.door_frame = "Door_Frame.blend"
         self.door_panel = "Door_Panel_Inset.blend"
         
+class PRODUCT_Bi_Fold_Double_Door_Double_Panel(Bi_Fold_Doors):
+    
+    def __init__(self):
+        self.category_name = "Bi-Fold Doors"
+        self.assembly_name = "Bi-Fold Double Door Double Panel"
+        self.width = DOUBLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.double_door = True
+        self.door_frame = "Door_Frame.blend"
+        self.door_panel = "Door_Panel_Double.blend"
+        
+class PRODUCT_Bi_Fold_Double_Door_Glass_Panel(Bi_Fold_Doors):
+    
+    def __init__(self):
+        self.category_name = "Bi-Fold Doors"
+        self.assembly_name = "Bi-Fold Double Door Glass Panel"
+        self.width = DOUBLE_PANEL_WIDTH
+        self.height = DOOR_HEIGHT
+        self.depth = DOOR_DEPTH
+        self.double_door = True
+        self.door_frame = "Door_Frame.blend"
+        self.door_panel = "Door_Panel_Glass.blend"
+                
 class PROMPTS_Entry_Door_Prompts(bpy.types.Operator):
     bl_idname = "cabinetlib.entry_door_prompts"
     bl_label = "Entry Door Prompts" 
