@@ -127,7 +127,7 @@ def draw_opengl(self, context):
     else:
         return
     
-def draw_dimensions(context, obj, i_dim, region, rv3d):
+def draw_dimensions(context, obj, i_props, region, rv3d):
     g_props = bpy.context.scene.mv.opengl_dim
     
     pr = g_props.gl_precision
@@ -139,32 +139,10 @@ def draw_dimensions(context, obj, i_dim, region, rv3d):
     a_type = g_props.gl_arrow_type
     b_type = g_props.gl_arrow_type
     
-    if i_dim.gl_color == 0:
+    if i_props.gl_color == 0:
         rgb = g_props.gl_default_color
-    elif i_dim.gl_color == 1:
-        #WHITE
-        rgb = (0.8,0.8,0.8,1.0)
-    elif i_dim.gl_color == 2:
-        #BLACK
-        rgb = (0.1,0.1,0.1,1.0)        
-    elif i_dim.gl_color == 3:
-        #RED
-        rgb = (0.8,0.0,0.0,1.0)
-    elif i_dim.gl_color == 4:
-        #GREEN
-        rgb = (0.0,0.8,0.0,1.0)
-    elif i_dim.gl_color == 5:
-        #BLUE
-        rgb = (0.0,0.0,0.8,1.0)
-    elif i_dim.gl_color == 6:
-        #YELLOW
-        rgb = (0.8,0.8,0.0,1.0)          
-    elif i_dim.gl_color == 7:
-        #AQUA
-        rgb = (0.0,0.8,0.8,1.0) 
-    elif i_dim.gl_color == 8:
-        #VIOLET
-        rgb = (0.8,0.0,0.8,1.0)                               
+    else:
+        rgb = g_props.standard_colors[i_props.gl_color]                        
  
     a_p1 = get_location(obj)
       
@@ -191,29 +169,30 @@ def draw_dimensions(context, obj, i_dim, region, rv3d):
     if None in (screen_point_ap1,screen_point_bp1):
         return
       
-    bgl.glLineWidth(i_dim.gl_width)
+    bgl.glLineWidth(i_props.gl_width)
     bgl.glColor4f(rgb[0], rgb[1], rgb[2], rgb[3])
           
     midpoint3d = interpolate3d(v1, v2, math.fabs(dist / 2))
     gap3d = (midpoint3d[0], midpoint3d[1], midpoint3d[2])
     txtpoint2d = get_2d_point(region, rv3d, gap3d)
     
-    if not i_dim.line_only:
-        if i_dim.gl_label == "":
+    if not i_props.line_only:
+        if i_props.gl_label == "":
             txt_dist = str(format_distance(fmt, units, dist))
         else:
-            txt_dist = i_dim.gl_label
+            txt_dist = i_props.gl_label
       
         draw_text(txtpoint2d[0], 
                   txtpoint2d[1],
                   txt_dist, 
                   rgb, 
-                  fsize)
+                  fsize,
+                  i_props)
   
     bgl.glEnable(bgl.GL_BLEND)
     bgl.glColor4f(rgb[0], rgb[1], rgb[2], rgb[3])      
 
-    if not i_dim.line_only:
+    if not i_props.line_only:
         draw_arrow(screen_point_ap1, screen_point_bp1, a_size, a_type, b_type)  
         draw_extension_lines(screen_point_ap1, screen_point_bp1, a_size)
         
@@ -225,7 +204,7 @@ def draw_dimensions(context, obj, i_dim, region, rv3d):
       
 #     draw_extension_lines(screen_point_ap1, screen_point_bp1, a_size)
                        
-def draw_text(x_pos, y_pos, display_text, rgb, fsize):
+def draw_text(x_pos, y_pos, display_text, rgb, fsize, i_props):
     font_id = 0
     blf.size(font_id, fsize, 72)
     #- height of one line
@@ -247,7 +226,15 @@ def draw_text(x_pos, y_pos, display_text, rgb, fsize):
         # and break the line where the text is.
 #         blf.position(font_id, x_pos - (text_width/2), new_y - (text_height/2), 0)
 
-        blf.position(font_id, x_pos - (text_width/2), new_y + 3, 0)
+        blf.position(font_id,
+                     x_pos
+                     - (text_width/2)
+                     + i_props.gl_text_x,
+                     new_y
+                     + 3
+                     + i_props.gl_text_y,
+                     0)
+        
         bgl.glColor4f(rgb[0], rgb[1], rgb[2], rgb[3])
         blf.draw(font_id, " " + line)
         

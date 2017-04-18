@@ -621,7 +621,16 @@ class opengl_dim(PropertyGroup):
     
     gl_color = IntProperty(name="gl_color",
                            default=0,
-                           description="Color for the measure")  
+                           description="Color for the measure")
+    
+    standard_colors = {1: (0.8, 0.8, 0.8, 1.0), #White
+                       2: (0.1, 0.1, 0.1, 1.0), #Black
+                       3: (0.8, 0.0, 0.0, 1.0), #Red
+                       4: (0.0, 0.8, 0.0, 1.0), #Green
+                       5: (0.0, 0.0, 0.8, 1.0), #Blue
+                       6: (0.8, 0.8, 0.0, 1.0), #Yellow
+                       7: (0.0, 0.8, 0.8, 1.0), #Aqua
+                       8: (0.8, 0.0, 0.8, 1.0)} #Violet
     
     gl_default_color = FloatVectorProperty(name="Default color",
                                            description="Default Color",
