@@ -13,6 +13,8 @@ from mv import fd_types, unit, utils
 DOOR_FRAME_PATH = os.path.join(os.path.dirname(__file__),"Door Frames")
 DOOR_PANEL = os.path.join(os.path.dirname(__file__),"Door Panels")
 DOOR_HANDLE = os.path.join(os.path.dirname(__file__),"Door Handles","Door_Handle.blend")
+HINGE = os.path.join(os.path.dirname(__file__),"Door Hardware","Hinge.blend")
+LATCH = os.path.join(os.path.dirname(__file__),"Door Hardware","Latch.blend")
 MATERIAL_FILE = os.path.join(os.path.dirname(__file__),"materials","materials.blend")
 
 SINGLE_PANEL_WIDTH = unit.inch(42)
@@ -37,21 +39,52 @@ class Entry_Door(fd_types.Assembly):
     door_panel = ""
     double_door = False
     
+    def add_hardware(self, panel_assembly, no_latch=False):
+        Width = panel_assembly.get_var("dim_x", "Width")
+        Height = panel_assembly.get_var("dim_z", "Height")
+        Depth = panel_assembly.get_var("dim_y", "Depth")
+        Hinge_Offset = self.get_var("Hinge Placement", 'Hinge_Offset')
+        
+        hinge_bottom = self.add_object(HINGE)
+        hinge_bottom.obj.parent = panel_assembly.obj_bp
+        hinge_bottom.set_name("Bottom Hinge")
+        hinge_bottom.z_loc("Hinge_Offset", [Hinge_Offset])
+        hinge_bottom.y_rot(value=-90)
+        
+        hinge_top = self.add_object(HINGE)
+        hinge_top.obj.parent = panel_assembly.obj_bp
+        hinge_top.set_name("Top Hinge")
+        hinge_top.z_loc("Height-Hinge_Offset", [Hinge_Offset, Height])
+        hinge_top.y_rot(value=-90)
+        
+        if not no_latch:
+            latch = self.add_object(LATCH)
+            latch.obj.parent = panel_assembly.obj_bp
+            latch.set_name("Latch")
+            latch.x_loc("Width", [Width])
+            latch.y_loc("Depth*0.5", [Depth])
+            latch.z_loc(value=HANDLE_HEIGHT)
+            latch.y_rot(value=90)
+    
     def draw(self):
         self.create_assembly()
         
         if self.door_panel != "":
-            self.add_tab(name='Main Options',tab_type='VISIBLE')
-            self.add_prompt(name="Reverse Swing",prompt_type='CHECKBOX',value=False,tab_index=0)
-            self.add_prompt(name="Door Rotation",prompt_type='ANGLE',value=0.0,tab_index=0)
+            self.add_tab(name='Main Options', tab_type='VISIBLE')
+            self.add_tab(name='Formulas', tab_type='HIDDEN')
+            self.add_prompt(name="Reverse Swing", prompt_type='CHECKBOX', value=False, tab_index=0)
+            self.add_prompt(name="Door Rotation", prompt_type='ANGLE', value=0.0, tab_index=0)
+            self.add_prompt(name="Hinge Placement", prompt_type='DISTANCE', value=unit.inch(18.0), tab_index=1)
+            
             if self.double_door != True:
-                self.add_prompt(name="Door Swing",prompt_type='COMBOBOX',items=["Left Swing","Right Swing"],value=False,tab_index=0)
+                self.add_prompt(name="Door Swing", prompt_type='COMBOBOX', items=["Left Swing", "Right Swing"], value=False, tab_index=0)
         
-        Width = self.get_var('dim_x','Width')
-        Height = self.get_var('dim_z','Height')
-        Depth = self.get_var('dim_y','Depth')
+        Width = self.get_var('dim_x', 'Width')
+        Height = self.get_var('dim_z', 'Height')
+        Depth = self.get_var('dim_y', 'Depth')
         Door_Rotation = self.get_var('Door Rotation')
         Reverse_Swing = self.get_var("Reverse Swing")
+        
         if self.double_door != True:
             Swing = self.get_var('Door Swing')
 
@@ -65,6 +98,7 @@ class Entry_Door(fd_types.Assembly):
         if self.door_panel != "":
             door_panel = self.add_assembly(os.path.join(DOOR_PANEL,self.door_panel))
             door_panel.set_name("Door Panel")
+            
             if self.double_door != True:
                 door_panel.x_loc('IF(Door_Swing==1,Width-INCH(3),INCH(3))',[Width, Swing])
                 door_panel.y_loc('IF(Reverse_Swing,IF(Door_Swing==0,INCH(1.75),0),IF(Door_Swing==0,Depth,Depth-INCH(1.75)))',[Swing, Reverse_Swing, Depth])
@@ -81,6 +115,7 @@ class Entry_Door(fd_types.Assembly):
             door_panel.assign_material("Door",MATERIAL_FILE,"White")
             door_panel.assign_material("Glass",MATERIAL_FILE,"Glass")
             door_panel.assign_material("Hinge",MATERIAL_FILE,"Stainless Steel")
+            self.add_hardware(door_panel)
             
             door_handle = self.add_object(DOOR_HANDLE)
             door_handle.obj.parent = door_panel.obj_bp
@@ -103,7 +138,8 @@ class Entry_Door(fd_types.Assembly):
             door_panel_right.z_dim('Height-INCH(3.25)',[Height])     
             door_panel_right.assign_material("Door",MATERIAL_FILE,"White")   
             door_panel_right.assign_material("Glass",MATERIAL_FILE,"Glass")  
-            door_panel_right.assign_material("Hinge",MATERIAL_FILE,"Stainless Steel")  
+            door_panel_right.assign_material("Hinge",MATERIAL_FILE,"Stainless Steel")
+            self.add_hardware(door_panel_right, no_latch=True)  
                 
             Dpr_Width = door_panel_right.get_var('dim_x','Dpr_Width')
             
