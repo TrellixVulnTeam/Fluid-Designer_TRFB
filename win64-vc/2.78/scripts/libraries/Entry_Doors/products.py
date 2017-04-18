@@ -767,19 +767,7 @@ class PRODUCT_Pocket_Double_Door_Glass_Border_Panel(Pocket_Doors):
         self.depth = DOOR_DEPTH
         self.double_door = True
         self.door_frame = "Pocket_Door_Frame_Double.blend"
-        self.door_panel = "Door_Panel_Glass_Marginal_Border.blend"
-
-#TODO create bi-fold flat panel assembly
-# class PRODUCT_Bi_Fold_Door_Flat_Panel(Bi_Fold_Doors):
-#     
-#     def __init__(self):
-#         self.category_name = "Bi-Fold Doors"
-#         self.assembly_name = "Bi-Fold Door Inset Panel"
-#         self.width = SINGLE_PANEL_WIDTH
-#         self.height = DOOR_HEIGHT
-#         self.depth = DOOR_DEPTH
-#         self.door_frame = "Door_Frame.blend"
-#         self.door_panel = "Bi-Fold_Door_Panel_Inset.blend"       
+        self.door_panel = "Door_Panel_Glass_Marginal_Border.blend"       
         
 class PRODUCT_Bi_Fold_Door_Flat_Panel(Bi_Fold_Doors):
     
