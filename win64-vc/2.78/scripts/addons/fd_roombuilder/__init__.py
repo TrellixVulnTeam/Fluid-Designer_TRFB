@@ -165,16 +165,18 @@ class Scene_Props(PropertyGroup):
                                           ('POCKET', 'Pocket Door', 'Pocket Door'),
                                           ('POCKET_DOUBLE', 'Pocket Double Door', 'Pocket Double Door'),
                                           ('SLIDING', 'Sliding Door', 'Sliding Door'),
-                                          ('BIFOLD', 'Bi-Fold Door', 'Bi-Fold Door')],
+                                          ('BIFOLD', 'Bi-Fold Door', 'Bi-Fold Door'),
+                                          ('BIFOLD_DOUBLE', 'Bi-Fold Double Door', 'Bi-Fold Double Door')],
                                    default='OPEN')
     
     entry_door_fn = {'OPEN': "Entry Door Frame.blend",
                      'SINGLE': "Single Door.blend",
-                     'DOUBLE': "Double  Door.blend",
+                     'DOUBLE': "Double Door.blend",
                      'POCKET': "Pocket Door.blend",
                      'POCKET_DOUBLE': "Pocket Double Door.blend",
                      'SLIDING': "Sliding Door.blend",
-                     'BIFOLD': "Bi-Fold Door.blend"}
+                     'BIFOLD': "Bi-Fold Door.blend",
+                     'BIFOLD_DOUBLE': "Bi-Fold Double Door.blend"}
     
     carpet_material = EnumProperty(name="Carpet Material",items=enum_carpet)
     wood_floor_material = EnumProperty(name="Wood Floor Material",items=enum_wood_floor)
