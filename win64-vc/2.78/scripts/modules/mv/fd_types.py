@@ -1265,6 +1265,27 @@ class Assembly():
                         utils.draw_add_variable_operators(layout,self.obj_bp.name,'mv.PromptPage.COL_Prompt["' + prompt.name + '"].CheckBoxValue',0)
                         utils.draw_driver_variables(layout,driver,self.obj_bp.name)
 
+    def draw_as_hidden_line(self, bp=None):
+        if bp:
+            for c in bp.children:
+                if c.type == 'MESH':
+                    if c.mv.type == 'BPASSEMBLY':
+                        self.draw_as_hidden_line(bp=c)
+                    else:
+                        for e in c.data.edges:
+                            e.use_freestyle_mark = True
+                        c.data.show_freestyle_edge_marks = True
+                        
+        else:
+            for c in self.obj_bp.children:
+                if c.type == 'MESH':
+                    if c.mv.type == 'BPASSEMBLY':
+                        self.draw_as_hidden_line(bp=c)
+                    else:
+                        for e in c.data.edges:
+                            e.use_freestyle_mark = True
+                        c.data.show_freestyle_edge_marks = True
+        
     def update(self,obj_bp=None):
         """ 
         Sets the specification group, placement_type, mirror_z, mirror_y, name, product_id,
