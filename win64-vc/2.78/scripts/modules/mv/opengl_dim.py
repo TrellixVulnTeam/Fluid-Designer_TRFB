@@ -165,8 +165,12 @@ def draw_dimensions(context, obj, i_props, region, rv3d):
       
     screen_point_ap1 = get_2d_point(region, rv3d, a_p1)
     screen_point_bp1 = get_2d_point(region, rv3d, b_p1)
-  
+    
+    print()
+    
     if None in (screen_point_ap1,screen_point_bp1):
+        return
+    elif check_overlap_2d_point(screen_point_ap1, screen_point_bp1) and i_props.gl_label == "":
         return
       
     bgl.glLineWidth(i_props.gl_width)
@@ -398,6 +402,12 @@ def get_2d_point(region, rv3d, point3d):
         return view3d_utils.location_3d_to_region_2d(region, rv3d, point3d)
     else:
         return get_render_location(point3d)
+    
+def check_overlap_2d_point(sp1, sp2):
+    if round(sp1[0], 2) == round(sp2[0], 2) and round(sp1[1], 2) == round(sp2[1], 2):
+        return True
+    else:
+        return False
 
 def get_render_location(mypoint):
     v1 = mathutils.Vector(mypoint)
