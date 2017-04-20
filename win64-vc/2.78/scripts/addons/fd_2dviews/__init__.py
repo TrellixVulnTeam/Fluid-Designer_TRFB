@@ -178,7 +178,8 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
         hidden_lineset = f_settings.linesets.new(self.HIDDEN_LINESET_NAME)
         hidden_lineset.linestyle = linestyles[self.HIDDEN_LINESET_NAME]
         
-        hidden_lineset.select_by_visibility = False
+        hidden_lineset.select_by_visibility = True
+        hidden_lineset.visibility = 'HIDDEN'
         hidden_lineset.select_by_edge_types = True
         hidden_lineset.select_by_face_marks = False
         hidden_lineset.select_by_group = False
