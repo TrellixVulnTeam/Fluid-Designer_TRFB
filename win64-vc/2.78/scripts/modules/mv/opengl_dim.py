@@ -223,19 +223,20 @@ def draw_text(x_pos, y_pos, display_text, rgb, fsize, i_props, anchor_co, endpoi
         y_pos += mheight * idx
         x_pos -= text_width * 0.5
         
-        #if vertical line text placement
-        if anchor_co[0] == endpoint_co[0]:
-            if i_props.v_line_text_placement == 'LEFT':
-                x_pos -= text_width * 0.5 + i_props.line_to_text_pad * 2
-            elif i_props.v_line_text_placement == 'RIGHT':
-                x_pos += text_width * 0.5
-        
-        #horizontal line text placement
-        if anchor_co[1] == endpoint_co[1]:
-            if i_props.h_line_text_placement == 'TOP':
-                y_pos += i_props.line_to_text_pad
-            elif i_props.h_line_text_placement == 'BOTTOM':
-                y_pos -= text_height + i_props.line_to_text_pad
+        if not check_overlap_2d_point(anchor_co, endpoint_co):
+            #if vertical line text placement
+            if anchor_co[0] == endpoint_co[0]:
+                if i_props.v_line_text_placement == 'LEFT':
+                    x_pos -= text_width * 0.5 + i_props.line_to_text_pad * 2
+                elif i_props.v_line_text_placement == 'RIGHT':
+                    x_pos += text_width * 0.5
+            
+            #horizontal line text placement
+            if anchor_co[1] == endpoint_co[1]:
+                if i_props.h_line_text_placement == 'TOP':
+                    y_pos += i_props.line_to_text_pad
+                elif i_props.h_line_text_placement == 'BOTTOM':
+                    y_pos -= text_height + i_props.line_to_text_pad
         
         blf.position(font_id,
                      x_pos + i_props.gl_text_x,
