@@ -1928,6 +1928,14 @@ class Dimension():
             self.opengl_dim.gl_label = " | " + text
         else:
             self.opengl_dim.gl_label = text
+            
+    def set_vertical_line_txt_pos(self, pos=''):
+        assert pos in ('LEFT', 'RIGHT'), "Invalid arg - '{}'".format(pos)
+        self.opengl_dim.v_line_text_placement = pos
+        
+    def set_horizontal_line_txt_pos(self, pos=''):
+        assert pos in ('TOP', 'BOTTOM'), "Invalid arg - '{}'".format(pos)
+        self.opengl_dim.h_line_text_placement = pos
     
     def set_text_offset_x(self,expression="",driver_vars=[],value=0):
         if expression == "":

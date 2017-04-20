@@ -660,6 +660,22 @@ class opengl_dim(PropertyGroup):
                                min=6, 
                                max=150)
     
+    h_line_text_placement = EnumProperty(name="Horizontal Line Text Placement",
+                                         items=[('TOP', "Top", "Top"),
+                                                ('BOTTOM', "Bottom", "Bottom")],
+                                         default='TOP')
+    
+    v_line_text_placement = EnumProperty(name="Vertical Line Text Placement",
+                                         items=[('LEFT', "Left", "Left"),
+                                                ('RIGHT', "Right", "Right")],
+                                         default='LEFT')
+    
+    line_to_text_pad = IntProperty(name="Line to Text Padding",
+                                   description="Padding between dimension line and text",
+                                   default=3,
+                                   min=-3000,
+                                   max=3000)
+    
     gl_text_x = IntProperty(name="gl_text_x",
                             description="Change font position in X axis",
                             default=0, 

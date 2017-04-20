@@ -187,7 +187,9 @@ def draw_dimensions(context, obj, i_props, region, rv3d):
                   txt_dist, 
                   rgb, 
                   fsize,
-                  i_props)
+                  i_props,
+                  screen_point_ap1,
+                  screen_point_bp1)
   
     bgl.glEnable(bgl.GL_BLEND)
     bgl.glColor4f(rgb[0], rgb[1], rgb[2], rgb[3])      
@@ -197,14 +199,8 @@ def draw_dimensions(context, obj, i_props, region, rv3d):
         draw_extension_lines(screen_point_ap1, screen_point_bp1, a_size)
         
     draw_line(screen_point_ap1, screen_point_bp1)
-      
-    #TODO: FIGURE OUT HOW TO DRAW TWO LINES
-#     draw_line(screen_point_ap1, end_line_point1)
-#     draw_line(start_line_point1, screen_point_bp1)
-      
-#     draw_extension_lines(screen_point_ap1, screen_point_bp1, a_size)
                        
-def draw_text(x_pos, y_pos, display_text, rgb, fsize, i_props):
+def draw_text(x_pos, y_pos, display_text, rgb, fsize, i_props, anchor_co, endpoint_co):
     font_id = 0
     blf.size(font_id, fsize, 72)
     #- height of one line
@@ -219,20 +215,27 @@ def draw_text(x_pos, y_pos, display_text, rgb, fsize, i_props):
     #---------- Draw all lines-+
     for line in mylines:
         text_width, text_height = blf.dimensions(font_id, line)
-        # calculate new Y position
-        new_y = y_pos + (mheight * idx)
-        # Draw
-        # Figure out how to draw the text right in the middle of the dimesion line
-        # and break the line where the text is.
-#         blf.position(font_id, x_pos - (text_width/2), new_y - (text_height/2), 0)
-
+        
+        y_pos += mheight * idx
+        x_pos -= text_width * 0.5
+        
+        #if vertical line text placement
+        if anchor_co[0] == endpoint_co[0]:
+            if i_props.v_line_text_placement == 'LEFT':
+                x_pos -= text_width * 0.5 + i_props.line_to_text_pad * 2
+            elif i_props.v_line_text_placement == 'RIGHT':
+                x_pos += text_width * 0.5
+        
+        #horizontal line text placement
+        if anchor_co[1] == endpoint_co[1]:
+            if i_props.h_line_text_placement == 'TOP':
+                y_pos += i_props.line_to_text_pad
+            elif i_props.h_line_text_placement == 'BOTTOM':
+                y_pos -= text_height + i_props.line_to_text_pad
+        
         blf.position(font_id,
-                     x_pos
-                     - (text_width/2)
-                     + i_props.gl_text_x,
-                     new_y
-                     + 3
-                     + i_props.gl_text_y,
+                     x_pos + i_props.gl_text_x,
+                     y_pos + i_props.gl_text_y,
                      0)
         
         bgl.glColor4f(rgb[0], rgb[1], rgb[2], rgb[3])
