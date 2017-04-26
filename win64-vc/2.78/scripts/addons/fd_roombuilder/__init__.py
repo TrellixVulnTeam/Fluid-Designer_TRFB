@@ -51,6 +51,10 @@ PAINT_CATEGORY_NAME = "Textured Wall Paint"
 CARPET_CATEGORY_NAME = "Carpet"
 TILE_CATEGORY_NAME = "Tile"
 HARDWOOD_CATEGORY_NAME = "Wood Flooring"
+MOLDING_ASSEMBLY = os.path.join(os.path.dirname(__file__), "Moldings", "assemblies", "molding.blend")
+BASE_PRO_PATH = os.path.join(os.path.dirname(__file__), "Moldings", "profiles", "base")
+CROWN_PRO_PATH = os.path.join(os.path.dirname(__file__), "Moldings", "profiles", "crown")
+
 
 preview_collections = {}
 
@@ -84,6 +88,22 @@ def enum_wall_material(self,context):
 
     icon_dir = os.path.join(utils.get_library_dir("materials"),PAINT_LIBRARY_NAME,PAINT_CATEGORY_NAME)
     pcoll = preview_collections["paint"]
+    return utils.get_image_enum_previews(icon_dir,pcoll)
+
+def enum_base_molding(self,context):
+    if context is None:
+        return []
+
+    icon_dir = os.path.join(os.path.dirname(__file__), "Moldings", "profiles","Base")
+    pcoll = preview_collections["base molding"]
+    return utils.get_image_enum_previews(icon_dir,pcoll)
+
+def enum_crown_molding(self,context):
+    if context is None:
+        return []
+
+    icon_dir = os.path.join(os.path.dirname(__file__), "Moldings", "profiles", "Crown")
+    pcoll = preview_collections["crown molding"]
     return utils.get_image_enum_previews(icon_dir,pcoll)
 
 def update_wall_index(self,context): 
@@ -183,6 +203,9 @@ class Scene_Props(PropertyGroup):
     tile_material = EnumProperty(name="Tile Material",items=enum_tile_floor)
     wall_material = EnumProperty(name="Wall Material",items=enum_wall_material)
     
+    base_molding = EnumProperty(name="Base Molding", items=enum_base_molding)
+    crown_molding = EnumProperty(name="Crown Molding", items=enum_crown_molding)
+    
 class Object_Props(PropertyGroup):
     
     is_floor = BoolProperty(name="Is Floor")
@@ -220,6 +243,11 @@ class PANEL_Room_Builder(Panel):
         row = box.row(align=True)
         row.prop(props,'paint_type',text="Walls",icon='FILE_FOLDER')
         row.prop(props,'wall_material',text="")
+        
+        row = box.row()
+        row.prop(props, 'base_molding', text="Base Molding")
+        row = box.row()
+        row.prop(props, 'crown_molding', text="Crown Molding")
 
         if props.room_type == 'SQUARE':
             row = box.row(align=True)
@@ -887,12 +915,18 @@ class OPERATOR_Build_Room(Operator):
     entry_wall = None
     right_side_wall = None
     door = None
+    base_molding = None
+    base_molding_pro = None
+    crown_molding = None
+    crown_molding_pro = None
     
     wall_mesh_objs = []
     
     floor = None
     
     clicked_ok = False
+    
+    props = None
     
     def check(self, context):
         self.update_wall_properties(context)
@@ -910,6 +944,151 @@ class OPERATOR_Build_Room(Operator):
         view3d.view_distance = distance
         view3d.view_location = (self.back_wall_length/2,self.side_wall_length,0)
         view3d.view_rotation = (.8416,.4984,-.1004,-.1824)
+    
+    def set_molding_points(self, curve, points):
+        spline = curve.data.splines.new('BEZIER')
+        spline.bezier_points.add(count=len(points) - 1)        
+        
+        for i, point in enumerate(points):
+            curve.data.splines[0].bezier_points[i].co = point
+        
+        bpy.context.scene.objects.active = curve 
+        bpy.ops.object.editmode_toggle()
+        bpy.ops.curve.select_all(action='SELECT')
+        bpy.ops.curve.handle_type_set(type='VECTOR')
+        bpy.ops.object.editmode_toggle()
+            
+    def update_square_room_molding(self):
+        self.base_molding.location = (self.left_return_length, 0, 0)
+        points = []
+        points.append((0, 0, 0))
+        points.append((-self.left_return_length, 0, 0))
+        points.append((-self.left_return_length, self.side_wall_length, 0))
+        points.append((self.back_wall_length-self.left_return_length, self.side_wall_length, 0))
+        points.append((self.back_wall_length-self.left_return_length, 0, 0))
+        points.append((self.back_wall_length
+                       -self.right_return_length
+                       -self.left_return_length,
+                       0,
+                       0))
+        
+        self.set_molding_points(self.base_molding, points)
+        
+        points.clear()
+        
+        points.append((0, 0, 0))
+        points.append((0, self.side_wall_length, 0))
+        points.append((self.back_wall_length, self.side_wall_length, 0))
+        points.append((self.back_wall_length, 0, 0))
+        
+        self.set_molding_points(self.crown_molding, points)
+        self.crown_molding.data.splines[0].use_cyclic_u = True
+            
+    def update_single_wall_molding(self):
+        points = []
+        points.append((0, 0, 0))
+        points.append((self.back_wall_length, 0, 0))
+        
+        self.set_molding_points(self.base_molding, points)
+        self.set_molding_points(self.crown_molding, points)
+    
+    def update_l_shape_molding(self):
+        points = []
+        points.append((0, 0, 0))
+        points.append((0, self.left_return_length, 0))
+        points.append((self.back_wall_length, self.left_return_length, 0))
+        
+        self.set_molding_points(self.base_molding, points)
+        self.set_molding_points(self.crown_molding, points)
+    
+    def update_u_shape_molding(self):
+        points = []
+        points.append((0, 0, 0))
+        points.append((0, self.left_return_length, 0))
+        points.append((self.back_wall_length, self.left_return_length, 0))
+        
+        if self.right_return_length > self.left_return_length:
+            points.append((self.back_wall_length,
+                           -(self.right_return_length - self.left_return_length),
+                           0))
+        else:
+            points.append((self.back_wall_length,
+                           self.left_return_length - self.right_return_length,
+                           0))            
+        
+        self.set_molding_points(self.base_molding, points)
+        self.set_molding_points(self.crown_molding, points)
+    
+    def add_molding(self, type=""):
+        bpy.ops.curve.primitive_bezier_curve_add(enter_editmode=False)
+        obj_curve = bpy.context.active_object
+        obj_curve.modifiers.new("Edge Split",type='EDGE_SPLIT')
+        obj_curve.data.splines.clear()
+        obj_curve.data.show_handles = False
+        obj_curve.cabinetlib.type_mesh = 'SOLIDSTOCK'
+        #obj_curve.cabinetlib.spec_group_index = product.obj_bp.cabinetlib.spec_group_index
+        
+        bpy.ops.fd_object.add_material_slot(object_name=obj_curve.name)
+        bpy.ops.cabinetlib.sync_material_slots(object_name=obj_curve.name)
+        obj_curve.cabinetlib.material_slots[0].pointer_name = "Molding"
+        obj_curve.data.dimensions = '2D'
+        utils.assign_materials_from_pointers(obj_curve)       
+        
+        if type == "base":
+            obj_curve.location = (0, 0, 0)
+            obj_curve.data.bevel_object = self.base_molding_pro
+            obj_curve.mv.name_object = "Base Molding"
+            obj_curve.name = "Base Molding"
+            obj_curve.mv.solid_stock = self.base_molding_pro.name
+            self.base_molding = obj_curve
+            
+        elif type == "crown":
+            pro_height = self.crown_molding_pro.dimensions.y
+            obj_curve.location = (0, 0, self.wall_height - pro_height)
+            obj_curve.data.bevel_object = self.crown_molding_pro
+            obj_curve.mv.name_object = "Crown Molding"
+            obj_curve.name = "Crown Molding"
+            obj_curve.mv.solid_stock = self.crown_molding_pro.name
+            self.crown_molding = obj_curve
+
+        return obj_curve        
+        
+        
+#FOR USING MOLDING ASSEMBLIES        
+#         Width = wall.get_var("dim_x", "Width")
+#         Height = wall.get_var("dim_z", "Height")
+#         
+#         bm = wall.add_assembly(MOLDING_ASSEMBLY)
+#         bm.obj_bp.parent = wall.obj_bp
+#         bm.update()
+#         bm_curve = self.get_molding_curve(bm.obj_bp)
+#         
+#         if self.props.base_molding in bpy.data.objects:
+#             bm_bev_obj = bpy.data.objects[self.props.base_molding] 
+#         else: 
+#             bm_bev_obj = utils.get_object(os.path.join(BASE_PRO_PATH, self.props.base_molding + ".blend"))
+#         
+#         bm_curve.data.bevel_object = bm_bev_obj
+# 
+#         bm.x_dim("Width", [Width])
+#         
+#         cm = wall.add_assembly(MOLDING_ASSEMBLY)
+#         cm.obj_bp.parent = wall.obj_bp
+#         cm.update()
+#         cm_curve = self.get_molding_curve(cm.obj_bp)
+#         
+#         if self.props.crown_molding in bpy.data.objects:
+#             cm_bev_obj = bpy.data.objects[self.props.crown_molding]
+#         else:
+#             cm_bev_obj = utils.get_object(os.path.join(CROWN_PRO_PATH, self.props.crown_molding + ".blend"))
+#             
+#         bev_obj_height = str(cm_bev_obj.dimensions.z)
+#         print("bev_obj_height: ",bev_obj_height)
+#         
+#         cm_curve.data.bevel_object = cm_bev_obj
+#         
+#         cm.z_loc("Height-INCH(" + bev_obj_height + ")", [Height])
+#         cm.x_dim("Width", [Width])    
     
     def update_square_room(self):
         self.left_side_wall.obj_z.location.z = self.wall_height
@@ -953,7 +1132,7 @@ class OPERATOR_Build_Room(Operator):
         self.door.obj_y.hide = True
         self.door.obj_x.hide = True
     
-    def update_single_room(self):
+    def update_single_wall(self):
         self.back_wall.obj_z.location.z = self.wall_height
         self.back_wall.obj_y.location.y = self.wall_thickness
         self.back_wall.obj_x.location.x = self.back_wall_length
@@ -1009,16 +1188,18 @@ class OPERATOR_Build_Room(Operator):
         self.right_side_wall.obj_x.hide = True
     
     def update_wall_properties(self,context):
-        props = bpy.context.scene.fd_roombuilder
-        
-        if props.room_type == 'SQUARE':
+        if self.props.room_type == 'SQUARE':
             self.update_square_room()
-        if props.room_type == 'LSHAPE':
+            self.update_square_room_molding()
+        if self.props.room_type == 'LSHAPE':
             self.update_l_shape_wall()
-        if props.room_type == 'USHAPE':
+            self.update_l_shape_molding()
+        if self.props.room_type == 'USHAPE':
             self.update_u_shape_wall()
-        if props.room_type == 'SINGLE':
-            self.update_single_room()
+            self.update_u_shape_molding()
+        if self.props.room_type == 'SINGLE':
+            self.update_single_wall()
+            self.update_single_wall_molding()
         
     def create_wall(self,context):
         wall = fd_types.Wall()
@@ -1062,12 +1243,14 @@ class OPERATOR_Build_Room(Operator):
         entry_wall.data.vertices[1].co[0] -= self.wall_thickness 
         entry_wall.data.vertices[2].co[0] += self.wall_thickness 
         entry_wall.data.vertices[5].co[0] -= self.wall_thickness 
-        entry_wall.data.vertices[6].co[0] += self.wall_thickness 
+        entry_wall.data.vertices[6].co[0] += self.wall_thickness
         
-        props = context.scene.fd_roombuilder
+#         self.add_molding(type="base")
+#         self.add_molding(type="crown")
+        
         bp = utils.get_group(os.path.join(os.path.dirname(__file__),
                                           "Entry Doors",
-                                          props.entry_door_fn[props.entry_door_type]))
+                                          self.props.entry_door_fn[self.props.entry_door_type]))
         
         self.door = fd_types.Assembly(bp)
         
@@ -1137,17 +1320,34 @@ class OPERATOR_Build_Room(Operator):
     def invoke(self,context,event):
         self.wall_mesh_objs = []
         utils.delete_obj_list(bpy.data.objects)
-        props = bpy.context.scene.fd_roombuilder
+        
+        self.props = bpy.context.scene.fd_roombuilder
+        
         self.wall_height = context.scene.mv.default_wall_height
         self.wall_thickness = context.scene.mv.default_wall_depth
         
-        if props.room_type == 'SQUARE':
+        objects = bpy.data.objects
+        
+        if self.props.base_molding in objects:
+            self.base_molding_pro = objects[self.props.base_molding]
+        else:
+            self.base_molding_pro = utils.get_object(os.path.join(BASE_PRO_PATH, self.props.base_molding + ".blend"))
+            
+        if self.props.crown_molding in objects:
+            self.crown_molding_pro = objects[self.props.crown_molding]
+        else:  
+            self.crown_molding_pro = utils.get_object(os.path.join(CROWN_PRO_PATH, self.props.crown_molding + ".blend"))
+        
+        self.add_molding(type="base")
+        self.add_molding(type="crown")
+        
+        if self.props.room_type == 'SQUARE':
             self.build_sqaure_room(context)
-        if props.room_type == 'LSHAPE':
+        if self.props.room_type == 'LSHAPE':
             self.build_l_shape_room(context)
-        if props.room_type == 'USHAPE':
+        if self.props.room_type == 'USHAPE':
             self.build_u_shape_room(context)
-        if props.room_type == 'SINGLE':
+        if self.props.room_type == 'SINGLE':
             self.build_single_wall(context)
         
         self.update_wall_properties(context)
@@ -1174,9 +1374,7 @@ class OPERATOR_Build_Room(Operator):
         layout = self.layout
         box = layout.box()
         
-        props = bpy.context.scene.fd_roombuilder
-        
-        if props.room_type == 'SQUARE':
+        if self.props.room_type == 'SQUARE':
         
             row = box.row()
             row.label("Room Length:")
@@ -1195,12 +1393,12 @@ class OPERATOR_Build_Room(Operator):
             row.label("Opening Height:")
             row.prop(self,"opening_height",text="")
             
-        if props.room_type == 'SINGLE':
+        if self.props.room_type == 'SINGLE':
             row = box.row()
             row.label("Wall Length:")
             row.prop(self,"back_wall_length",text="")
         
-        if props.room_type == 'LSHAPE':
+        if self.props.room_type == 'LSHAPE':
             row = box.row()
             row.label("Back Wall Length:")
             row.prop(self,"back_wall_length",text="")
@@ -1209,7 +1407,7 @@ class OPERATOR_Build_Room(Operator):
             row.label("Left Wall Length:")
             row.prop(self,"left_return_length",text="")
         
-        if props.room_type == 'USHAPE':
+        if self.props.room_type == 'USHAPE':
             row = box.row()
             row.label("Back Wall Length:")
             row.prop(self,"back_wall_length",text="")
@@ -1501,12 +1699,22 @@ def register():
 
     paint_coll = bpy.utils.previews.new()
     paint_coll.my_previews_dir = ""
-    paint_coll.my_previews = ()   
+    paint_coll.my_previews = ()
+    
+    base_molding_coll = bpy.utils.previews.new()
+    base_molding_coll.my_previews_dir = ""
+    base_molding_coll.my_previews = ()
+    
+    crown_molding_coll = bpy.utils.previews.new()
+    crown_molding_coll.my_previews_dir = ""
+    crown_molding_coll.my_previews = ()         
     
     preview_collections["carpet"] = carpet_coll
     preview_collections["wood_floor"] = wood_floor_coll
     preview_collections["tile"] = tile_floor_coll
     preview_collections["paint"] = paint_coll
+    preview_collections["base molding"] = base_molding_coll
+    preview_collections["crown molding"] = crown_molding_coll
 
 def unregister():
     bpy.utils.unregister_class(Scene_Props)
