@@ -1747,9 +1747,10 @@ class Assembly_Object():
             utils.add_variables_to_driver(driver,driver_vars)
             driver.driver.expression = expression
             
-    def material(self,material_pointer_name):
+    def material(self,material_pointer_name,slot_name=""):
         for slot in self.obj.cabinetlib.material_slots:
-            slot.pointer_name = material_pointer_name
+            if slot_name == slot.name:
+                slot.pointer_name = material_pointer_name
 
     def assign_material(self,slot_name,material_path,material_name):
         """ Returns:None - sets the every material slot that matches the slot_name
