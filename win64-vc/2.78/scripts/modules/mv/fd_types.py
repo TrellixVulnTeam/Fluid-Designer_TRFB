@@ -1749,8 +1749,11 @@ class Assembly_Object():
             
     def material(self,material_pointer_name,slot_name=""):
         for slot in self.obj.cabinetlib.material_slots:
-            if slot_name == slot.name:
+            if slot_name == "":
                 slot.pointer_name = material_pointer_name
+            else:
+                if slot_name == slot.name:
+                    slot.pointer_name = material_pointer_name
 
     def assign_material(self,slot_name,material_path,material_name):
         """ Returns:None - sets the every material slot that matches the slot_name
