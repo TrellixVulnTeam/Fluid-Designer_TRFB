@@ -17,20 +17,20 @@
 # ##### END GPL LICENSE BLOCK #####
 
 import bpy
+from . import fd_assembly
+from . import fd_driver
+from . import fd_general
+from . import fd_group
+from . import fd_material
+from . import fd_object
+from . import fd_prompts
+from . import fd_scene
+from . import fd_world
+from . import fd_text_editor
+from . import fd_api_doc
+from . import keyconfigs
 
 def register():
-    from . import fd_assembly
-    from . import fd_driver
-    from . import fd_general
-    from . import fd_group
-    from . import fd_material
-    from . import fd_object
-    from . import fd_prompts
-    from . import fd_scene
-    from . import fd_world
-    from . import fd_text_editor
-    from . import fd_api_doc
-    
     fd_assembly.register()
     fd_driver.register()
     fd_general.register()
@@ -42,20 +42,9 @@ def register():
     fd_world.register()
     fd_text_editor.register()
     fd_api_doc.register()
+    keyconfigs.register()
     
-def unregister():
-    from . import fd_assembly
-    from . import fd_driver
-    from . import fd_general
-    from . import fd_group
-    from . import fd_material
-    from . import fd_object
-    from . import fd_prompts
-    from . import fd_scene
-    from . import fd_world
-    from . import fd_text_editor
-    from . import fd_api_doc
-    
+def unregister():    
     fd_assembly.unregister()
     fd_driver.unregister()
     fd_general.unregister()
