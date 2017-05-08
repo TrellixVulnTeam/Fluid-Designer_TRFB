@@ -80,12 +80,12 @@ class PANEL_2d_views(bpy.types.Panel):
                                     "scenes", 
                                     bpy.context.window_manager.mv, 
                                     "elevation_scene_index")
+            
         image_views = context.window_manager.mv.image_views
         
         if len(image_views) > 0:
             panel_box.label("Image Views",icon='RENDERLAYERS')
             panel_box.template_list("LIST_2d_images"," ",context.window_manager.mv,"image_views",context.window_manager.mv,"image_view_index")
-            
             panel_box.operator('2dviews.create_pdf',text="Create PDF",icon='FILE_BLANK')
             
 class MENU_elevation_scene_options(bpy.types.Menu):
@@ -114,6 +114,7 @@ class LIST_scenes(bpy.types.UIList):
 class LIST_2d_images(bpy.types.UIList):
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        
         show_cover_option = True
         for iv in data.image_views:
             if iv.use_as_cover_image:
@@ -235,8 +236,29 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
                         grp.objects.link(child)  
         return grp
     
-    def create_default_plan(self,obj_bp):
-        pass
+    def create_new_scene(self, context, grp, obj_bp):
+        bpy.ops.scene.new('INVOKE_DEFAULT',type='EMPTY')
+        new_scene = context.scene
+        new_scene.name = grp.name
+        new_scene.mv.name_scene = "Product - " + obj_bp.mv.name_object if obj_bp.mv.type == 'BPASSEMBLY' else obj_bp.mv.name_object
+        new_scene.mv.elevation_img_name = obj_bp.name
+        new_scene.mv.plan_view_scene = False
+        new_scene.mv.elevation_scene = True
+        self.create_linesets(new_scene)
+        
+        return new_scene
+    
+    def add_text(self, context, assembly):
+        bpy.ops.object.text_add()
+        text = context.active_object
+        text.parent = assembly.obj_bp
+        text.location.x = unit.inch(-2)
+        text.location.z = unit.inch(-10)
+        text.rotation_euler.x = math.radians(90)
+        text.data.size = .1
+        text.data.body = assembly.obj_bp.mv.name_object
+        text.data.align_x = 'RIGHT'
+        text.data.font = self.font        
     
     def create_plan_view_scene(self,context):
         bpy.ops.scene.new('INVOKE_DEFAULT',type='EMPTY')   
@@ -313,47 +335,30 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
         bpy.ops.view3d.camera_to_view_selected()
         camera.data.ortho_scale += self.pv_pad
     
-    def create_elv_view_scene(self,context,wall):
-        bpy.ops.scene.new('INVOKE_DEFAULT',type='EMPTY')
-        wall_group = bpy.data.groups.new(wall.obj_bp.mv.name_object)
+    def create_elv_view_scene(self, context, assembly):
+        grp = bpy.data.groups.new(assembly.obj_bp.mv.name_object)
+        new_scene = self.create_new_scene(context, grp, assembly.obj_bp)
         
-        new_scene = context.scene
-        new_scene.name = wall_group.name
-        new_scene.mv.name_scene = wall.obj_bp.mv.name_object
-        new_scene.mv.elevation_img_name = wall.obj_bp.name
-        new_scene.mv.plan_view_scene = False
-        new_scene.mv.elevation_scene = True
-        self.create_linesets(new_scene)
+        self.group_children(grp, assembly.obj_bp)                    
+        wall_mesh = utils.create_cube_mesh(assembly.obj_bp.mv.name_object,
+                                           (assembly.obj_x.location.x,
+                                            assembly.obj_y.location.y,
+                                            assembly.obj_z.location.z))
+        wall_mesh.parent = assembly.obj_bp
+        grp.objects.link(wall_mesh)
         
-        self.group_children(wall_group,wall.obj_bp)                    
-        wall_mesh = utils.create_cube_mesh(wall.obj_bp.mv.name_object,(wall.obj_x.location.x,wall.obj_y.location.y,wall.obj_z.location.z))
-        wall_mesh.parent = wall.obj_bp
-        wall_group.objects.link(wall_mesh)
-        
-        instance = bpy.data.objects.new(wall.obj_bp.mv.name_object + " "  + "Instance" , None)
+        instance = bpy.data.objects.new(assembly.obj_bp.mv.name_object + " "  + "Instance" , None)
         new_scene.objects.link(instance)
         instance.dupli_type = 'GROUP'
-        instance.dupli_group = wall_group
+        instance.dupli_group = grp
         
         new_scene.world = self.main_scene.world
-        
-        self.link_dims_to_scene(new_scene, wall.obj_bp)
-        
-        bpy.ops.object.text_add()
-        
-        text = context.active_object
-        text.parent = wall.obj_bp
-        text.location.x = unit.inch(-2)
-        text.location.z = unit.inch(-10)
-        text.rotation_euler.x = math.radians(90)
-        text.data.size = .1
-        text.data.body = wall.obj_bp.mv.name_object
-        text.data.align_x = 'RIGHT'
-        text.data.font = self.font
+        self.link_dims_to_scene(new_scene, assembly.obj_bp)
+        self.add_text(context, assembly)
         
         camera = self.create_camera(new_scene)
         camera.rotation_euler.x = math.radians(90.0)
-        camera.rotation_euler.z = wall.obj_bp.rotation_euler.z   
+        camera.rotation_euler.z = assembly.obj_bp.rotation_euler.z   
         bpy.ops.object.select_all(action='DESELECT')
         wall_mesh.select = True
         bpy.ops.view3d.camera_to_view_selected()
@@ -370,16 +375,20 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
         context.scene.name = "_Main"
         self.create_plan_view_scene(context)
         
-        
         for obj in self.main_scene.objects:
             if obj.mv.type == 'BPWALL':
                 wall = fd_types.Wall(obj_bp = obj)
                 if len(wall.get_wall_groups()) > 0:
                     self.create_elv_view_scene(context, wall)
                     
+            elif obj.mv.type == 'BPASSEMBLY' and not obj.parent:
+                prod = fd_types.Assembly(obj_bp = obj)
+                self.create_elv_view_scene(context, prod)
+                    
         self.clear_unused_linestyles()
         bpy.context.screen.scene = self.main_scene
-        context.window_manager.mv.elevation_scene_index = 0
+        wm = context.window_manager.mv
+        wm.elevation_scene_index = 0
         return {'FINISHED'}
 
 class OPERATOR_render_2d_views(bpy.types.Operator):
