@@ -259,7 +259,7 @@ class PANEL_Room_Builder(Panel):
 
         if props.room_type == 'CUSTOM':
             row = box.row()
-            row.operator('fd_assembly.draw_wall',text="Draw Walls",icon='GREASEPENCIL')
+            row.operator('fd_roombuilder.draw_walls',text="Draw Walls",icon='GREASEPENCIL')
             row.operator('fd_roombuilder.collect_walls',icon='FILE_REFRESH')
             self.draw_custom_room_options(layout,context)
         else:
@@ -425,6 +425,21 @@ class FD_UL_obstacles(UIList):
         else:
             layout.operator('fd_roombuilder.add_obstacle',text="",icon='INFO').obstacle_bp_name = item.bp_name
         layout.operator('fd_roombuilder.delete_obstacle',text="",icon='X').obstacle_bp_name = item.bp_name
+        
+class OPERATOR_Draw_Walls(Operator):        
+    bl_idname = "fd_roombuilder.draw_walls"
+    bl_label = "Custom Room - Draw Walls" 
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        utils.delete_obj_list(bpy.data.objects)
+        props = context.scene.fd_roombuilder
+        
+        for old_wall in props.walls:
+            props.walls.remove(0)      
+        
+        bpy.ops.fd_assembly.draw_wall()
+        return {'FINISHED'}
         
 class OPERATOR_Add_Obstacle(Operator):
     bl_idname = "fd_roombuilder.add_obstacle"
@@ -1051,44 +1066,7 @@ class OPERATOR_Build_Room(Operator):
             obj_curve.mv.solid_stock = self.crown_molding_pro.name
             self.crown_molding = obj_curve
 
-        return obj_curve        
-        
-        
-#FOR USING MOLDING ASSEMBLIES        
-#         Width = wall.get_var("dim_x", "Width")
-#         Height = wall.get_var("dim_z", "Height")
-#         
-#         bm = wall.add_assembly(MOLDING_ASSEMBLY)
-#         bm.obj_bp.parent = wall.obj_bp
-#         bm.update()
-#         bm_curve = self.get_molding_curve(bm.obj_bp)
-#         
-#         if self.props.base_molding in bpy.data.objects:
-#             bm_bev_obj = bpy.data.objects[self.props.base_molding] 
-#         else: 
-#             bm_bev_obj = utils.get_object(os.path.join(BASE_PRO_PATH, self.props.base_molding + ".blend"))
-#         
-#         bm_curve.data.bevel_object = bm_bev_obj
-# 
-#         bm.x_dim("Width", [Width])
-#         
-#         cm = wall.add_assembly(MOLDING_ASSEMBLY)
-#         cm.obj_bp.parent = wall.obj_bp
-#         cm.update()
-#         cm_curve = self.get_molding_curve(cm.obj_bp)
-#         
-#         if self.props.crown_molding in bpy.data.objects:
-#             cm_bev_obj = bpy.data.objects[self.props.crown_molding]
-#         else:
-#             cm_bev_obj = utils.get_object(os.path.join(CROWN_PRO_PATH, self.props.crown_molding + ".blend"))
-#             
-#         bev_obj_height = str(cm_bev_obj.dimensions.z)
-#         print("bev_obj_height: ",bev_obj_height)
-#         
-#         cm_curve.data.bevel_object = cm_bev_obj
-#         
-#         cm.z_loc("Height-INCH(" + bev_obj_height + ")", [Height])
-#         cm.x_dim("Width", [Width])    
+        return obj_curve
     
     def update_square_room(self):
         self.left_side_wall.obj_z.location.z = self.wall_height
@@ -1323,6 +1301,9 @@ class OPERATOR_Build_Room(Operator):
         
         self.props = bpy.context.scene.fd_roombuilder
         
+        for old_wall in self.props.walls:
+            self.props.walls.remove(0)        
+        
         self.wall_height = context.scene.mv.default_wall_height
         self.wall_thickness = context.scene.mv.default_wall_depth
         
@@ -1426,6 +1407,10 @@ class OPERATOR_Collect_Walls(Operator):
     bl_options = {'UNDO'}
 
 #     floor = None
+
+    @classmethod
+    def poll(cls, context):
+        return len(context.scene.fd_roombuilder.walls) < 1
 
     def assign_floor_material(self,context,obj):
         props = context.scene.fd_roombuilder
@@ -1675,6 +1660,7 @@ def register():
     bpy.utils.register_class(FD_UL_walls)
     bpy.utils.register_class(FD_UL_obstacles)
     
+    bpy.utils.register_class(OPERATOR_Draw_Walls)
     bpy.utils.register_class(OPERATOR_Hide_Show_Wall)
     bpy.utils.register_class(OPERATOR_Add_Obstacle)
     bpy.utils.register_class(OPERATOR_Add_Floor_Obstacle)
@@ -1726,6 +1712,7 @@ def unregister():
     bpy.utils.unregister_class(FD_UL_walls)
     bpy.utils.unregister_class(FD_UL_obstacles)
     
+    bpy.utils.unregister_class(OPERATOR_Draw_Walls)
     bpy.utils.unregister_class(OPERATOR_Hide_Show_Wall)
     bpy.utils.unregister_class(OPERATOR_Add_Obstacle)
     bpy.utils.unregister_class(OPERATOR_Add_Floor_Obstacle)
