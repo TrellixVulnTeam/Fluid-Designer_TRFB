@@ -130,10 +130,6 @@ def draw_opengl(self, context):
 def draw_dimensions(context, obj, i_props, region, rv3d):
     g_props = bpy.context.scene.mv.opengl_dim
     
-    pr = g_props.gl_precision
-    fmt = "%1." + str(pr) + "f"
-    
-    units = g_props.gl_dim_units
     fsize = g_props.gl_font_size    
     a_size = g_props.gl_arrow_size
     a_type = g_props.gl_arrow_type
@@ -180,7 +176,7 @@ def draw_dimensions(context, obj, i_props, region, rv3d):
     
     if not i_props.line_only:
         if i_props.gl_label == "":
-            txt_dist = str(format_distance(fmt, units, dist))
+            txt_dist = str(format_distance(dist))
         else:
             txt_dist = i_props.gl_label
       
@@ -252,9 +248,13 @@ def draw_text(x_pos, y_pos, display_text, rgb, fsize, i_props, anchor_co, endpoi
 
     return maxwidth, maxheight
 
-def format_distance(fmt, units, value):
+def format_distance(value):
+    g_props = bpy.context.scene.mv.opengl_dim
     bldr_units = bpy.context.scene.unit_settings.system
-
+    pr = g_props.gl_precision
+    fmt = "%1." + str(pr) + "f"
+    units = g_props.gl_dim_units
+    
     if units == 'AUTO' and bldr_units == "METRIC":
         if round(value, 2) >= 1.0:
             fmt += " m"
