@@ -25,12 +25,12 @@ def get_imp_rounded(value):
     
     return math.modf(round(inches * int(rd_fac)) / int(rd_fac))
 
-def fmt_imp(value, units='INCH'):
+def fmt_imp(value):
     g_props = bpy.context.scene.mv.opengl_dim
     dist_imp = get_imp_rounded(value)
     str_dist = "{}{}{}"
     
-    if units == "FEET":
+    if g_props.gl_dim_units in ('FEET', 'AUTO'):
         feet = int(dist_imp[1] // 12)
         inch = int(dist_imp[1] % 12)
         fract = Fraction(dist_imp[0])     
@@ -57,7 +57,7 @@ def fmt_imp(value, units='INCH'):
     
         return str_dist.format(feet_fmt, inch_fmt, fract_fmt)
     
-    if units == "INCH":
+    if g_props.gl_dim_units in ('INCH', 'AUTO'):
         inch = int(dist_imp[1])
         fract = Fraction(dist_imp[0])
         
@@ -166,8 +166,6 @@ def draw_dimensions(context, obj, i_props, region, rv3d):
     screen_point_ap1 = get_2d_point(region, rv3d, a_p1)
     screen_point_bp1 = get_2d_point(region, rv3d, b_p1)
     
-    print()
-    
     if None in (screen_point_ap1,screen_point_bp1):
         return
     elif check_overlap_2d_point(screen_point_ap1, screen_point_bp1) and i_props.gl_label == "":
@@ -255,25 +253,21 @@ def draw_text(x_pos, y_pos, display_text, rgb, fsize, i_props, anchor_co, endpoi
     return maxwidth, maxheight
 
 def format_distance(fmt, units, value):
-    if units == "AUTO":
-        if bpy.context.scene.unit_settings.system == "IMPERIAL":
-            tx_dist = fmt_imp(value, units='INCH')
+    bldr_units = bpy.context.scene.unit_settings.system
 
-        elif bpy.context.scene.unit_settings.system == "METRIC":
-            if round(value, 2) >= 1.0:
-                fmt += " m"
-                tx_dist = fmt % value
-            else:
-                if round(value, 2) >= 0.01:
-                    fmt += " cm"
-                    d_cm = value * 100
-                    tx_dist = fmt % d_cm
-                else:
-                    fmt += " mm"
-                    d_mm = value * 1000
-                    tx_dist = fmt % d_mm
-        else:
+    if units == 'AUTO' and bldr_units == "METRIC":
+        if round(value, 2) >= 1.0:
+            fmt += " m"
             tx_dist = fmt % value
+        else:
+            if round(value, 2) >= 0.01:
+                fmt += " cm"
+                d_cm = value * 100
+                tx_dist = fmt % d_cm
+            else:
+                fmt += " mm"
+                d_mm = value * 1000
+                tx_dist = fmt % d_mm
 
     elif units == "METER":
         fmt += " m"
@@ -289,8 +283,8 @@ def format_distance(fmt, units, value):
         d_mm = value * (1000)
         tx_dist = fmt % d_mm
 
-    elif units in ("FEET", "INCH"):
-        tx_dist = fmt_imp(value, units)
+    elif units in ("FEET", "INCH") or units == 'AUTO' and bldr_units == 'IMPERIAL':
+        tx_dist = fmt_imp(value)
         
     else:
         tx_dist = fmt % value
