@@ -1096,6 +1096,8 @@ def draw_object_materials(layout,obj):
             row.prop_search(obj.cabinetlib,"cutpart_name",spec_group,"cutparts",icon='MOD_UVPROJECT',text="")
             row = layout.row(align=True)
             row.prop_search(obj.cabinetlib,"edgepart_name",spec_group,"edgeparts",icon='EDGESEL',text="")
+            row = layout.row(align=True)
+            row.label('Material Name: ' + utils.get_material_name(obj))
 
         if obj.cabinetlib.type_mesh == 'EDGEBANDING':
             row = layout.row(align=True)
@@ -1784,7 +1786,7 @@ class MENU_right_click_menu_edit_curve(Menu):
         layout.operator("fd_object.set_base_point",icon='SPACE2').object_name = obj.name 
         layout.separator()       
         layout.prop(obj.data,'show_handles')
-        layout.prop(obj.data,'show_normal_face')
+        layout.prop(obj.data,'show_normal_face')        
         layout.separator()
         layout.operator("curve.handle_type_set",icon='CURVE_PATH')
         layout.separator()

@@ -354,6 +354,11 @@ def get_selection_point(context, event, ray_max=10000.0,objects=None,floor=None)
 
 def get_material_name(obj):
     if obj.cabinetlib.type_mesh in {'CUTPART','EDGEBANDING'}:
+        #IF mv.cutpart_material_name IS SET THEN RETURN THAT VALUE
+        #THIS IS USED FOR USERS WHO WANT TO CONTROL THE NAME
+        #OF THE MATERIAL THAT GETS EXPORTED 
+        if obj.mv.cutpart_material_name != "":
+            return obj.mv.cutpart_material_name
         thickness = str(round(unit.meter_to_active_unit(get_part_thickness(obj)),4))
         core = ""
         exterior = ""

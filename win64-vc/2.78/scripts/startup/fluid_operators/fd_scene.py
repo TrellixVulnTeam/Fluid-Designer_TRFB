@@ -1687,10 +1687,27 @@ class OPS_export_mvfd(Operator):
             self.xml.add_element_with_text(elm_part,'XRotation',self.angle(obj.rotation_euler.x))
             self.xml.add_element_with_text(elm_part,'YRotation',self.angle(obj.rotation_euler.y))
             self.xml.add_element_with_text(elm_part,'ZRotation',self.angle(obj.rotation_euler.z))
-            self.xml.add_element_with_text(elm_part,'EdgeWidth1',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_w1,spec_group))
-            self.xml.add_element_with_text(elm_part,'EdgeLength1',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_l1,spec_group))
-            self.xml.add_element_with_text(elm_part,'EdgeWidth2',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_w2,spec_group))
-            self.xml.add_element_with_text(elm_part,'EdgeLength2',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_l2,spec_group))
+            
+            if obj.mv.edgeband_material_name != "" and obj.mv.edge_w1 != "":
+                self.xml.add_element_with_text(elm_part,'EdgeWidth1',obj.mv.edgeband_material_name)
+            else:
+                self.xml.add_element_with_text(elm_part,'EdgeWidth1',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_w1,spec_group))
+                
+            if obj.mv.edgeband_material_name != "" and obj.mv.edge_l1 != "":
+                self.xml.add_element_with_text(elm_part,'EdgeLength1',obj.mv.edgeband_material_name)
+            else:
+                self.xml.add_element_with_text(elm_part,'EdgeLength1',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_l1,spec_group))
+                
+            if obj.mv.edgeband_material_name != "" and obj.mv.edge_w2 != "":
+                self.xml.add_element_with_text(elm_part,'EdgeWidth2',obj.mv.edgeband_material_name)
+            else:
+                self.xml.add_element_with_text(elm_part,'EdgeWidth2',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_w2,spec_group))
+                
+            if obj.mv.edgeband_material_name != "" and obj.mv.edge_l2 != "":
+                self.xml.add_element_with_text(elm_part,'EdgeLength2',obj.mv.edgeband_material_name)
+            else:
+                self.xml.add_element_with_text(elm_part,'EdgeLength2',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_l2,spec_group))                                                
+
             self.xml.add_element_with_text(elm_part,'DrawToken3D',"DRAW3DBOX CABINET")
             self.xml.add_element_with_text(elm_part,'ElvToken2D',"DRAW2DBOX CABINET")
             self.xml.add_element_with_text(elm_part,'BasePoint',"1")
@@ -1698,7 +1715,7 @@ class OPS_export_mvfd(Operator):
             self.xml.add_element_with_text(elm_part,'Par1',"")
             self.xml.add_element_with_text(elm_part,'Par2',"")
             self.xml.add_element_with_text(elm_part,'Par3',"")
-
+            
             item_number += 1
             
     def write_materials(self,project_node):
@@ -1904,10 +1921,27 @@ class OPS_export_mvfd(Operator):
             self.xml.add_element_with_text(elm_part,'XRotation',self.angle(assembly.obj_bp.rotation_euler.x))
             self.xml.add_element_with_text(elm_part,'YRotation',self.angle(assembly.obj_bp.rotation_euler.y))
             self.xml.add_element_with_text(elm_part,'ZRotation',self.angle(assembly.obj_bp.rotation_euler.z))
-            self.xml.add_element_with_text(elm_part,'EdgeWidth1',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_w1,spec_group))
-            self.xml.add_element_with_text(elm_part,'EdgeLength1',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_l1,spec_group))
-            self.xml.add_element_with_text(elm_part,'EdgeWidth2',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_w2,spec_group))
-            self.xml.add_element_with_text(elm_part,'EdgeLength2',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_l2,spec_group))
+            
+            if obj.mv.edgeband_material_name != "" and obj.mv.edge_w1 != "":
+                self.xml.add_element_with_text(elm_part,'EdgeWidth1',obj.mv.edgeband_material_name)
+            else:
+                self.xml.add_element_with_text(elm_part,'EdgeWidth1',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_w1,spec_group))
+                
+            if obj.mv.edgeband_material_name != "" and obj.mv.edge_l1 != "":
+                self.xml.add_element_with_text(elm_part,'EdgeLength1',obj.mv.edgeband_material_name)
+            else:
+                self.xml.add_element_with_text(elm_part,'EdgeLength1',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_l1,spec_group))
+                
+            if obj.mv.edgeband_material_name != "" and obj.mv.edge_w2 != "":
+                self.xml.add_element_with_text(elm_part,'EdgeWidth2',obj.mv.edgeband_material_name)
+            else:
+                self.xml.add_element_with_text(elm_part,'EdgeWidth2',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_w2,spec_group))
+                
+            if obj.mv.edgeband_material_name != "" and obj.mv.edge_l2 != "":
+                self.xml.add_element_with_text(elm_part,'EdgeLength2',obj.mv.edgeband_material_name)
+            else:
+                self.xml.add_element_with_text(elm_part,'EdgeLength2',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_l2,spec_group))
+                    
             self.xml.add_element_with_text(elm_part,'DrawToken3D',"DRAW3DBOX CABINET")
             self.xml.add_element_with_text(elm_part,'ElvToken2D',"DRAW2DBOX CABINET")
             self.xml.add_element_with_text(elm_part,'BasePoint',self.get_part_base_point(assembly))
