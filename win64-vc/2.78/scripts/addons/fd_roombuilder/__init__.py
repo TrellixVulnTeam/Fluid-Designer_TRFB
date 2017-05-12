@@ -202,9 +202,12 @@ class Scene_Props(PropertyGroup):
     wood_floor_material = EnumProperty(name="Wood Floor Material",items=enum_wood_floor)
     tile_material = EnumProperty(name="Tile Material",items=enum_tile_floor)
     wall_material = EnumProperty(name="Wall Material",items=enum_wall_material)
-    
+
     base_molding = EnumProperty(name="Base Molding", items=enum_base_molding)
     crown_molding = EnumProperty(name="Crown Molding", items=enum_crown_molding)
+    
+    add_base_molding = BoolProperty(name="Add Base Molding",default = False)
+    add_crown_molding = BoolProperty(name="Add Crown Molding",default = False)    
     
 class Object_Props(PropertyGroup):
     
@@ -245,9 +248,16 @@ class PANEL_Room_Builder(Panel):
         row.prop(props,'wall_material',text="")
         
         row = box.row()
-        row.prop(props, 'base_molding', text="Base Molding")
+        row.prop(props, 'add_base_molding',text="Include Base Molding:")
+        
+        if props.add_base_molding:
+            row.prop(props, 'base_molding', text="")
+        
         row = box.row()
-        row.prop(props, 'crown_molding', text="Crown Molding")
+        row.prop(props, 'add_crown_molding', text="Include Crown Molding:")        
+        
+        if props.add_crown_molding:
+            row.prop(props, 'crown_molding', text="")
 
         if props.room_type == 'SQUARE':
             row = box.row(align=True)
