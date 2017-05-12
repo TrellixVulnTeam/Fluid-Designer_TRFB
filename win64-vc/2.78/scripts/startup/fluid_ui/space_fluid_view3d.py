@@ -1780,7 +1780,11 @@ class MENU_right_click_menu_edit_curve(Menu):
         layout.operator("curve.extrude_move",icon='CURVE_PATH')
         layout.operator("curve.switch_direction",icon='SCULPTMODE_HLT')
         layout.operator("curve.subdivide",icon='OUTLINER_OB_LATTICE')
+        layout.separator()
+        layout.operator("fd_object.set_base_point",icon='SPACE2').object_name = obj.name 
+        layout.separator()       
         layout.prop(obj.data,'show_handles')
+        layout.prop(obj.data,'show_normal_face')
         layout.separator()
         layout.operator("curve.handle_type_set",icon='CURVE_PATH')
         layout.separator()
