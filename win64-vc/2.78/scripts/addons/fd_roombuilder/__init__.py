@@ -982,102 +982,7 @@ class OPERATOR_Build_Room(Operator):
         bpy.ops.curve.select_all(action='SELECT')
         bpy.ops.curve.handle_type_set(type='VECTOR')
         bpy.ops.object.editmode_toggle()
-            
-    def update_square_room_molding(self):
-        self.base_molding.location = (self.left_return_length, 0, 0)
-        points = []
-        points.append((0, 0, 0))
-        points.append((-self.left_return_length, 0, 0))
-        points.append((-self.left_return_length, self.side_wall_length, 0))
-        points.append((self.back_wall_length-self.left_return_length, self.side_wall_length, 0))
-        points.append((self.back_wall_length-self.left_return_length, 0, 0))
-        points.append((self.back_wall_length
-                       -self.right_return_length
-                       -self.left_return_length,
-                       0,
-                       0))
-        
-        self.set_molding_points(self.base_molding, points)
-        
-        points.clear()
-        
-        points.append((0, 0, 0))
-        points.append((0, self.side_wall_length, 0))
-        points.append((self.back_wall_length, self.side_wall_length, 0))
-        points.append((self.back_wall_length, 0, 0))
-        
-        self.set_molding_points(self.crown_molding, points)
-        self.crown_molding.data.splines[0].use_cyclic_u = True
-            
-    def update_single_wall_molding(self):
-        points = []
-        points.append((0, 0, 0))
-        points.append((self.back_wall_length, 0, 0))
-        
-        self.set_molding_points(self.base_molding, points)
-        self.set_molding_points(self.crown_molding, points)
-    
-    def update_l_shape_molding(self):
-        points = []
-        points.append((0, 0, 0))
-        points.append((0, self.left_return_length, 0))
-        points.append((self.back_wall_length, self.left_return_length, 0))
-        
-        self.set_molding_points(self.base_molding, points)
-        self.set_molding_points(self.crown_molding, points)
-    
-    def update_u_shape_molding(self):
-        points = []
-        points.append((0, 0, 0))
-        points.append((0, self.left_return_length, 0))
-        points.append((self.back_wall_length, self.left_return_length, 0))
-        
-        if self.right_return_length > self.left_return_length:
-            points.append((self.back_wall_length,
-                           -(self.right_return_length - self.left_return_length),
-                           0))
-        else:
-            points.append((self.back_wall_length,
-                           self.left_return_length - self.right_return_length,
-                           0))            
-        
-        self.set_molding_points(self.base_molding, points)
-        self.set_molding_points(self.crown_molding, points)
-    
-    def add_molding(self, type=""):
-        bpy.ops.curve.primitive_bezier_curve_add(enter_editmode=False)
-        obj_curve = bpy.context.active_object
-        obj_curve.modifiers.new("Edge Split",type='EDGE_SPLIT')
-        obj_curve.data.splines.clear()
-        obj_curve.data.show_handles = False
-        obj_curve.cabinetlib.type_mesh = 'SOLIDSTOCK'
-        #obj_curve.cabinetlib.spec_group_index = product.obj_bp.cabinetlib.spec_group_index
-        
-        bpy.ops.fd_object.add_material_slot(object_name=obj_curve.name)
-        bpy.ops.cabinetlib.sync_material_slots(object_name=obj_curve.name)
-        obj_curve.cabinetlib.material_slots[0].pointer_name = "Molding"
-        obj_curve.data.dimensions = '2D'
-        utils.assign_materials_from_pointers(obj_curve)       
-        
-        if type == "base":
-            obj_curve.location = (0, 0, 0)
-            obj_curve.data.bevel_object = self.base_molding_pro
-            obj_curve.mv.name_object = "Base Molding"
-            obj_curve.name = "Base Molding"
-            obj_curve.mv.solid_stock = self.base_molding_pro.name
-            self.base_molding = obj_curve
-            
-        elif type == "crown":
-            pro_height = self.crown_molding_pro.dimensions.y
-            obj_curve.location = (0, 0, self.wall_height - pro_height)
-            obj_curve.data.bevel_object = self.crown_molding_pro
-            obj_curve.mv.name_object = "Crown Molding"
-            obj_curve.name = "Crown Molding"
-            obj_curve.mv.solid_stock = self.crown_molding_pro.name
-            self.crown_molding = obj_curve
 
-        return obj_curve
-    
     def update_square_room(self):
         self.left_side_wall.obj_z.location.z = self.wall_height
         self.left_side_wall.obj_y.location.y = self.wall_thickness
@@ -1178,16 +1083,12 @@ class OPERATOR_Build_Room(Operator):
     def update_wall_properties(self,context):
         if self.props.room_type == 'SQUARE':
             self.update_square_room()
-            self.update_square_room_molding()
         if self.props.room_type == 'LSHAPE':
             self.update_l_shape_wall()
-            self.update_l_shape_molding()
         if self.props.room_type == 'USHAPE':
             self.update_u_shape_wall()
-            self.update_u_shape_molding()
         if self.props.room_type == 'SINGLE':
             self.update_single_wall()
-            self.update_single_wall_molding()
         
     def create_wall(self,context):
         wall = fd_types.Wall()
@@ -1233,9 +1134,6 @@ class OPERATOR_Build_Room(Operator):
         entry_wall.data.vertices[5].co[0] -= self.wall_thickness 
         entry_wall.data.vertices[6].co[0] += self.wall_thickness
         
-#         self.add_molding(type="base")
-#         self.add_molding(type="crown")
-        
         bp = utils.get_group(os.path.join(os.path.dirname(__file__),
                                           "Entry Doors",
                                           self.props.entry_door_fn[self.props.entry_door_type]))
@@ -1244,6 +1142,7 @@ class OPERATOR_Build_Room(Operator):
         
         self.door.obj_bp.mv.mirror_y = False
         self.door.obj_bp.mv.type_group = 'PRODUCT'
+        self.door.obj_bp.mv.product_type = "Entry Door"
         self.door.obj_bp.parent = self.entry_wall.obj_bp
         
         objs = utils.get_child_objects(self.door.obj_bp)
@@ -1305,6 +1204,69 @@ class OPERATOR_Build_Room(Operator):
         utils.connect_objects_location(self.left_side_wall.obj_x,self.back_wall.obj_bp)
         utils.connect_objects_location(self.back_wall.obj_x,self.right_side_wall.obj_bp)
         
+    def add_molding(self, molding_type, wall, points):
+        bpy.ops.curve.primitive_bezier_curve_add(enter_editmode=False)
+        obj_curve = bpy.context.active_object
+        obj_curve.modifiers.new("Edge Split",type='EDGE_SPLIT')
+        obj_curve.data.splines.clear()
+        obj_curve.data.show_handles = False
+        obj_curve.cabinetlib.type_mesh = 'SOLIDSTOCK'
+        obj_curve.parent = wall.obj_bp
+        
+        bpy.ops.fd_object.add_material_slot(object_name=obj_curve.name)
+        bpy.ops.cabinetlib.sync_material_slots(object_name=obj_curve.name)
+        obj_curve.cabinetlib.material_slots[0].pointer_name = "Molding"
+        obj_curve.data.dimensions = '2D'
+        utils.assign_materials_from_pointers(obj_curve)  
+        
+        if molding_type == "base":
+            obj_curve.location = (0, 0, 0)
+            obj_curve.data.bevel_object = self.base_molding_pro
+            obj_curve.mv.name_object = wall.obj_bp.mv.name_object + " Base Molding"
+            obj_curve.name = wall.obj_bp.mv.name_object + " Base Molding"
+            obj_curve.mv.solid_stock = self.base_molding_pro.name
+            self.set_molding_points(obj_curve,points)
+            
+        elif molding_type == "crown":
+            pro_height = self.crown_molding_pro.dimensions.y
+            obj_curve.location = (0, 0, self.wall_height - pro_height)
+            obj_curve.data.bevel_object = self.crown_molding_pro
+            obj_curve.mv.name_object = wall.obj_bp.mv.name_object + " Crown Molding"
+            obj_curve.name = wall.obj_bp.mv.name_object + " Crown Molding"
+            obj_curve.mv.solid_stock = self.crown_molding_pro.name
+            self.set_molding_points(obj_curve,points)
+
+        return obj_curve
+
+    def add_molding_to_room(self,molding_type='crown'):
+        if self.left_side_wall:
+            points = [(0,0,0),(self.left_side_wall.obj_x.location.x,0,0)]
+            self.add_molding(molding_type=molding_type,wall=self.left_side_wall,points=points)
+            
+        if self.back_wall:
+            points = [(0,0,0),(self.back_wall.obj_x.location.x,0,0)]
+            self.add_molding(molding_type=molding_type,wall=self.back_wall,points=points)
+            
+        if self.right_side_wall:
+            points = [(0,0,0),(self.right_side_wall.obj_x.location.x,0,0)]
+            self.add_molding(molding_type=molding_type,wall=self.right_side_wall,points=points)
+            
+        if self.entry_wall:
+            if molding_type == 'base':
+                # If the base molding is being added we need to wrap around the entry way.
+                # This currently only works for the square room.
+                products = self.entry_wall.get_wall_groups()
+                entry_door = fd_types.Assembly(products[0])
+                points = [(0,0,0),(entry_door.obj_bp.location.x,0,0)]
+                self.add_molding(molding_type=molding_type,wall=self.entry_wall,points=points)
+                
+                points = [(entry_door.obj_bp.location.x + entry_door.obj_x.location.x,0,0),
+                          (self.entry_wall.obj_x.location.x,0,0)]
+                self.add_molding(molding_type=molding_type,wall=self.entry_wall,points=points)
+            else:
+                points = [(0,0,0),(self.entry_wall.obj_x.location.x,0,0)]
+                self.add_molding(molding_type=molding_type,wall=self.entry_wall,points=points)
+        
     def invoke(self,context,event):
         self.wall_mesh_objs = []
         utils.delete_obj_list(bpy.data.objects)
@@ -1312,26 +1274,25 @@ class OPERATOR_Build_Room(Operator):
         self.props = bpy.context.scene.fd_roombuilder
         
         for old_wall in self.props.walls:
-            self.props.walls.remove(0)        
+            self.props.walls.remove(0)
         
         self.wall_height = context.scene.mv.default_wall_height
         self.wall_thickness = context.scene.mv.default_wall_depth
         
         objects = bpy.data.objects
         
-        if self.props.base_molding in objects:
-            self.base_molding_pro = objects[self.props.base_molding]
-        else:
-            self.base_molding_pro = utils.get_object(os.path.join(BASE_PRO_PATH, self.props.base_molding + ".blend"))
-            
-        if self.props.crown_molding in objects:
-            self.crown_molding_pro = objects[self.props.crown_molding]
-        else:  
-            self.crown_molding_pro = utils.get_object(os.path.join(CROWN_PRO_PATH, self.props.crown_molding + ".blend"))
-        
-        self.add_molding(type="base")
-        self.add_molding(type="crown")
-        
+        if self.props.add_base_molding:
+            if self.props.base_molding in objects:
+                self.base_molding_pro = objects[self.props.base_molding]
+            else:
+                self.base_molding_pro = utils.get_object(os.path.join(BASE_PRO_PATH, self.props.base_molding + ".blend"))
+                
+        if self.props.add_crown_molding:
+            if self.props.crown_molding in objects:
+                self.crown_molding_pro = objects[self.props.crown_molding]
+            else:  
+                self.crown_molding_pro = utils.get_object(os.path.join(CROWN_PRO_PATH, self.props.crown_molding + ".blend"))
+                
         if self.props.room_type == 'SQUARE':
             self.build_sqaure_room(context)
         if self.props.room_type == 'LSHAPE':
@@ -1359,8 +1320,14 @@ class OPERATOR_Build_Room(Operator):
             if obj.type == 'EMPTY':
                 obj.hide = True
         
-        bpy.ops.fd_roombuilder.collect_walls()     
+        if self.props.add_base_molding:
+            self.add_molding_to_room(molding_type="base")
+            
+        if self.props.add_crown_molding:
+            self.add_molding_to_room(molding_type="crown")
         
+        bpy.ops.fd_roombuilder.collect_walls()     
+
     def draw(self,context):
         layout = self.layout
         box = layout.box()
