@@ -275,7 +275,10 @@ class PANEL_Room_Builder(Panel):
         else:
             col = box.column()
             col.scale_y = 1.3
-            col.operator('fd_roombuilder.build_room',text="Build Room",icon='SNAP_PEEL_OBJECT')
+            if len(bpy.data.objects) > 0:
+                col.operator('fd_roombuilder.delete_room',text="Delete Room",icon='X')
+            else:
+                col.operator('fd_roombuilder.build_room',text="Build Room",icon='SNAP_PEEL_OBJECT')
 
         if len(props.walls) > 0:
             box = main_box.box()
@@ -1534,6 +1537,28 @@ class OPERATOR_Hide_Show_Wall(Operator):
         
         return {'FINISHED'}
 
+class OPERATOR_Delete_Room(Operator):
+    bl_idname = "fd_roombuilder.delete_room"
+    bl_label = "Delete Room"
+
+    def invoke(self,context,event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self, width=400)
+
+    def execute(self, context):
+        utils.delete_obj_list(bpy.data.objects)
+        
+        props = context.scene.fd_roombuilder
+        
+        for old_wall in props.walls:
+            props.walls.remove(0)        
+            
+        return {'FINISHED'}
+
+    def draw(self,context):
+        layout = self.layout
+        layout.label("Are you sure you want to delete the room?")
+
 class OPERATOR_Show_Plane(Operator):
     bl_idname = "fd_roombuilder.show_plane"
     bl_label = "Show Plane"
@@ -1642,6 +1667,7 @@ def register():
     bpy.utils.register_class(OPERATOR_Add_Obstacle)
     bpy.utils.register_class(OPERATOR_Add_Floor_Obstacle)
     bpy.utils.register_class(OPERATOR_Build_Room)
+    bpy.utils.register_class(OPERATOR_Delete_Room)
     bpy.utils.register_class(OPERATOR_Collect_Walls)
     bpy.utils.register_class(OPERATOR_Delete_Obstacle)
     bpy.utils.register_class(OPERATOR_Hide_Plane)
@@ -1694,6 +1720,7 @@ def unregister():
     bpy.utils.unregister_class(OPERATOR_Add_Obstacle)
     bpy.utils.unregister_class(OPERATOR_Add_Floor_Obstacle)
     bpy.utils.unregister_class(OPERATOR_Build_Room)
+    bpy.utils.unregister_class(OPERATOR_Delete_Room)
     bpy.utils.unregister_class(OPERATOR_Collect_Walls)
     bpy.utils.unregister_class(OPERATOR_Delete_Obstacle)
     bpy.utils.unregister_class(OPERATOR_Hide_Plane)
