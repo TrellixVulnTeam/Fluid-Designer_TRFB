@@ -1861,6 +1861,32 @@ class OPS_export_mvfd(Operator):
                     self.write_part_node(elm_parts, child, spec_group)
             self.write_parts_for_product(elm_parts, child, spec_group)
     
+    def get_part_qty(self,assembly):
+        qty = 1
+        z_quantity = assembly.get_prompt("Z Quantity")
+        x_quantity = assembly.get_prompt("X Quantity")
+        if z_quantity:
+            qty += z_quantity.value() - 1
+        
+        if x_quantity:
+            qty += x_quantity.value() - 1
+            
+        return str(qty)
+        
+    def get_part_width(self,assembly):
+        width = math.fabs(assembly.obj_y.location.y)
+        oversize_width = assembly.get_prompt("Oversize Width")
+        if oversize_width:
+            width += oversize_width.value()
+        return self.distance(width)
+    
+    def get_part_length(self,assembly):
+        length = math.fabs(assembly.obj_x.location.x)
+        oversize_length = assembly.get_prompt("Oversize Length")
+        if oversize_length:
+            length += oversize_length.value()
+        return self.distance(length)
+        
     def get_part_x_location(self,obj,value):
         if obj.parent is None or obj.parent.mv.type_group == 'PRODUCT':
             return self.location(value)
@@ -1906,14 +1932,14 @@ class OPS_export_mvfd(Operator):
                     self.solid_stock_materials[utils.get_material_name(obj)] = utils.get_part_thickness(obj)
                     
             self.xml.add_element_with_text(elm_part,'LinkID',assembly.obj_bp.name)
-            self.xml.add_element_with_text(elm_part,'Qty',"1")
+            self.xml.add_element_with_text(elm_part,'Qty',self.get_part_qty(assembly))
             self.xml.add_element_with_text(elm_part,'MaterialName',utils.get_material_name(obj))
             self.xml.add_element_with_text(elm_part,'Thickness',self.distance(utils.get_part_thickness(obj)))
             self.xml.add_element_with_text(elm_part,'UseSMA','True' if obj.mv.use_sma else 'False')
             self.xml.add_element_with_text(elm_part,'LinkIDProduct',utils.get_bp(obj,'PRODUCT').name)
             self.xml.add_element_with_text(elm_part,'LinkIDParent',assembly.obj_bp.parent.name)
-            self.xml.add_element_with_text(elm_part,'PartLength',self.distance(assembly.obj_x.location.x))
-            self.xml.add_element_with_text(elm_part,'PartWidth',self.distance(assembly.obj_y.location.y))
+            self.xml.add_element_with_text(elm_part,'PartLength',self.get_part_length(assembly))
+            self.xml.add_element_with_text(elm_part,'PartWidth',self.get_part_width(assembly))
             self.xml.add_element_with_text(elm_part,'Comment',assembly.obj_bp.mv.comment)
             self.xml.add_element_with_text(elm_part,'XOrigin',self.get_part_x_location(assembly.obj_bp,assembly.obj_bp.location.x))
             self.xml.add_element_with_text(elm_part,'YOrigin',self.get_part_y_location(assembly.obj_bp,assembly.obj_bp.location.y))
