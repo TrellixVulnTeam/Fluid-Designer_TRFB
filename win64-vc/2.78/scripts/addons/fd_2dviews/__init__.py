@@ -149,6 +149,8 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
     
     ignore_obj_list = []
     
+#     orphan_products = []
+#     
     def get_world(self):
         if self.ENV_2D_NAME in bpy.data.worlds:
             return bpy.data.worlds[self.ENV_2D_NAME]
@@ -201,7 +203,7 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
             if linestyle.users == 0:
                 bpy.data.linestyles.remove(linestyle)
     
-    def create_camera(self,scene):
+    def create_camera(self, scene):
         camera_data = bpy.data.cameras.new(scene.name)
         camera_obj = bpy.data.objects.new(name=scene.name,object_data=camera_data)
         scene.objects.link(camera_obj)
@@ -224,12 +226,18 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
                 if len(child.children) > 0:
                     self.link_dims_to_scene(scene, child)     
     
-    def group_children(self,grp,obj):
+    def group_children(self, grp, obj):
         if obj.mv.type != 'CAGE' and obj not in self.ignore_obj_list:
-            grp.objects.link(obj)   
+            grp.objects.link(obj)
         for child in obj.children:
             if len(child.children) > 0:
-                self.group_children(grp,child)
+                if child.mv.type == 'OBSTACLE':
+                    for cc in child.children:
+                        if cc.mv.type == 'CAGE':
+                            cc.hide_render = False
+                            grp.objects.link(cc)
+                else:
+                    self.group_children(grp,child)
             else:
                 if not child.mv.is_wall_mesh:
                     if child.mv.type != 'CAGE' and obj not in self.ignore_obj_list:
@@ -344,6 +352,7 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
                                            (assembly.obj_x.location.x,
                                             assembly.obj_y.location.y,
                                             assembly.obj_z.location.z))
+        
         wall_mesh.parent = assembly.obj_bp
         grp.objects.link(wall_mesh)
         
@@ -369,6 +378,10 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
         self.font = opengl_dim.get_custom_font()
         bpy.ops.fd_scene.clear_2d_views()
         
+#         for obj in context.selected_objects:
+#             bp = utils.get_parent_assembly_bp(obj)
+#             self.orphan_products.append(bp)
+#         
         self.create_linestyles()
         
         self.main_scene = context.scene
@@ -381,9 +394,11 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
                 if len(wall.get_wall_groups()) > 0:
                     self.create_elv_view_scene(context, wall)
                     
-            elif obj.mv.type == 'BPASSEMBLY' and not obj.parent:
-                prod = fd_types.Assembly(obj_bp = obj)
-                self.create_elv_view_scene(context, prod)
+#         for obj in context.selected_objects:
+#             print("Getting: ", obj)
+#             if obj.mv.type == 'BPASSEMBLY' and not obj.parent:
+#                 prod = fd_types.Assembly(obj_bp = obj)
+#                 self.create_elv_view_scene(context, prod)
                     
         self.clear_unused_linestyles()
         bpy.context.screen.scene = self.main_scene
