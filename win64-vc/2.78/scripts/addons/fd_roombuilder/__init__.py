@@ -127,6 +127,15 @@ def update_obstacle_index(self,context):
             child.hide_select = False
             child.select = True
             context.scene.objects.active = child 
+           
+def toggle_obstacle_hide(self, context):
+    state = True if self.obstacle_hide == 'HIDE' else False
+    
+    for o in bpy.data.objects:
+        if o.mv.type == 'OBSTACLE':
+            obstacle = fd_types.Assembly(o)
+            cage = obstacle.get_cage()
+            cage.hide = state
                        
 class Obstacle(PropertyGroup):
     
@@ -197,6 +206,12 @@ class Scene_Props(PropertyGroup):
                      'SLIDING': "Sliding Door.blend",
                      'BIFOLD': "Bi-Fold Door.blend",
                      'BIFOLD_DOUBLE': "Bi-Fold Double Door.blend"}
+    
+    obstacle_hide = EnumProperty(name="Hide Obstacles",
+                                 items=[('SHOW', 'Show Obstacles', 'Show Obstacles'),
+                                        ('HIDE', 'Hide Obstacles', 'Hide Obstacles')],
+                                 default='SHOW',
+                                 update=toggle_obstacle_hide)
     
     carpet_material = EnumProperty(name="Carpet Material",items=enum_carpet)
     wood_floor_material = EnumProperty(name="Wood Floor Material",items=enum_wood_floor)
@@ -282,7 +297,11 @@ class PANEL_Room_Builder(Panel):
 
         if len(props.walls) > 0:
             box = main_box.box()
-            box.label("Room Objects:",icon='SNAP_FACE')
+            row = box.row(align=True)
+            row.label("Room Objects:",icon='SNAP_FACE')
+            row.prop_enum(props, 'obstacle_hide', 'SHOW', icon='RESTRICT_VIEW_OFF', text="")
+            row.prop_enum(props, 'obstacle_hide', 'HIDE', icon='RESTRICT_VIEW_ON', text="")
+            
             box.template_list("FD_UL_walls", "", props, "walls", props, "wall_index", rows=len(props.walls))
             wall = props.walls[props.wall_index]
             if wall.bp_name in context.scene.objects:
@@ -607,6 +626,7 @@ class OPERATOR_Add_Obstacle(Operator):
         self.obstacle.obj_y.location.y = self.wall.obj_y.location.y + unit.inch(2)
         self.obstacle.obj_z.location.z = self.obstacle_height
         self.obstacle.obj_bp.location.y = - unit.inch(1)
+        
         #Set bp_name for obstacle item just in case user doesn't click OK.
         if obstacle_item:
             obstacle_item.bp_name = self.obstacle.obj_bp.name
@@ -630,7 +650,7 @@ class OPERATOR_Add_Obstacle(Operator):
             self.wall_item.add_obstacle(self.obstacle,self.base_point)
             
             if self.obstacle:
-                self.obstacle.obj_bp.mv.type = 'NONE'
+                self.obstacle.obj_bp.mv.type = 'OBSTACLE'
             
         for obstacle in self.wall_item.obstacles:
             if obstacle.bp_name == self.obstacle_bp_name:
