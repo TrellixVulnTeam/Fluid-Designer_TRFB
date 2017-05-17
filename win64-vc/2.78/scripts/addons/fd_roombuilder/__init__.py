@@ -522,6 +522,15 @@ class OPERATOR_Add_Obstacle(Operator):
     wall_item = None
     click_ok = False
     
+    def reset_props(self):
+        self.obstacle_bp_name = ""
+        self.base_point = 'BOTTOM_LEFT'
+        self.obstacle_name = "New Obstacle"
+        self.obstacle_width = unit.inch(3)
+        self.obstacle_height = unit.inch(4)
+        self.x_location = unit.inch(0)
+        self.z_location = unit.inch(0)
+    
     def check(self, context):
         if self.obstacle and self.wall:
             
@@ -555,7 +564,7 @@ class OPERATOR_Add_Obstacle(Operator):
     def __del__(self):
         self.set_draw_type(bpy.context, 'TEXTURED')
 
-        if self.click_ok == False: # Only delete The obstacle if user didn't click OK
+        if self.click_ok == False and self.obstacle_bp_name == "": # Only delete The obstacle if user didn't click OK
             utils.delete_object_and_children(self.obstacle.obj_bp)
         
     def set_draw_type(self,context,draw_type='WIRE'):
@@ -611,6 +620,9 @@ class OPERATOR_Add_Obstacle(Operator):
                 self.z_location = self.obstacle.obj_bp.location.z
             utils.delete_object_and_children(obj_bp)
             
+        if self.obstacle_bp_name == "":
+            self.reset_props()
+            
         #Create Obstacle Assembly 
         self.obstacle = fd_types.Assembly()
         self.obstacle.create_assembly()
@@ -644,7 +656,10 @@ class OPERATOR_Add_Obstacle(Operator):
         dim.start_x('Width/2',[Width])
         dim.set_label(self.obstacle_name)
         
-        self.obstacle.obj_bp.mv.name_object = self.obstacle_name
+        disp_obstacle_index = str(len(self.wall_item.obstacles) + 1)
+        disp_obstacle_name = "Obstacle " + disp_obstacle_index + " - " + self.obstacle_name     
+        
+        self.obstacle.obj_bp.mv.name_object = disp_obstacle_name
         
         if self.obstacle_bp_name == "":
             self.wall_item.add_obstacle(self.obstacle,self.base_point)
@@ -661,6 +676,8 @@ class OPERATOR_Add_Obstacle(Operator):
             for child in self.obstacle.obj_bp.children:
                 child.mv.product_type = 'Obstacle'
                 child.draw_type = 'WIRE'
+                
+        self.obstacle_bp_name = ""
                 
 #         self.obstacle = None
 #         self.obstacle_bp_name = ""
