@@ -151,10 +151,10 @@ class Wall(PropertyGroup):
     obstacle_index = IntProperty(name="ObstacleIndex",update=update_obstacle_index)
     obstacles = CollectionProperty(name="Obstacles",type=Obstacle)
 
-    def add_obstacle(self,objstacle,base_point):
+    def add_obstacle(self,obstacle,base_point):
         obst = self.obstacles.add()
-        obst.name = objstacle.obj_bp.mv.name_object
-        obst.bp_name = objstacle.obj_bp.name
+        obst.name = obstacle.obj_bp.mv.name_object
+        obst.bp_name = obstacle.obj_bp.name
         obst.base_point = base_point
     
 bpy.utils.register_class(Wall)
@@ -446,17 +446,16 @@ class FD_UL_obstacles(UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         wall = context.scene.fd_roombuilder.walls[context.scene.fd_roombuilder.wall_index]
         wall_obj = context.scene.objects[wall.bp_name]
-        obs_obj = context.scene.objects[item.bp_name]
+
         layout.label(text="",icon='PLUG')
         layout.label(text=item.name)
-        for child in obs_obj.children:
-            if child.mv.type =='CAGE':
-                layout.prop(child,'draw_type',text="")
-        if wall_obj.fd_roombuilder.is_floor or wall_obj.fd_roombuilder.is_ceiling:
-            layout.operator('fd_roombuilder.add_floor_obstacle',text="",icon='INFO').obstacle_bp_name = item.bp_name
-        else:
-            layout.operator('fd_roombuilder.add_obstacle',text="",icon='INFO').obstacle_bp_name = item.bp_name
-        layout.operator('fd_roombuilder.delete_obstacle',text="",icon='X').obstacle_bp_name = item.bp_name
+                
+#         if wall_obj.fd_roombuilder.is_floor or wall_obj.fd_roombuilder.is_ceiling:
+#             layout.operator('fd_roombuilder.add_floor_obstacle',text="",icon='INFO').obstacle_bp_name = item.bp_name
+#         else:
+#             layout.operator('fd_roombuilder.add_obstacle',text="",icon='INFO').obstacle_bp_name = item.bp_name
+#             
+#         layout.operator('fd_roombuilder.delete_obstacle',text="",icon='X').obstacle_bp_name = item.bp_name
         
 class OPERATOR_Draw_Walls(Operator):        
     bl_idname = "fd_roombuilder.draw_walls"
@@ -478,9 +477,9 @@ class OPERATOR_Add_Obstacle(Operator):
     bl_label = "Add Obstacle" 
     bl_options = {'UNDO'}
 
-    obstacle_bp_name = StringProperty(name="Obstacle BP Name",
-                                      description="Pass the base point name to reposition an existing obstacle",
-                                      default="")
+#     obstacle_bp_name = StringProperty(name="Obstacle BP Name",
+#                                       description="Pass the base point name to reposition an existing obstacle",
+#                                       default="")
 
     base_point = EnumProperty(name="Base Point",
                              items=[('TOP_LEFT',"Top Left",'Top Left of Wall'),
@@ -564,7 +563,7 @@ class OPERATOR_Add_Obstacle(Operator):
     def __del__(self):
         self.set_draw_type(bpy.context, 'TEXTURED')
 
-        if self.click_ok == False and self.obstacle_bp_name == "": # Only delete The obstacle if user didn't click OK
+        if self.click_ok == False: #and self.obstacle_bp_name == "": # Only delete The obstacle if user didn't click OK
             utils.delete_object_and_children(self.obstacle.obj_bp)
         
     def set_draw_type(self,context,draw_type='WIRE'):
@@ -592,43 +591,47 @@ class OPERATOR_Add_Obstacle(Operator):
             
         self.set_draw_type(context)
         
-        obstacle_item = None
-        
-        #Get Existing obstacle assembly so we can set properties then delete it. 
-        if self.obstacle_bp_name in context.scene.objects:
-            for obstacle in self.wall_item.obstacles:
-                if obstacle.bp_name == self.obstacle_bp_name:
-                    obstacle_item = obstacle
-                    self.base_point = obstacle.base_point
+#         obstacle_item = None
+#         
+#         #Get Existing obstacle assembly so we can set properties then delete it. 
+#         if self.obstacle_bp_name in context.scene.objects:
+#             for obstacle in self.wall_item.obstacles:
+#                 if obstacle.bp_name == self.obstacle_bp_name:
+#                     obstacle_item = obstacle
+#                     self.base_point = obstacle.base_point
+#             
+#             obj_bp = context.scene.objects[self.obstacle_bp_name]
+#             self.obstacle = fd_types.Assembly(obj_bp)
+#             self.obstacle_name = self.obstacle.obj_bp.mv.name_object
+#             self.obstacle_height = self.obstacle.obj_z.location.z
+#             self.obstacle_width = self.obstacle.obj_x.location.x
+#             if self.base_point == 'TOP_LEFT':
+#                 self.x_location = self.obstacle.obj_bp.location.x
+#                 self.z_location = self.wall.obj_z.location.z - self.obstacle.obj_bp.location.z - self.obstacle_height
+#             if self.base_point == 'TOP_RIGHT':
+#                 self.x_location = self.wall.obj_x.location.x - self.obstacle.obj_bp.location.x - self.obstacle_width
+#                 self.z_location = self.wall.obj_z.location.z - self.obstacle.obj_bp.location.z - self.obstacle_height
+#             if self.base_point == 'BOTTOM_LEFT':
+#                 self.x_location = self.obstacle.obj_bp.location.x
+#                 self.z_location = self.obstacle.obj_bp.location.z
+#             if self.base_point == 'BOTTOM_RIGHT':
+#                 self.x_location = self.wall.obj_x.location.x - self.obstacle.obj_bp.location.x - self.obstacle_width
+#                 self.z_location = self.obstacle.obj_bp.location.z
+#             utils.delete_object_and_children(obj_bp)
             
-            obj_bp = context.scene.objects[self.obstacle_bp_name]
-            self.obstacle = fd_types.Assembly(obj_bp)
-            self.obstacle_name = self.obstacle.obj_bp.mv.name_object
-            self.obstacle_height = self.obstacle.obj_z.location.z
-            self.obstacle_width = self.obstacle.obj_x.location.x
-            if self.base_point == 'TOP_LEFT':
-                self.x_location = self.obstacle.obj_bp.location.x
-                self.z_location = self.wall.obj_z.location.z - self.obstacle.obj_bp.location.z - self.obstacle_height
-            if self.base_point == 'TOP_RIGHT':
-                self.x_location = self.wall.obj_x.location.x - self.obstacle.obj_bp.location.x - self.obstacle_width
-                self.z_location = self.wall.obj_z.location.z - self.obstacle.obj_bp.location.z - self.obstacle_height
-            if self.base_point == 'BOTTOM_LEFT':
-                self.x_location = self.obstacle.obj_bp.location.x
-                self.z_location = self.obstacle.obj_bp.location.z
-            if self.base_point == 'BOTTOM_RIGHT':
-                self.x_location = self.wall.obj_x.location.x - self.obstacle.obj_bp.location.x - self.obstacle_width
-                self.z_location = self.obstacle.obj_bp.location.z
-            utils.delete_object_and_children(obj_bp)
-            
-        if self.obstacle_bp_name == "":
-            self.reset_props()
+#         if self.obstacle_bp_name == "":
+#             self.reset_props()
             
         #Create Obstacle Assembly 
         self.obstacle = fd_types.Assembly()
         self.obstacle.create_assembly()
+        
+        self.obstacle.obj_bp.mv.type = 'OBSTACLE'
+        utils.set_object_name(self.obstacle.obj_bp)
+        
         cage = self.obstacle.get_cage()
         cage.select = True
-        cage.show_x_ray = True
+        cage.show_x_ray = True #Maybe not needed
         self.obstacle.obj_x.hide = True
         self.obstacle.obj_y.hide = True
         self.obstacle.obj_z.hide = True
@@ -640,9 +643,10 @@ class OPERATOR_Add_Obstacle(Operator):
         self.obstacle.obj_bp.location.y = - unit.inch(1)
         
         #Set bp_name for obstacle item just in case user doesn't click OK.
-        if obstacle_item:
-            obstacle_item.bp_name = self.obstacle.obj_bp.name
-        self.check(context)
+#         if obstacle_item:
+#             obstacle_item.bp_name = self.obstacle.obj_bp.name
+            
+        #self.check(context)
         
         return wm.invoke_props_dialog(self, width=400)
     
@@ -650,34 +654,37 @@ class OPERATOR_Add_Obstacle(Operator):
         self.click_ok = True
         Width = self.obstacle.get_var('dim_x','Width')
         
+        #Add dimension
         dim = fd_types.Dimension()
         dim.parent(self.obstacle.obj_bp)
         dim.start_z(value = unit.inch(.5))
         dim.start_x('Width/2',[Width])
         dim.set_label(self.obstacle_name)
         
-        disp_obstacle_index = str(len(self.wall_item.obstacles) + 1)
-        disp_obstacle_name = "Obstacle " + disp_obstacle_index + " - " + self.obstacle_name     
-        
-        self.obstacle.obj_bp.mv.name_object = disp_obstacle_name
-        
-        if self.obstacle_bp_name == "":
-            self.wall_item.add_obstacle(self.obstacle,self.base_point)
-            
-            if self.obstacle:
-                self.obstacle.obj_bp.mv.type = 'OBSTACLE'
-            
-        for obstacle in self.wall_item.obstacles:
-            if obstacle.bp_name == self.obstacle_bp_name:
-                obstacle.name = self.obstacle_name
-                obstacle.bp_name = self.obstacle.obj_bp.name
-                
         if self.obstacle:
+            self.obstacle.obj_bp.mv.type = 'OBSTACLE'        
+            str_obstacle_index = str(len(self.wall_item.obstacles))
+        
+            #DISP LIST NAME
+            self.obstacle.obj_bp.mv.name_object = self.obstacle_name
+            #OBJ_BP NAME
+            self.obstacle.obj_bp.name = "{}.{}.{}".format(self.obstacle.obj_bp.mv.type,
+                                                           str_obstacle_index,
+                                                           self.obstacle_name)
+            
             for child in self.obstacle.obj_bp.children:
                 child.mv.product_type = 'Obstacle'
-                child.draw_type = 'WIRE'
+                child.draw_type = 'WIRE'            
+        
+        #if self.obstacle_bp_name == "":
+        self.wall_item.add_obstacle(self.obstacle,self.base_point)
+         
+#         for obstacle in self.wall_item.obstacles:
+#             if obstacle.bp_name == self.obstacle_bp_name:
+#                 obstacle.name = self.obstacle_name
+#                 obstacle.bp_name = self.obstacle.obj_bp.name
                 
-        self.obstacle_bp_name = ""
+        #self.obstacle_bp_name = ""
                 
 #         self.obstacle = None
 #         self.obstacle_bp_name = ""
