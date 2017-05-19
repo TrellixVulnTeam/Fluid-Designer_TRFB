@@ -515,8 +515,22 @@ class OPERATOR_Add_Obstacle(Operator):
                                default=unit.inch(0),
                                unit='LENGTH',
                                precision=4)
+    
+    dim_x_loc_offset = FloatProperty(name="Dimension X Location Offset",
+                                     description="Enter X location dimension offset from wall",
+                                     default=unit.inch(6.0),
+                                     unit='LENGTH',
+                                     precision=4)    
+
+    dim_z_loc_offset = FloatProperty(name="Dimension Z Location Offset",
+                                     description="Enter Z location dimension offset from wall",
+                                     default=unit.inch(9.0),
+                                     unit='LENGTH',
+                                     precision=4)    
 
     obstacle = None
+    dim_x_loc = None
+    dim_z_loc = None
     wall = None
     wall_item = None
     click_ok = False
@@ -540,15 +554,48 @@ class OPERATOR_Add_Obstacle(Operator):
             if self.base_point == 'TOP_LEFT':
                 self.obstacle.obj_bp.location.x = self.x_location
                 self.obstacle.obj_bp.location.z = self.wall.obj_z.location.z - self.z_location - self.obstacle_height
+                
+                self.dim_x_loc.start_x(value=-self.obstacle.obj_bp.location.x)
+                self.dim_x_loc.end_x(value=self.obstacle.obj_bp.location.x)
+                self.dim_x_loc.start_z(value=self.wall.obj_z.location.z - self.obstacle.obj_bp.location.z + self.dim_x_loc_offset)
+                
+                self.dim_z_loc.start_x(value=-self.obstacle.obj_bp.location.x - self.dim_z_loc_offset)
+                self.dim_z_loc.start_z(value=self.wall.obj_z.location.z - self.obstacle.obj_bp.location.z)
+                self.dim_z_loc.end_z(value=-(self.wall.obj_z.location.z - self.obstacle.obj_bp.location.z - self.obstacle_height))
+                
             if self.base_point == 'TOP_RIGHT':
                 self.obstacle.obj_bp.location.x = self.wall.obj_x.location.x - self.x_location - self.obstacle_width
                 self.obstacle.obj_bp.location.z = self.wall.obj_z.location.z - self.z_location - self.obstacle_height
+                
+                self.dim_x_loc.start_x(value=self.obstacle_width)
+                self.dim_x_loc.end_x(value=self.wall.obj_x.location.x - self.obstacle.obj_bp.location.x - self.obstacle_width)
+                self.dim_x_loc.start_z(value=self.wall.obj_z.location.z - self.obstacle.obj_bp.location.z + self.dim_x_loc_offset)
+                
+                self.dim_z_loc.start_x(value=self.wall.obj_x.location.x - self.obstacle.obj_bp.location.x + self.dim_z_loc_offset)
+                self.dim_z_loc.start_z(value=self.wall.obj_z.location.z - self.obstacle.obj_bp.location.z)
+                self.dim_z_loc.end_z(value=-(self.wall.obj_z.location.z - self.obstacle.obj_bp.location.z - self.obstacle_height))
+                
             if self.base_point == 'BOTTOM_LEFT':
                 self.obstacle.obj_bp.location.x = self.x_location
                 self.obstacle.obj_bp.location.z = self.z_location
+                
+                self.dim_x_loc.start_x(value=-self.obstacle.obj_bp.location.x)
+                self.dim_x_loc.end_x(value=self.obstacle.obj_bp.location.x)
+                self.dim_x_loc.start_z(value=-self.obstacle.obj_bp.location.z - self.dim_x_loc_offset)
+                
+                self.dim_z_loc.start_x(value=-self.obstacle.obj_bp.location.x - self.dim_z_loc_offset)
+                self.dim_z_loc.end_z(value=-self.obstacle.obj_bp.location.z)                
+                
             if self.base_point == 'BOTTOM_RIGHT':
                 self.obstacle.obj_bp.location.x = self.wall.obj_x.location.x - self.x_location - self.obstacle_width
                 self.obstacle.obj_bp.location.z = self.z_location
+                
+                self.dim_x_loc.start_x(value=self.obstacle_width)
+                self.dim_x_loc.end_x(value= self.wall.obj_x.location.x - self.obstacle.obj_bp.location.x - self.obstacle_width)
+                self.dim_x_loc.start_z(value=-self.obstacle.obj_bp.location.z - self.dim_x_loc_offset)
+                
+                self.dim_z_loc.start_x(value=self.wall.obj_x.location.x - self.obstacle.obj_bp.location.x + self.dim_z_loc_offset)
+                self.dim_z_loc.end_z(value=-self.obstacle.obj_bp.location.z)                
                 
         #SET VIEW FOR USER
 #         view3d = context.space_data.region_3d
@@ -631,6 +678,16 @@ class OPERATOR_Add_Obstacle(Operator):
         self.obstacle.obj_y.location.y = self.wall.obj_y.location.y + unit.inch(2)
         self.obstacle.obj_z.location.z = self.obstacle_height
         self.obstacle.obj_bp.location.y = - unit.inch(1)
+        
+        self.dim_x_loc = fd_types.Dimension()
+        self.dim_x_loc.parent(self.obstacle.obj_bp)
+#         dim_x_loc.start_z()
+#         dim_x_loc.start_x()
+        
+        self.dim_z_loc = fd_types.Dimension()
+        self.dim_z_loc.parent(self.obstacle.obj_bp)
+#         dim_z_loc.start_z()
+#         dim_z_loc.start_x()          
         
         if self.modify_existing:
             self.obstacle.obj_bp.name = self.obstacle_bp_name
