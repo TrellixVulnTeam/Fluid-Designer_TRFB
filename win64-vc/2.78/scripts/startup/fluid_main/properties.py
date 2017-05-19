@@ -1620,6 +1620,12 @@ class fd_object(PropertyGroup):
     comment = StringProperty(name="Comment",
                              description="Comment to store information for reporting purposes.")    
     
+    comment_2 = StringProperty(name="Comment 2",
+                             description="Comment 2 to store information for reporting purposes.")        
+    
+    comment_3 = StringProperty(name="Comment 3",
+                             description="Comment 3 to store information for reporting purposes.")            
+    
     price = FloatProperty(name="Price",
                           description="Stores the price for an object. This it only used for hardware.")    
     

@@ -1661,7 +1661,7 @@ class OPS_export_mvfd(Operator):
             self.xml.add_element_with_text(elm_product,'XOrigin',self.location(obj.matrix_world[0][3]))
             self.xml.add_element_with_text(elm_product,'YOrigin',self.location(obj.matrix_world[1][3]))
             self.xml.add_element_with_text(elm_product,'ZOrigin',self.location(obj.location.z))
-            self.xml.add_element_with_text(elm_product,'Comment',obj.mv.comment)
+            self.xml.add_element_with_text(elm_product,'Comment',self.get_part_comment(obj))
             self.xml.add_element_with_text(elm_product,'Angle',self.angle(obj.rotation_euler.z))
             
             elm_parts = self.xml.add_element(elm_product,"Parts")
@@ -1905,6 +1905,9 @@ class OPS_export_mvfd(Operator):
         value += obj.parent.location.z
         return self.get_part_z_location(obj.parent,value)
 
+    def get_part_comment(self,obj):
+        return obj.mv.comment + "|" + obj.mv.comment_2 + "|" + obj.mv.comment_3 
+
     def write_part_node(self,node,obj,spec_group):
         if obj.mv.type == 'BPASSEMBLY':
             assembly = fd_types.Assembly(obj)
@@ -1940,7 +1943,7 @@ class OPS_export_mvfd(Operator):
             self.xml.add_element_with_text(elm_part,'LinkIDParent',assembly.obj_bp.parent.name)
             self.xml.add_element_with_text(elm_part,'PartLength',self.get_part_length(assembly))
             self.xml.add_element_with_text(elm_part,'PartWidth',self.get_part_width(assembly))
-            self.xml.add_element_with_text(elm_part,'Comment',assembly.obj_bp.mv.comment)
+            self.xml.add_element_with_text(elm_part,'Comment',self.get_part_comment(assembly.obj_bp))
             self.xml.add_element_with_text(elm_part,'XOrigin',self.get_part_x_location(assembly.obj_bp,assembly.obj_bp.location.x))
             self.xml.add_element_with_text(elm_part,'YOrigin',self.get_part_y_location(assembly.obj_bp,assembly.obj_bp.location.y))
             self.xml.add_element_with_text(elm_part,'ZOrigin',self.get_part_z_location(assembly.obj_bp,assembly.obj_bp.location.z))
