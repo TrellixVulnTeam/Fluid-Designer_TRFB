@@ -531,19 +531,11 @@ class OPERATOR_Add_Obstacle(Operator):
     obstacle = None
     dim_x_loc = None
     dim_z_loc = None
+    dim_label = None
     wall = None
     wall_item = None
     click_ok = False
     modify_existing = False
-    
-    def reset_props(self):
-        self.obstacle_bp_name = ""
-        self.base_point = 'BOTTOM_LEFT'
-        self.obstacle_name = "New Obstacle"
-        self.obstacle_width = unit.inch(3)
-        self.obstacle_height = unit.inch(4)
-        self.x_location = unit.inch(0)
-        self.z_location = unit.inch(0)
     
     def check(self, context):
         if self.obstacle and self.wall:
@@ -584,6 +576,7 @@ class OPERATOR_Add_Obstacle(Operator):
                 self.dim_x_loc.start_z(value=-self.obstacle.obj_bp.location.z - self.dim_x_loc_offset)
                 
                 self.dim_z_loc.start_x(value=-self.obstacle.obj_bp.location.x - self.dim_z_loc_offset)
+                self.dim_z_loc.start_z(value=0)
                 self.dim_z_loc.end_z(value=-self.obstacle.obj_bp.location.z)                
                 
             if self.base_point == 'BOTTOM_RIGHT':
@@ -595,16 +588,8 @@ class OPERATOR_Add_Obstacle(Operator):
                 self.dim_x_loc.start_z(value=-self.obstacle.obj_bp.location.z - self.dim_x_loc_offset)
                 
                 self.dim_z_loc.start_x(value=self.wall.obj_x.location.x - self.obstacle.obj_bp.location.x + self.dim_z_loc_offset)
-                self.dim_z_loc.end_z(value=-self.obstacle.obj_bp.location.z)                
-                
-        #SET VIEW FOR USER
-#         view3d = context.space_data.region_3d
-#         print(view3d.view_rotation)
-#         view3d.view_distance = 7
-#         view3d.view_location = (self.wall.obj_bp.location.x+self.wall.obj_x.location.x,
-#                                 self.wall.obj_bp.location.y,
-#                                 self.wall.obj_bp.location.z)
-#         view3d.view_rotation = (.8416,.4984,-.1004,-.1824)
+                self.dim_z_loc.start_z(value=0)
+                self.dim_z_loc.end_z(value=-self.obstacle.obj_bp.location.z)
 
         return True
     
@@ -679,15 +664,19 @@ class OPERATOR_Add_Obstacle(Operator):
         self.obstacle.obj_z.location.z = self.obstacle_height
         self.obstacle.obj_bp.location.y = - unit.inch(1)
         
+        Width = self.obstacle.get_var('dim_x','Width')
+        
+        self.dim_label = fd_types.Dimension()
+        self.dim_label.parent(self.obstacle.obj_bp)
+        self.dim_label.start_z(value = unit.inch(.5))
+        self.dim_label.start_x('Width/2',[Width])
+        self.dim_label.set_label(self.obstacle_name)        
+        
         self.dim_x_loc = fd_types.Dimension()
         self.dim_x_loc.parent(self.obstacle.obj_bp)
-#         dim_x_loc.start_z()
-#         dim_x_loc.start_x()
         
         self.dim_z_loc = fd_types.Dimension()
-        self.dim_z_loc.parent(self.obstacle.obj_bp)
-#         dim_z_loc.start_z()
-#         dim_z_loc.start_x()          
+        self.dim_z_loc.parent(self.obstacle.obj_bp)       
         
         if self.modify_existing:
             self.obstacle.obj_bp.name = self.obstacle_bp_name
@@ -698,14 +687,7 @@ class OPERATOR_Add_Obstacle(Operator):
     
     def execute(self, context):
         self.click_ok = True
-        Width = self.obstacle.get_var('dim_x','Width')
-        
-        #Add dimension
-        dim = fd_types.Dimension()
-        dim.parent(self.obstacle.obj_bp)
-        dim.start_z(value = unit.inch(.5))
-        dim.start_x('Width/2',[Width])
-        dim.set_label(self.obstacle_name)
+        self.dim_label.set_label(self.obstacle_name)
         
         if not self.modify_existing:
             self.obstacle.obj_bp.mv.name_object = self.obstacle_name
@@ -749,27 +731,18 @@ class OPERATOR_Add_Obstacle(Operator):
         row.label("Obstacle Width:")
         row.prop(self,"obstacle_width",text="")
         
-        if self.wall:
-            row = col.row()
-            row.label("Obstacle Height:")
-            row.prop(self,"obstacle_height",text="")
-        else:
-            row = col.row()
-            row.label("Obstacle Depth:")
-            row.prop(self,"obstacle_depth",text="")
+        row = col.row()
+        row.label("Obstacle Height:")
+        row.prop(self,"obstacle_height",text="")
         
         row = col.row()
         row.label("Obstacle X Location:")
         row.prop(self,"x_location",text="")
         
-        if self.wall:
-            row = col.row()
-            row.label("Obstacle Z Location:")
-            row.prop(self,"z_location",text="")
-        else:
-            row = col.row()
-            row.label("Obstacle Y Location:")
-            row.prop(self,"y_location",text="")
+        row = col.row()
+        row.label("Obstacle Z Location:")
+        row.prop(self,"z_location",text="")
+
 
 class OPERATOR_Add_Floor_Obstacle(Operator):
     bl_idname = "fd_roombuilder.add_floor_obstacle"
