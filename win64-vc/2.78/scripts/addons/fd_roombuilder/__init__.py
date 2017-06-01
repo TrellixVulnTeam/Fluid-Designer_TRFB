@@ -626,7 +626,12 @@ class OPERATOR_Add_Obstacle(Operator):
         wall_bp = context.scene.objects[self.wall_item.bp_name]
         self.wall = fd_types.Wall(wall_bp)
         self.set_draw_type(context)
-
+        
+        self.obstacle_height = unit.inch(4)
+        self.obstacle_width = unit.inch(3)
+        self.x_location = 0
+        self.z_location = 0
+        
         if self.modify_existing:
             if self.obstacle_bp_name in context.scene.objects:
                 for obstacle in self.wall_item.obstacles:
