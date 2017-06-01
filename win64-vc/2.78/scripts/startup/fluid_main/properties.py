@@ -993,6 +993,8 @@ class Machine_Token(PropertyGroup):
                                      ('SLIDE',"SLIDE","SLIDE"),
                                      ('CAMLOCK',"CAMLOCK","CAMLOCK"),
                                      ('MITER',"MITER","MITER"),
+                                     ('3SIDEDNOTCH',"3SIDEDNOTCH","3SIDEDNOTCH"),
+                                     ('PLINE',"PLINE","PLINE"),
                                      ('BORE',"BORE","BORE")],
                               description="Select the Machine Token Type.",
                               default='NONE')
@@ -1185,6 +1187,28 @@ class Machine_Token(PropertyGroup):
             param_dict['Par8'] = str(unit.meter_to_active_unit(self.drawer_slide_clearance))
             param_dict['Par9'] = ""
             
+        if self.type_token == '3SIDEDNOTCH':
+            param_dict['Par1'] = str(unit.meter_to_active_unit(self.dim_in_x)) # X
+            param_dict['Par2'] = str(unit.meter_to_active_unit(self.dim_in_y)) #Y
+            param_dict['Par3'] = str(unit.meter_to_active_unit(self.dim_in_z)) #Z
+            param_dict['Par4'] = str(unit.meter_to_active_unit(self.end_dim_in_x)) #ENDX
+            param_dict['Par5'] = str(unit.meter_to_active_unit(self.end_dim_in_y)) #ENDY
+            param_dict['Par6'] = str(unit.meter_to_active_unit(self.lead_in)) #LEADINOUT
+            param_dict['Par7'] = str(self.tool_number) #TOOLNUMBER
+            param_dict['Par8'] = "" #DRAW NUMBER
+            param_dict['Par9'] = "" #SEQUENCE NUMBER
+            
+        if self.type_token == 'PLINE':
+            param_dict['Par1'] = str(unit.meter_to_active_unit(self.dim_from_drawer_bottom)) #VECTOR LOCATION
+            param_dict['Par2'] = str(unit.meter_to_active_unit(self.dim_to_first_hole)) #BULGE LIST
+            param_dict['Par3'] = str(unit.meter_to_active_unit(self.dim_to_second_hole)) #FEED SPEEDS
+            param_dict['Par4'] = str(unit.meter_to_active_unit(self.dim_to_third_hole)) #OPTIONS
+            param_dict['Par5'] = str(unit.meter_to_active_unit(self.dim_to_fourth_hole)) #OFFSET
+            param_dict['Par6'] = str(unit.meter_to_active_unit(self.dim_to_fifth_hole)) #PROFILE NAME
+            param_dict['Par7'] = str(unit.meter_to_active_unit(self.face_bore_depth)) + "|" + str(self.face_bore_dia) #TOOLNUMBER
+            param_dict['Par8'] = str(unit.meter_to_active_unit(self.drawer_slide_clearance)) #TOOL COMPENSATION
+            param_dict['Par9'] = "" #SEQUENCE
+            
         return param_dict
     
     def draw_properties(self,layout):
@@ -1324,6 +1348,20 @@ class Machine_Token(PropertyGroup):
                 box.prop(self,'dim_in_x')
                 box.prop(self,'dim_in_y')
                 box.prop(self,'dim_in_z')
+                box.prop(self,'lead_in')
+                box.prop(self,'tool_number')
+            if self.type_token == '3SIDEDNOTCH':
+                row = box.row(align=True)
+                row.label("Start Dim:")
+                row.prop(self,'dim_in_x',text="X")
+                row.prop(self,'dim_in_y',text="Y")
+                row.prop(self,'dim_in_z',text="Z")
+                
+                row = box.row(align=True)
+                row.label("End Dim:")
+                row.prop(self,'end_dim_in_x',text="X")
+                row.prop(self,'end_dim_in_x',text="Y")            
+                
                 box.prop(self,'lead_in')
                 box.prop(self,'tool_number')
                                 
