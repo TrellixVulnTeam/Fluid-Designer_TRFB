@@ -285,57 +285,58 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
                         child.select = True
                         pv_scene.objects.link(child)
                 wall = fd_types.Wall(obj_bp = obj)
+                if wall.obj_bp and wall.obj_x and wall.obj_y and wall.obj_z:
                 
-                dim = fd_types.Dimension()
-                dim.parent(wall.obj_bp)
-                dim.start_y(value = unit.inch(4) + wall.obj_y.location.y)
-                dim.start_z(value = wall.obj_z.location.z + unit.inch(6))
-                dim.end_x(value = wall.obj_x.location.x)  
-                
-                self.ignore_obj_list.append(dim.anchor)
-                self.ignore_obj_list.append(dim.end_point)
-  
-                bpy.ops.object.text_add()
-                text = context.active_object
-                text.parent = wall.obj_bp
-                text.location = (wall.obj_x.location.x/2,unit.inch(1.5),wall.obj_z.location.z)
-                text.data.size = .1
-                text.data.body = wall.obj_bp.mv.name_object
-                text.data.align_x = 'CENTER'
-                text.data.font = self.font
-                 
-                self.ignore_obj_list.append(dim.anchor)
-                self.ignore_obj_list.append(dim.end_point)
-                 
-                obj_bps = wall.get_wall_groups()
-                #Create Cubes for all products
-                for obj_bp in obj_bps:
-                    if obj_bp.mv.plan_draw_id != "":
-                        eval('bpy.ops.' + obj_bp.mv.plan_draw_id + '(object_name=obj_bp.name)')
-                    else:
-                        assembly = fd_types.Assembly(obj_bp)
-                        assembly_mesh = utils.create_cube_mesh(assembly.obj_bp.mv.name_object,
-                                                            (assembly.obj_x.location.x,
-                                                             assembly.obj_y.location.y,
-                                                             assembly.obj_z.location.z))
-                        assembly_mesh.parent = wall.obj_bp
-                        assembly_mesh.location = assembly.obj_bp.location
-                        assembly_mesh.rotation_euler = assembly.obj_bp.rotation_euler
-                        assembly_mesh.mv.type = 'CAGE'
-                        distance = unit.inch(14) if assembly.obj_bp.location.z > 1 else unit.inch(8)
-                        distance += wall.obj_y.location.y
-                        
-                        dim = fd_types.Dimension()
-                        dim.parent(assembly_mesh)
-                        dim.start_y(value = distance)
-                        dim.start_z(value = 0)
-                        dim.end_x(value = assembly.obj_x.location.x)
-                        
-                        self.ignore_obj_list.append(dim.anchor)
-                        self.ignore_obj_list.append(dim.end_point)
-                        
-                if wall and wall.get_wall_mesh():
-                    wall.get_wall_mesh().select = True
+                    dim = fd_types.Dimension()
+                    dim.parent(wall.obj_bp)
+                    dim.start_y(value = unit.inch(4) + wall.obj_y.location.y)
+                    dim.start_z(value = wall.obj_z.location.z + unit.inch(6))
+                    dim.end_x(value = wall.obj_x.location.x)  
+                    
+                    self.ignore_obj_list.append(dim.anchor)
+                    self.ignore_obj_list.append(dim.end_point)
+      
+                    bpy.ops.object.text_add()
+                    text = context.active_object
+                    text.parent = wall.obj_bp
+                    text.location = (wall.obj_x.location.x/2,unit.inch(1.5),wall.obj_z.location.z)
+                    text.data.size = .1
+                    text.data.body = wall.obj_bp.mv.name_object
+                    text.data.align_x = 'CENTER'
+                    text.data.font = self.font
+                     
+                    self.ignore_obj_list.append(dim.anchor)
+                    self.ignore_obj_list.append(dim.end_point)
+                     
+                    obj_bps = wall.get_wall_groups()
+                    #Create Cubes for all products
+                    for obj_bp in obj_bps:
+                        if obj_bp.mv.plan_draw_id != "":
+                            eval('bpy.ops.' + obj_bp.mv.plan_draw_id + '(object_name=obj_bp.name)')
+                        else:
+                            assembly = fd_types.Assembly(obj_bp)
+                            assembly_mesh = utils.create_cube_mesh(assembly.obj_bp.mv.name_object,
+                                                                (assembly.obj_x.location.x,
+                                                                 assembly.obj_y.location.y,
+                                                                 assembly.obj_z.location.z))
+                            assembly_mesh.parent = wall.obj_bp
+                            assembly_mesh.location = assembly.obj_bp.location
+                            assembly_mesh.rotation_euler = assembly.obj_bp.rotation_euler
+                            assembly_mesh.mv.type = 'CAGE'
+                            distance = unit.inch(14) if assembly.obj_bp.location.z > 1 else unit.inch(8)
+                            distance += wall.obj_y.location.y
+                            
+                            dim = fd_types.Dimension()
+                            dim.parent(assembly_mesh)
+                            dim.start_y(value = distance)
+                            dim.start_z(value = 0)
+                            dim.end_x(value = assembly.obj_x.location.x)
+                            
+                            self.ignore_obj_list.append(dim.anchor)
+                            self.ignore_obj_list.append(dim.end_point)
+                            
+                    if wall and wall.get_wall_mesh():
+                        wall.get_wall_mesh().select = True
                 
         camera = self.create_camera(pv_scene)
         camera.rotation_euler.z = math.radians(-90.0)
@@ -344,34 +345,35 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
         camera.data.ortho_scale += self.pv_pad
     
     def create_elv_view_scene(self, context, assembly):
-        grp = bpy.data.groups.new(assembly.obj_bp.mv.name_object)
-        new_scene = self.create_new_scene(context, grp, assembly.obj_bp)
-        
-        self.group_children(grp, assembly.obj_bp)                    
-        wall_mesh = utils.create_cube_mesh(assembly.obj_bp.mv.name_object,
-                                           (assembly.obj_x.location.x,
-                                            assembly.obj_y.location.y,
-                                            assembly.obj_z.location.z))
-        
-        wall_mesh.parent = assembly.obj_bp
-        grp.objects.link(wall_mesh)
-        
-        instance = bpy.data.objects.new(assembly.obj_bp.mv.name_object + " "  + "Instance" , None)
-        new_scene.objects.link(instance)
-        instance.dupli_type = 'GROUP'
-        instance.dupli_group = grp
-        
-        new_scene.world = self.main_scene.world
-        self.link_dims_to_scene(new_scene, assembly.obj_bp)
-        self.add_text(context, assembly)
-        
-        camera = self.create_camera(new_scene)
-        camera.rotation_euler.x = math.radians(90.0)
-        camera.rotation_euler.z = assembly.obj_bp.rotation_euler.z   
-        bpy.ops.object.select_all(action='DESELECT')
-        wall_mesh.select = True
-        bpy.ops.view3d.camera_to_view_selected()
-        camera.data.ortho_scale += self.pv_pad
+        if assembly.obj_bp and assembly.obj_x and assembly.obj_y and assembly.obj_z:
+            grp = bpy.data.groups.new(assembly.obj_bp.mv.name_object)
+            new_scene = self.create_new_scene(context, grp, assembly.obj_bp)
+            
+            self.group_children(grp, assembly.obj_bp)                    
+            wall_mesh = utils.create_cube_mesh(assembly.obj_bp.mv.name_object,
+                                               (assembly.obj_x.location.x,
+                                                assembly.obj_y.location.y,
+                                                assembly.obj_z.location.z))
+            
+            wall_mesh.parent = assembly.obj_bp
+            grp.objects.link(wall_mesh)
+            
+            instance = bpy.data.objects.new(assembly.obj_bp.mv.name_object + " "  + "Instance" , None)
+            new_scene.objects.link(instance)
+            instance.dupli_type = 'GROUP'
+            instance.dupli_group = grp
+            
+            new_scene.world = self.main_scene.world
+            self.link_dims_to_scene(new_scene, assembly.obj_bp)
+            self.add_text(context, assembly)
+            
+            camera = self.create_camera(new_scene)
+            camera.rotation_euler.x = math.radians(90.0)
+            camera.rotation_euler.z = assembly.obj_bp.rotation_euler.z   
+            bpy.ops.object.select_all(action='DESELECT')
+            wall_mesh.select = True
+            bpy.ops.view3d.camera_to_view_selected()
+            camera.data.ortho_scale += self.pv_pad
         
     def execute(self, context):
         context.window_manager.mv.use_opengl_dimensions = True
