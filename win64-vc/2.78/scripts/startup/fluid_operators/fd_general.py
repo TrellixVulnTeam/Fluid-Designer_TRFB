@@ -442,14 +442,15 @@ class OPS_drop_insert(Operator):
     def selected_opening(self,selected_obj):
         if selected_obj:
             opening = fd_types.Assembly(selected_obj.parent)
-            self.insert.obj_bp.parent = opening.obj_bp.parent
-            self.insert.obj_bp.location = opening.obj_bp.location
-            self.insert.obj_bp.rotation_euler = opening.obj_bp.rotation_euler
-            self.insert.obj_x.location.x = opening.obj_x.location.x
-            self.insert.obj_y.location.y = opening.obj_y.location.y
-            self.insert.obj_z.location.z = opening.obj_z.location.z
-            utils.run_calculators(self.insert.obj_bp)
-            return opening
+            if opening.obj_bp.parent and opening.obj_bp.parent is not self.insert.obj_bp.parent:
+                self.insert.obj_bp.parent = opening.obj_bp.parent
+                self.insert.obj_bp.location = opening.obj_bp.location
+                self.insert.obj_bp.rotation_euler = opening.obj_bp.rotation_euler
+                self.insert.obj_x.location.x = opening.obj_x.location.x
+                self.insert.obj_y.location.y = opening.obj_y.location.y
+                self.insert.obj_z.location.z = opening.obj_z.location.z
+                utils.run_calculators(self.insert.obj_bp)
+                return opening
             
     def set_opening_name(self,obj,name):
         obj.mv.opening_name = name
