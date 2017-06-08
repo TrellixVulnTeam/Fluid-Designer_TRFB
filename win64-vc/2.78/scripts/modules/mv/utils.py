@@ -374,8 +374,12 @@ def get_material_name(obj):
         return format_material_name(thickness,core,exterior,interior)
     
     if obj.cabinetlib.type_mesh == 'BUYOUT':
+
+        if obj.mv.buyout_material_name != "":
+            return obj.mv.buyout_material_name
+        
         # THIS IS NEEDED FOR THE DOOR BUILDER LIBRARY
-        # BECAUSE THE DOOR ASSEMBLY BP IS MARKED AS BUYOUT
+        # BECAUSE THE DOOR ASSEMBLY BP IS MARKED AS BUYOUT        
         if obj.mv.type == 'BPASSEMBLY':
             return obj.mv.name_object
         if obj.parent:

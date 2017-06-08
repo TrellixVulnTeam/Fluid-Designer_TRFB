@@ -1630,6 +1630,7 @@ class fd_object(PropertyGroup):
     solid_stock = StringProperty(name="Solid Stock",description="Name of the solid stock material applied to the obj")    
     cutpart_material_name = StringProperty(name="Cutpart Material Name",description="Name cutpart material name")   
     edgeband_material_name = StringProperty(name="Edgeband Material Name",description="Edgeband material name")  
+    buyout_material_name = StringProperty(name="Buyout Material Name",description="Buyout material name")  
     opening_name = StringProperty(name="Opening Name",description="Name of the opening")   
     
     mp = PointerProperty(name="Machine Point",
