@@ -1351,6 +1351,7 @@ class Machine_Token(PropertyGroup):
                 box.prop(self,'lead_in')
                 box.prop(self,'tool_number')
             if self.type_token == '3SIDEDNOTCH':
+                box.prop(self,'edge')
                 row = box.row(align=True)
                 row.label("Start Dim:")
                 row.prop(self,'dim_in_x',text="X")
@@ -1360,7 +1361,7 @@ class Machine_Token(PropertyGroup):
                 row = box.row(align=True)
                 row.label("End Dim:")
                 row.prop(self,'end_dim_in_x',text="X")
-                row.prop(self,'end_dim_in_x',text="Y")            
+                row.prop(self,'end_dim_in_y',text="Y")            
                 
                 box.prop(self,'lead_in')
                 box.prop(self,'tool_number')

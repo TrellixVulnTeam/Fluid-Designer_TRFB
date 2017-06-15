@@ -2038,7 +2038,7 @@ class OPS_export_mvfd(Operator):
             token_name = token.name if token.name != "" else "Unnamed"
             elm_token = self.xml.add_element(elm_tokens,'MachineToken',token_name)
             param_dict = token.create_parameter_dictionary()
-            if token.type_token in {'CORNERNOTCH','CHAMFER'}:
+            if token.type_token in {'CORNERNOTCH','CHAMFER','3SIDEDNOTCH'}:
                 instructions = token.type_token + token.face + " " + token.edge
             elif token.type_token == 'SLIDE':
                 instructions = token.type_token
