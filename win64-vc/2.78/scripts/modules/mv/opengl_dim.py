@@ -141,62 +141,64 @@ def draw_dimensions(context, obj, i_props, region, rv3d):
         rgb = g_props.standard_colors[i_props.gl_color]                        
  
     a_p1 = get_location(obj)
-      
+    b_p1 = None
+    
     for child in obj.children:
         if child.mv.type == 'VISDIM_B':
             b_p1 = get_location(child)
-      
-    dist = utils.calc_distance(a_p1, b_p1)  
-  
-    loc = get_location(obj)
-    midpoint3d = interpolate3d(a_p1, b_p1, math.fabs(dist / 2))
-    vn = mathutils.Vector((midpoint3d[0] - loc[0],
-                           midpoint3d[1] - loc[1],
-                           midpoint3d[2] - loc[2]))
-  
-    vn.normalize()
-      
-    v1 = [a_p1[0], a_p1[1], a_p1[2]]
-    v2 = [b_p1[0], b_p1[1], b_p1[2]]    
-      
-    screen_point_ap1 = get_2d_point(region, rv3d, a_p1)
-    screen_point_bp1 = get_2d_point(region, rv3d, b_p1)
     
-    if None in (screen_point_ap1,screen_point_bp1):
-        return
-    elif check_overlap_2d_point(screen_point_ap1, screen_point_bp1) and i_props.gl_label == "":
-        return
-      
-    bgl.glLineWidth(i_props.gl_width)
-    bgl.glColor4f(rgb[0], rgb[1], rgb[2], rgb[3])
-          
-    midpoint3d = interpolate3d(v1, v2, math.fabs(dist / 2))
-    gap3d = (midpoint3d[0], midpoint3d[1], midpoint3d[2])
-    txtpoint2d = get_2d_point(region, rv3d, gap3d)
-    
-    if not i_props.line_only:
-        if i_props.gl_label == "":
-            txt_dist = str(format_distance(dist))
-        else:
-            txt_dist = i_props.gl_label
-      
-        draw_text(txtpoint2d[0], 
-                  txtpoint2d[1],
-                  txt_dist, 
-                  rgb, 
-                  fsize,
-                  i_props,
-                  screen_point_ap1,
-                  screen_point_bp1)
-  
-    bgl.glEnable(bgl.GL_BLEND)
-    bgl.glColor4f(rgb[0], rgb[1], rgb[2], rgb[3])      
-
-    if not i_props.line_only:
-        draw_arrow(screen_point_ap1, screen_point_bp1, a_size, a_type, b_type)  
-        draw_extension_lines(screen_point_ap1, screen_point_bp1, a_size)
+    if a_p1 and b_p1:
+        dist = utils.calc_distance(a_p1, b_p1)  
         
-    draw_line(screen_point_ap1, screen_point_bp1)
+        loc = get_location(obj)
+        midpoint3d = interpolate3d(a_p1, b_p1, math.fabs(dist / 2))
+        vn = mathutils.Vector((midpoint3d[0] - loc[0],
+                               midpoint3d[1] - loc[1],
+                               midpoint3d[2] - loc[2]))
+      
+        vn.normalize()
+          
+        v1 = [a_p1[0], a_p1[1], a_p1[2]]
+        v2 = [b_p1[0], b_p1[1], b_p1[2]]    
+          
+        screen_point_ap1 = get_2d_point(region, rv3d, a_p1)
+        screen_point_bp1 = get_2d_point(region, rv3d, b_p1)
+        
+        if None in (screen_point_ap1,screen_point_bp1):
+            return
+        elif check_overlap_2d_point(screen_point_ap1, screen_point_bp1) and i_props.gl_label == "":
+            return
+          
+        bgl.glLineWidth(i_props.gl_width)
+        bgl.glColor4f(rgb[0], rgb[1], rgb[2], rgb[3])
+              
+        midpoint3d = interpolate3d(v1, v2, math.fabs(dist / 2))
+        gap3d = (midpoint3d[0], midpoint3d[1], midpoint3d[2])
+        txtpoint2d = get_2d_point(region, rv3d, gap3d)
+        
+        if not i_props.line_only:
+            if i_props.gl_label == "":
+                txt_dist = str(format_distance(dist))
+            else:
+                txt_dist = i_props.gl_label
+          
+            draw_text(txtpoint2d[0], 
+                      txtpoint2d[1],
+                      txt_dist, 
+                      rgb, 
+                      fsize,
+                      i_props,
+                      screen_point_ap1,
+                      screen_point_bp1)
+      
+        bgl.glEnable(bgl.GL_BLEND)
+        bgl.glColor4f(rgb[0], rgb[1], rgb[2], rgb[3])      
+    
+        if not i_props.line_only:
+            draw_arrow(screen_point_ap1, screen_point_bp1, a_size, a_type, b_type)  
+            draw_extension_lines(screen_point_ap1, screen_point_bp1, a_size)
+            
+        draw_line(screen_point_ap1, screen_point_bp1)
                        
 def draw_text(x_pos, y_pos, display_text, rgb, fsize, i_props, anchor_co, endpoint_co):
     font_id = 0
