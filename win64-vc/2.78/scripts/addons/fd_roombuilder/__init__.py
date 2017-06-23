@@ -55,7 +55,6 @@ MOLDING_ASSEMBLY = os.path.join(os.path.dirname(__file__), "Moldings", "assembli
 BASE_PRO_PATH = os.path.join(os.path.dirname(__file__), "Moldings", "profiles", "base")
 CROWN_PRO_PATH = os.path.join(os.path.dirname(__file__), "Moldings", "profiles", "crown")
 
-
 preview_collections = {}
 
 def enum_carpet(self,context):
@@ -284,7 +283,7 @@ class PANEL_Room_Builder(Panel):
 
         if props.room_type == 'CUSTOM':
             row = box.row()
-            row.operator('fd_roombuilder.draw_walls',text="Draw Walls",icon='GREASEPENCIL')
+            row.operator('fd_assembly.draw_wall',text="Draw Walls",icon='GREASEPENCIL')
             row.operator('fd_roombuilder.collect_walls',icon='FILE_REFRESH')
             self.draw_custom_room_options(layout,context)
         else:
