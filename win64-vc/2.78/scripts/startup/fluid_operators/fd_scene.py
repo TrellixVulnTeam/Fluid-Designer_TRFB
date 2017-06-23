@@ -1835,9 +1835,22 @@ class OPS_export_mvfd(Operator):
                     #diff = product_bp.matrix_world - child.matrix_world
                     hardware_name = child.mv.name_object if child.mv.name_object != "" else child.name
                     elm_item = self.xml.add_element(elm_hardware,'Hardware',hardware_name)
-                    self.xml.add_element_with_text(elm_item,'XDimension',self.distance(child.dimensions.x))
-                    self.xml.add_element_with_text(elm_item,'YDimension',self.distance(child.dimensions.y))
-                    self.xml.add_element_with_text(elm_item,'ZDimension',self.distance(child.dimensions.z))
+                    
+                    if child.mv.hardware_x_dim != 0:
+                        self.xml.add_element_with_text(elm_item,'XDimension',self.distance(child.mv.hardware_x_dim))
+                    else:
+                        self.xml.add_element_with_text(elm_item,'XDimension',self.distance(child.dimensions.x))
+                        
+                    if child.mv.hardware_y_dim != 0:
+                        self.xml.add_element_with_text(elm_item,'YDimension',self.distance(child.mv.hardware_y_dim))
+                    else:
+                        self.xml.add_element_with_text(elm_item,'YDimension',self.distance(child.dimensions.y))
+                        
+                    if child.mv.hardware_z_dim != 0:
+                        self.xml.add_element_with_text(elm_item,'ZDimension',self.distance(child.mv.hardware_z_dim))
+                    else:
+                        self.xml.add_element_with_text(elm_item,'ZDimension',self.distance(child.dimensions.z))
+                        
                     self.xml.add_element_with_text(elm_item,'XOrigin',self.get_part_x_location(child,child.location.x))
                     self.xml.add_element_with_text(elm_item,'YOrigin',self.get_part_y_location(child,child.location.y))
                     self.xml.add_element_with_text(elm_item,'ZOrigin',self.get_part_z_location(child,child.location.z))                    

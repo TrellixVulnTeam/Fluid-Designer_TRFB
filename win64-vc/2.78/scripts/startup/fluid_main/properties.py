@@ -1718,6 +1718,18 @@ class fd_object(PropertyGroup):
     buyout_material_name = StringProperty(name="Buyout Material Name",description="Buyout material name")  
     opening_name = StringProperty(name="Opening Name",description="Name of the opening")   
     
+    hardware_x_dim = FloatProperty(name="Hardware X Dimension",
+                                   description="The hardware size override for the x dimension. Used in MV Export",
+                                   unit="LENGTH")       
+    
+    hardware_y_dim = FloatProperty(name="Hardware Y Dimension",
+                                   description="The hardware size override for the y dimension. Used in MV Export",
+                                   unit="LENGTH")     
+          
+    hardware_z_dim = FloatProperty(name="Hardware Z Dimension",
+                                   description="The hardware size override for the z dimension. Used in MV Export",
+                                   unit="LENGTH")
+    
     mp = PointerProperty(name="Machine Point",
                          description="Machining Point",
                          type=Machine_Point)    
@@ -1752,6 +1764,8 @@ class fd_object(PropertyGroup):
     
     price = FloatProperty(name="Price",
                           description="Stores the price for an object. This it only used for hardware.")    
+    
+     
     
     opengl_dim = PointerProperty(type=opengl_dim)
 
