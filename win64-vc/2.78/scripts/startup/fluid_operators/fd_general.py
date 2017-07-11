@@ -357,6 +357,8 @@ class OPS_drop_insert(Operator):
     bl_label = "Drop Insert"
     bl_description = "This will add an insert to the scene"
 
+    object_name = bpy.props.StringProperty(name="Object Name")
+
     product_name = StringProperty(name="Product Name")
     category_name = StringProperty(name="Category Name")
     library_name = StringProperty(name="Library Name")
@@ -380,22 +382,29 @@ class OPS_drop_insert(Operator):
 
     def get_insert(self,context):
         bpy.ops.object.select_all(action='DESELECT')
-        lib = context.window_manager.cabinetlib.lib_inserts[self.library_name]
-        blend_path = os.path.join(lib.lib_path,self.category_name,self.product_name + ".blend")
-        obj_bp = None
-        if os.path.exists(blend_path):
-            obj_bp = utils.get_group(blend_path)
-            self.insert = fd_types.Assembly(obj_bp)
-        else:
-            self.insert = utils.get_insert_class(context,self.library_name,self.category_name,self.product_name)
-
-        if obj_bp:
-            pass
-        #TODO: SET UP UPDATE OPERATOR
-#                 self.insert.update(obj_bp)
-        else:
-            self.insert.draw()
-            self.insert.update()
+        
+        if self.object_name in bpy.data.objects:
+            bp = bpy.data.objects[self.object_name]
+            self.insert = fd_types.Assembly(bp)
+            
+        
+        if not self.insert:
+            lib = context.window_manager.cabinetlib.lib_inserts[self.library_name]
+            blend_path = os.path.join(lib.lib_path,self.category_name,self.product_name + ".blend")
+            obj_bp = None
+            if os.path.exists(blend_path):
+                obj_bp = utils.get_group(blend_path)
+                self.insert = fd_types.Assembly(obj_bp)
+            else:
+                self.insert = utils.get_insert_class(context,self.library_name,self.category_name,self.product_name)
+    
+            if obj_bp:
+                pass
+            #TODO: SET UP UPDATE OPERATOR
+    #                 self.insert.update(obj_bp)
+            else:
+                self.insert.draw()
+                self.insert.update()
             
         self.show_openings()
         utils.init_objects(self.insert.obj_bp)
@@ -404,8 +413,10 @@ class OPS_drop_insert(Operator):
         self.default_depth = self.insert.obj_y.location.y
 
     def invoke(self,context,event):
+        self.insert = None
         context.window.cursor_set('WAIT')
         self.get_insert(context)
+        set_wire_and_xray(self.insert.obj_bp, True)
         if self.insert is None:
             bpy.ops.fd_general.error('INVOKE_DEFAULT',message="Could Not Find Insert Class: " + "\\" + self.library_name + "\\" + self.category_name + "\\" + self.product_name)
             return {'CANCELLED'}
@@ -471,6 +482,8 @@ class OPS_drop_insert(Operator):
 #         cabinet_utils.set_property_id(self.insert.obj_bp,opening.obj_bp.mv.property_id)
         self.set_opening_name(self.insert.obj_bp, opening.obj_bp.mv.opening_name)
         
+        set_wire_and_xray(self.insert.obj_bp, False)
+        
         for obj in self.objects:
             obj.hide = True
             obj.hide_render = True
@@ -495,6 +508,7 @@ class OPS_drop_insert(Operator):
                     utils.run_calculators(self.insert.obj_bp)
 
                     bpy.context.window.cursor_set('DEFAULT')
+                    
                     return {'FINISHED'}
 
             return {'RUNNING_MODAL'}
