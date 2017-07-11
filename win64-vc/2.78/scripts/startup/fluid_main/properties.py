@@ -1022,6 +1022,8 @@ bpy.utils.register_class(Pline_Bulge)
     
 class Machine_Token(PropertyGroup):
     show_expanded = BoolProperty(name="Show Expanded",default=False)
+    is_disabled = BoolProperty(name="Is Disabled",default=False)
+    
     type_token = EnumProperty(name="Mesh Type",
                               items=[('NONE',"None","None"),
                                      ('CORNERNOTCH',"CORNERNOTCH","CORNERNOTCH"),
