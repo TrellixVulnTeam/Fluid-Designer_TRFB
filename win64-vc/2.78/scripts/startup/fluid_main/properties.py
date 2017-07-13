@@ -1290,7 +1290,7 @@ class Machine_Token(PropertyGroup):
             row.prop(self,'show_expanded',text='',icon='TRIA_DOWN',emboss=False)
         else:
             row.prop(self,'show_expanded',text="",icon='TRIA_RIGHT',emboss=False)
-        row.prop(self,"name",text="",icon='SCULPTMODE_HLT')
+        row.prop(self,"name",text="",icon='LAYER_USED' if self.is_disabled else 'LAYER_ACTIVE')
         row.operator('cabinetlib.delete_machine_token',text="",icon='X',emboss=False).token_name = self.name
 
         if self.show_expanded:
