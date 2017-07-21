@@ -1597,7 +1597,7 @@ class VIEW3D_MT_producttools(Menu):
             layout.separator()
             layout.operator("fd_assembly.copy_parent_assembly",text="Copy Selected Product",icon='PASTEDOWN')
             layout.operator("fd_assembly.select_parent_assemby_base_point",text="Select Product Base Point",icon='MAN_TRANS')
-            layout.operator('fd_assembly.delete_selected_product',text="Delete Selected Product",icon='X').object_name = product_bp.name
+            layout.operator('fd_assembly.delete_selected_product',text="Delete Selected Product",icon='X')
         else:
             layout.label("A Product is not selected")
         

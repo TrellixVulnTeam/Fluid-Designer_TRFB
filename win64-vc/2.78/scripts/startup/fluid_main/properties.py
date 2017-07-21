@@ -977,8 +977,53 @@ class Specification_Group(PropertyGroup):
 
 bpy.utils.register_class(Specification_Group)
 
+class Pline_Vector(PropertyGroup):
+    
+    x_loc = FloatProperty(name="X Location",unit='LENGTH')
+    y_loc = FloatProperty(name="Y Location",unit='LENGTH')
+    z_loc = FloatProperty(name="Z Location",unit='LENGTH')
+    bulge = FloatProperty(name="Buldge")
+    
+    def add_x_driver(self,token_name,vector_index,expression,driver_vars):
+        obj = self.id_data
+        data_path = 'mv.mp.machine_tokens.["' + token_name + '"].vector_locations[' + str(vector_index) + '].x_loc'
+        driver = obj.driver_add(data_path)
+        utils.add_variables_to_driver(driver,driver_vars)
+        driver.driver.expression = expression
+    
+    def add_y_driver(self,token_name,vector_index,expression,driver_vars):
+        obj = self.id_data
+        data_path = 'mv.mp.machine_tokens.["' + token_name + '"].vector_locations[' + str(vector_index) + '].y_loc'
+        driver = obj.driver_add(data_path)
+        utils.add_variables_to_driver(driver,driver_vars)
+        driver.driver.expression = expression    
+    
+    def add_z_driver(self,token_name,vector_index,expression,driver_vars):
+        obj = self.id_data
+        data_path = 'mv.mp.machine_tokens.["' + token_name + '"].vector_locations[' + str(vector_index) + '].z_loc'
+        driver = obj.driver_add(data_path)
+        utils.add_variables_to_driver(driver,driver_vars)
+        driver.driver.expression = expression        
+    
+    def add_bulge_driver(self,token_name,vector_index,expression,driver_vars):
+        obj = self.id_data
+        data_path = 'mv.mp.machine_tokens.["' + token_name + '"].vector_locations[' + str(vector_index) + '].bulge'
+        driver = obj.driver_add(data_path)
+        utils.add_variables_to_driver(driver,driver_vars)
+        driver.driver.expression = expression
+
+bpy.utils.register_class(Pline_Vector)
+
+class Pline_Bulge(PropertyGroup):
+    
+    value = FloatProperty(name="Pline Buldge Value")
+    
+bpy.utils.register_class(Pline_Bulge)
+    
 class Machine_Token(PropertyGroup):
     show_expanded = BoolProperty(name="Show Expanded",default=False)
+    is_disabled = BoolProperty(name="Is Disabled",default=False)
+    
     type_token = EnumProperty(name="Mesh Type",
                               items=[('NONE',"None","None"),
                                      ('CORNERNOTCH',"CORNERNOTCH","CORNERNOTCH"),
@@ -993,6 +1038,8 @@ class Machine_Token(PropertyGroup):
                                      ('SLIDE',"SLIDE","SLIDE"),
                                      ('CAMLOCK',"CAMLOCK","CAMLOCK"),
                                      ('MITER',"MITER","MITER"),
+                                     ('3SIDEDNOTCH',"3SIDEDNOTCH","3SIDEDNOTCH"),
+                                     ('PLINE',"PLINE","PLINE"),
                                      ('BORE',"BORE","BORE")],
                               description="Select the Machine Token Type.",
                               default='NONE')
@@ -1018,6 +1065,9 @@ class Machine_Token(PropertyGroup):
                                ('8',"8","8")],
                         description="Select the edge to assign the machine token to.",
                         default='1')
+    
+    vector_locations = CollectionProperty(name="Vector Location",type=Pline_Vector)
+#     buldge_list = CollectionProperty(name="Vector Location",type=Pline_Bulge)
     
     dim_to_first_const_hole = FloatProperty(name="Dim to First Construction Hole",unit='LENGTH')
     dim_to_last_const_hole = FloatProperty(name="Dim to Last Construction Hole",unit='LENGTH')
@@ -1056,6 +1106,12 @@ class Machine_Token(PropertyGroup):
                             description="The face number the cam is assigned to.",
                             default='5')
     
+    tool_comp = EnumProperty(name="Tool Compensation",
+                             items=[('R',"R","Right"),
+                                    ('L',"L","Left")],
+                             description="The offset of the router bit",
+                             default='R')
+    
     angle = FloatProperty(name="Angle",unit='ROTATION')
     
     tool_number = StringProperty(name="Tool Number")
@@ -1083,6 +1139,22 @@ class Machine_Token(PropertyGroup):
             if self.hole_locations[x] != 0:
                 locations += str(unit.meter_to_active_unit(self.hole_locations[x])) + ","
         return locations[:-1] #Remove last comma
+    
+    def get_vector_locations(self):
+        vector_string = ""
+        for i, vector in enumerate(self.vector_locations):
+            vector_string += str(unit.meter_to_active_unit(vector.x_loc)) + ";" + str(unit.meter_to_active_unit(vector.y_loc)) + ";" + str(unit.meter_to_active_unit(vector.z_loc))
+            if i + 1 < len(self.vector_locations):
+                vector_string += "|"
+        return vector_string
+    
+    def get_bulge_list(self):
+        bulge_string = ""
+        for i, vector in enumerate(self.vector_locations):
+            bulge_string += str(vector.bulge)
+            if i + 1 < len(self.vector_locations):
+                bulge_string += ";"
+        return bulge_string
     
     def create_parameter_dictionary(self):
         param_dict = {}
@@ -1185,8 +1257,30 @@ class Machine_Token(PropertyGroup):
             param_dict['Par8'] = str(unit.meter_to_active_unit(self.drawer_slide_clearance))
             param_dict['Par9'] = ""
             
+        if self.type_token == '3SIDEDNOTCH':
+            param_dict['Par1'] = str(unit.meter_to_active_unit(self.dim_in_x)) # X
+            param_dict['Par2'] = str(unit.meter_to_active_unit(self.dim_in_y)) #Y
+            param_dict['Par3'] = str(unit.meter_to_active_unit(self.dim_in_z)) #Z
+            param_dict['Par4'] = str(unit.meter_to_active_unit(self.end_dim_in_x)) #ENDX
+            param_dict['Par5'] = str(unit.meter_to_active_unit(self.end_dim_in_y)) #ENDY
+            param_dict['Par6'] = str(unit.meter_to_active_unit(self.lead_in)) #LEADINOUT
+            param_dict['Par7'] = str(self.tool_number) #TOOLNUMBER
+            param_dict['Par8'] = "" #DRAW NUMBER
+            param_dict['Par9'] = "" #SEQUENCE NUMBER
+            
+        if self.type_token == 'PLINE':
+            param_dict['Par1'] = self.get_vector_locations() #VECTOR LOCATION
+            param_dict['Par2'] = self.get_bulge_list() #BULGE LIST
+            param_dict['Par3'] = "" #FEED SPEEDS
+            param_dict['Par4'] = "" #OPTIONS
+            param_dict['Par5'] = "" #OFFSET
+            param_dict['Par6'] = "" #PROFILE NAME
+            param_dict['Par7'] = str(self.tool_number) #TOOLNUMBER
+            param_dict['Par8'] = str(self.tool_comp) #TOOL COMPENSATION
+            param_dict['Par9'] = "" #SEQUENCE
+            
         return param_dict
-    
+            
     def draw_properties(self,layout):
         col = layout.column(align=True)
         box = col.box()
@@ -1196,7 +1290,7 @@ class Machine_Token(PropertyGroup):
             row.prop(self,'show_expanded',text='',icon='TRIA_DOWN',emboss=False)
         else:
             row.prop(self,'show_expanded',text="",icon='TRIA_RIGHT',emboss=False)
-        row.prop(self,"name",text="",icon='SCULPTMODE_HLT')
+        row.prop(self,"name",text="",icon='LAYER_USED' if self.is_disabled else 'LAYER_ACTIVE')
         row.operator('cabinetlib.delete_machine_token',text="",icon='X',emboss=False).token_name = self.name
 
         if self.show_expanded:
@@ -1326,7 +1420,38 @@ class Machine_Token(PropertyGroup):
                 box.prop(self,'dim_in_z')
                 box.prop(self,'lead_in')
                 box.prop(self,'tool_number')
-                                
+            if self.type_token == '3SIDEDNOTCH':
+                box.prop(self,'edge')
+                row = box.row(align=True)
+                row.label("Start Dim:")
+                row.prop(self,'dim_in_x',text="X")
+                row.prop(self,'dim_in_y',text="Y")
+                row.prop(self,'dim_in_z',text="Z")
+                
+                row = box.row(align=True)
+                row.label("End Dim:")
+                row.prop(self,'end_dim_in_x',text="X")
+                row.prop(self,'end_dim_in_y',text="Y")            
+                
+                box.prop(self,'lead_in')
+                box.prop(self,'tool_number')
+            if self.type_token == 'PLINE':
+                row = box.row()
+                row.prop(self,'tool_number')
+                row = box.row()
+                row.prop(self,'tool_comp')
+                
+                for i, vector in enumerate(self.vector_locations):
+                    row = box.row(align=True)
+                    row.label("Vector")
+                    row.prop(vector,'x_loc',text="X")
+                    row.prop(vector,'y_loc',text="Y")
+                    row.prop(vector,'z_loc',text="Z")
+                    if i + 1 != len(self.vector_locations):
+                        row = box.row(align=True)
+                        row.label("Bulge")
+                        row.prop(vector,'bulge',text="")
+
     def add_driver(self,obj,token_property,expression,driver_vars,index=None):
         data_path = 'mv.mp.machine_tokens.["' + self.name + '"].' + token_property
         
@@ -1338,7 +1463,7 @@ class Machine_Token(PropertyGroup):
             utils.add_variables_to_driver(driver,driver_vars)
             driver.driver.expression = expression
         else:
-            print("Error: '" + self.name + "' not found while setting expression '" + expression + "'")
+            print("Error: '" + self.name + "' not found while setting expression '" + expression + "'")     
         
 bpy.utils.register_class(Machine_Token)
 
@@ -1592,7 +1717,20 @@ class fd_object(PropertyGroup):
     solid_stock = StringProperty(name="Solid Stock",description="Name of the solid stock material applied to the obj")    
     cutpart_material_name = StringProperty(name="Cutpart Material Name",description="Name cutpart material name")   
     edgeband_material_name = StringProperty(name="Edgeband Material Name",description="Edgeband material name")  
+    buyout_material_name = StringProperty(name="Buyout Material Name",description="Buyout material name")  
     opening_name = StringProperty(name="Opening Name",description="Name of the opening")   
+    
+    hardware_x_dim = FloatProperty(name="Hardware X Dimension",
+                                   description="The hardware size override for the x dimension. Used in MV Export",
+                                   unit="LENGTH")       
+    
+    hardware_y_dim = FloatProperty(name="Hardware Y Dimension",
+                                   description="The hardware size override for the y dimension. Used in MV Export",
+                                   unit="LENGTH")     
+          
+    hardware_z_dim = FloatProperty(name="Hardware Z Dimension",
+                                   description="The hardware size override for the z dimension. Used in MV Export",
+                                   unit="LENGTH")
     
     mp = PointerProperty(name="Machine Point",
                          description="Machining Point",
@@ -1628,6 +1766,8 @@ class fd_object(PropertyGroup):
     
     price = FloatProperty(name="Price",
                           description="Stores the price for an object. This it only used for hardware.")    
+    
+     
     
     opengl_dim = PointerProperty(type=opengl_dim)
 
