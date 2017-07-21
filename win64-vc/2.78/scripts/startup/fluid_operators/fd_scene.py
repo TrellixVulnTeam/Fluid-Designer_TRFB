@@ -557,6 +557,8 @@ class OPS_Prepare_Plan_view(Operator):
         
         return {'FINISHED'}   
     
+    
+#REMOVE UPON FINISHING NEW 2D VIEWS MODULE    
 class OPS_Prepare_Plan_view_OLD(Operator):
     bl_idname = "fd_scene.prepare_plan_view_old"    
     bl_label = "Prepare Plan View"
@@ -744,167 +746,169 @@ class OPS_Prepare_2d_elevations(Operator):
         
         return {'FINISHED'}
     
+#REMOVE UPON FINISHING NEW 2D VIEWS MODULE
 class OPS_clear_2d_views(Operator):   
     bl_idname = "fd_scene.clear_2d_views"    
     bl_label = "Delete 2d View Scenes"
     bl_description = "Delete all 2d view scenes"
     bl_options = {'UNDO'}     
-    
+     
     def execute(self, context):
         for scene in bpy.data.scenes:
             if scene.mv.elevation_scene or scene.mv.plan_view_scene:
                 context.screen.scene = scene
                 bpy.ops.scene.delete()                         
-                
+                 
         for view in context.window_manager.mv.image_views:
             context.window_manager.mv.image_views.remove(0)
-                
+                 
         return {'FINISHED'}
     
-class OPS_genereate_views(Operator):
-    bl_idname = "fd_scene.genereate_2d_views"    
-    bl_label = "Generate 2d View Scenes"
-    bl_description = "Prepare 2D View Scenes"
-    bl_options = {'UNDO'}
-
-    ev_pad = FloatProperty(name="Elevation View Padding",
-                           default=0.75)
-    
-    pv_pad = FloatProperty(name="Plan View Padding",
-                           default=0.75)
-    
-    main_scene = None
-    
-    def create_camera(self,scene):
-        camera_data = bpy.data.cameras.new(scene.name)
-        camera_obj = bpy.data.objects.new(name=scene.name,object_data=camera_data)
-        scene.objects.link(camera_obj)
-        scene.camera = camera_obj                        
-        camera_obj.data.type = 'ORTHO'
-        scene.render.resolution_y = 1280
-        
-        scene.mv.ui.render_type_tabs = 'NPR'
-        lineset = scene.render.layers["RenderLayer"].freestyle_settings.linesets.new("LineSet")
-        lineset.linestyle = \
-        self.main_scene.render.layers["RenderLayer"].freestyle_settings.linesets["LineSet"].linestyle 
-        
-        scene.world = bpy.data.worlds[0]
-        scene.world.horizon_color = (1.0, 1.0, 1.0)
-        scene.render.display_mode = 'NONE'
-        scene.render.use_lock_interface = True        
-        
-        scene.mv.ui.render_type_tabs = 'NPR'
-        lineset = scene.render.layers["RenderLayer"].freestyle_settings.linesets.new("LineSet")
-        lineset.linestyle = \
-        self.main_scene.render.layers["RenderLayer"].freestyle_settings.linesets["LineSet"].linestyle                
-        
-        scene.world.horizon_color = (1.0, 1.0, 1.0)
-        scene.render.display_mode = 'NONE'
-        scene.render.use_lock_interface = True        
-        
-        return camera_obj
-    
-    def link_dims_to_scene(self, scene, obj_bp):
-        for child in obj_bp.children:
-            if child.mv.type in ('VISDIM_A','VISDIM_B'):
-                scene.objects.link(child)
-            if len(child.children) > 0:
-                self.link_dims_to_scene(scene, child)     
-    
-    def group_children(self,grp,obj):
-        grp.objects.link(obj)   
-        for child in obj.children:
-            if len(child.children) > 0:
-                self.group_children(grp,child)
-            else:
-                if not child.mv.is_wall_mesh:
-                    grp.objects.link(child)  
-        return grp
-    
-    def create_plan_view_scene(self,context):
-        bpy.ops.scene.new('INVOKE_DEFAULT',type='EMPTY')   
-        pv_scene = context.scene     
-        pv_scene.name = "Plan View"
-        pv_scene.mv.name_scene = "Plan View" 
-        pv_scene.mv.plan_view_scene = True 
-    
-        for obj in self.main_scene.objects:
-            if obj.mv.type == 'BPWALL':
-                pv_scene.objects.link(obj)
-                #Only link all of the wall meshes
-                for child in obj.children:
-                    if child.mv.is_wall_mesh:
-                        child.select = True
-                        pv_scene.objects.link(child)
-                wall = fd_types.Wall(obj_bp = obj)
-                obj_bps = wall.get_wall_groups()
-                #Create Cubes for all products
-                for obj_bp in obj_bps:
-                    assembly = fd_types.Assembly(obj_bp)
-                    assembly_mesh = utils.create_cube_mesh(assembly.obj_bp.mv.name_object,
-                                                        (assembly.obj_x.location.x,
-                                                         assembly.obj_y.location.y,
-                                                         assembly.obj_z.location.z))
-                    assembly_mesh.parent = wall.obj_bp
-                    assembly_mesh.location = assembly.obj_bp.location
-                    assembly_mesh.rotation_euler = assembly.obj_bp.rotation_euler
-                wall.get_wall_mesh().select = True
-                
-        camera = self.create_camera(pv_scene)
-        camera.rotation_euler.z = math.radians(-90.0)
-        bpy.ops.view3d.camera_to_view_selected()
-        camera.data.ortho_scale += self.pv_pad
-    
-    def create_elv_view_scene(self,context,wall):
-        bpy.ops.scene.new('INVOKE_DEFAULT',type='EMPTY')
-        new_scene = context.scene
-        new_scene.name = wall.obj_bp.name
-        new_scene.mv.name_scene = wall.obj_bp.mv.name_object + " " + str(wall.obj_bp.mv.item_number)
-        new_scene.mv.elevation_img_name = wall.obj_bp.name
-        new_scene.mv.plan_view_scene = False
-        new_scene.mv.elevation_scene = True
-        
-        wall_group = bpy.data.groups.new(wall.obj_bp.name)
-        self.group_children(wall_group,wall.obj_bp)                    
-        wall_mesh = utils.create_cube_mesh(wall.obj_bp.mv.name_object,(wall.obj_x.location.x,wall.obj_y.location.y,wall.obj_z.location.z))
-        wall_mesh.parent = wall.obj_bp
-        wall_group.objects.link(wall_mesh)  
-        
-        instance = bpy.data.objects.new(wall.obj_bp.mv.name_object + " "  + "Instance" , None)
-        new_scene.objects.link(instance)
-        instance.dupli_type = 'GROUP'
-        instance.dupli_group = wall_group
-        
-        new_scene.world = self.main_scene.world
-        
-        self.link_dims_to_scene(new_scene, wall.obj_bp)
-        
-        camera = self.create_camera(new_scene)
-        camera.rotation_euler.x = math.radians(90.0)
-        camera.rotation_euler.z = wall.obj_bp.rotation_euler.z   
-        bpy.ops.object.select_all(action='DESELECT')
-        wall_mesh.select = True
-        bpy.ops.view3d.camera_to_view_selected()
-        camera.data.ortho_scale += self.pv_pad
-        
-    def execute(self, context):
-        context.window_manager.mv.use_opengl_dimensions = True
-
-        bpy.ops.fd_scene.clear_2d_views()
-        
-        self.main_scene = context.scene
-        
-        self.create_plan_view_scene(context)
-        
-        for obj in self.main_scene.objects:
-            if obj.mv.type == 'BPWALL':
-                wall = fd_types.Wall(obj_bp = obj)
-                if len(wall.get_wall_groups()) > 0:
-                    self.create_elv_view_scene(context, wall)
-                    
-        bpy.context.screen.scene = self.main_scene
-  
-        return {'FINISHED'}
+#REMOVE UPON FINISHING NEW 2D VIEWS MODULE
+# class OPS_genereate_views(Operator):
+#     bl_idname = "fd_scene.genereate_2d_views"    
+#     bl_label = "Generate 2d View Scenes"
+#     bl_description = "Prepare 2D View Scenes"
+#     bl_options = {'UNDO'}
+# 
+#     ev_pad = FloatProperty(name="Elevation View Padding",
+#                            default=0.75)
+#     
+#     pv_pad = FloatProperty(name="Plan View Padding",
+#                            default=0.75)
+#     
+#     main_scene = None
+#     
+#     def create_camera(self,scene):
+#         camera_data = bpy.data.cameras.new(scene.name)
+#         camera_obj = bpy.data.objects.new(name=scene.name,object_data=camera_data)
+#         scene.objects.link(camera_obj)
+#         scene.camera = camera_obj                        
+#         camera_obj.data.type = 'ORTHO'
+#         scene.render.resolution_y = 1280
+#         
+#         scene.mv.ui.render_type_tabs = 'NPR'
+#         lineset = scene.render.layers["RenderLayer"].freestyle_settings.linesets.new("LineSet")
+#         lineset.linestyle = \
+#         self.main_scene.render.layers["RenderLayer"].freestyle_settings.linesets["LineSet"].linestyle 
+#         
+#         scene.world = bpy.data.worlds[0]
+#         scene.world.horizon_color = (1.0, 1.0, 1.0)
+#         scene.render.display_mode = 'NONE'
+#         scene.render.use_lock_interface = True        
+#         
+#         scene.mv.ui.render_type_tabs = 'NPR'
+#         lineset = scene.render.layers["RenderLayer"].freestyle_settings.linesets.new("LineSet")
+#         lineset.linestyle = \
+#         self.main_scene.render.layers["RenderLayer"].freestyle_settings.linesets["LineSet"].linestyle                
+#         
+#         scene.world.horizon_color = (1.0, 1.0, 1.0)
+#         scene.render.display_mode = 'NONE'
+#         scene.render.use_lock_interface = True        
+#         
+#         return camera_obj
+#     
+#     def link_dims_to_scene(self, scene, obj_bp):
+#         for child in obj_bp.children:
+#             if child.mv.type in ('VISDIM_A','VISDIM_B'):
+#                 scene.objects.link(child)
+#             if len(child.children) > 0:
+#                 self.link_dims_to_scene(scene, child)     
+#     
+#     def group_children(self,grp,obj):
+#         grp.objects.link(obj)   
+#         for child in obj.children:
+#             if len(child.children) > 0:
+#                 self.group_children(grp,child)
+#             else:
+#                 if not child.mv.is_wall_mesh:
+#                     grp.objects.link(child)  
+#         return grp
+#     
+#     def create_plan_view_scene(self,context):
+#         bpy.ops.scene.new('INVOKE_DEFAULT',type='EMPTY')   
+#         pv_scene = context.scene     
+#         pv_scene.name = "Plan View"
+#         pv_scene.mv.name_scene = "Plan View" 
+#         pv_scene.mv.plan_view_scene = True 
+#     
+#         for obj in self.main_scene.objects:
+#             if obj.mv.type == 'BPWALL':
+#                 pv_scene.objects.link(obj)
+#                 #Only link all of the wall meshes
+#                 for child in obj.children:
+#                     if child.mv.is_wall_mesh:
+#                         child.select = True
+#                         pv_scene.objects.link(child)
+#                 wall = fd_types.Wall(obj_bp = obj)
+#                 obj_bps = wall.get_wall_groups()
+#                 #Create Cubes for all products
+#                 for obj_bp in obj_bps:
+#                     assembly = fd_types.Assembly(obj_bp)
+#                     assembly_mesh = utils.create_cube_mesh(assembly.obj_bp.mv.name_object,
+#                                                         (assembly.obj_x.location.x,
+#                                                          assembly.obj_y.location.y,
+#                                                          assembly.obj_z.location.z))
+#                     assembly_mesh.parent = wall.obj_bp
+#                     assembly_mesh.location = assembly.obj_bp.location
+#                     assembly_mesh.rotation_euler = assembly.obj_bp.rotation_euler
+#                 wall.get_wall_mesh().select = True
+#                 
+#         camera = self.create_camera(pv_scene)
+#         camera.rotation_euler.z = math.radians(-90.0)
+#         bpy.ops.view3d.camera_to_view_selected()
+#         camera.data.ortho_scale += self.pv_pad
+#     
+#     def create_elv_view_scene(self,context,wall):
+#         bpy.ops.scene.new('INVOKE_DEFAULT',type='EMPTY')
+#         new_scene = context.scene
+#         new_scene.name = wall.obj_bp.name
+#         new_scene.mv.name_scene = wall.obj_bp.mv.name_object + " " + str(wall.obj_bp.mv.item_number)
+#         new_scene.mv.elevation_img_name = wall.obj_bp.name
+#         new_scene.mv.plan_view_scene = False
+#         new_scene.mv.elevation_scene = True
+#         
+#         wall_group = bpy.data.groups.new(wall.obj_bp.name)
+#         self.group_children(wall_group,wall.obj_bp)                    
+#         wall_mesh = utils.create_cube_mesh(wall.obj_bp.mv.name_object,(wall.obj_x.location.x,wall.obj_y.location.y,wall.obj_z.location.z))
+#         wall_mesh.parent = wall.obj_bp
+#         wall_group.objects.link(wall_mesh)  
+#         
+#         instance = bpy.data.objects.new(wall.obj_bp.mv.name_object + " "  + "Instance" , None)
+#         new_scene.objects.link(instance)
+#         instance.dupli_type = 'GROUP'
+#         instance.dupli_group = wall_group
+#         
+#         new_scene.world = self.main_scene.world
+#         
+#         self.link_dims_to_scene(new_scene, wall.obj_bp)
+#         
+#         camera = self.create_camera(new_scene)
+#         camera.rotation_euler.x = math.radians(90.0)
+#         camera.rotation_euler.z = wall.obj_bp.rotation_euler.z   
+#         bpy.ops.object.select_all(action='DESELECT')
+#         wall_mesh.select = True
+#         bpy.ops.view3d.camera_to_view_selected()
+#         camera.data.ortho_scale += self.pv_pad
+#         
+#     def execute(self, context):
+#         context.window_manager.mv.use_opengl_dimensions = True
+# 
+#         bpy.ops.fd_scene.clear_2d_views()
+#         
+#         self.main_scene = context.scene
+#         
+#         self.create_plan_view_scene(context)
+#         
+#         for obj in self.main_scene.objects:
+#             if obj.mv.type == 'BPWALL':
+#                 wall = fd_types.Wall(obj_bp = obj)
+#                 if len(wall.get_wall_groups()) > 0:
+#                     self.create_elv_view_scene(context, wall)
+#                     
+#         bpy.context.screen.scene = self.main_scene
+#   
+#         return {'FINISHED'}
     
 class OPS_prepare_2d_views(Operator):   
     bl_idname = "fd_scene.prepare_2d_views"    
@@ -1108,6 +1112,8 @@ class OPS_prepare_2d_views(Operator):
 
         return {'FINISHED'}
        
+       
+#REMOVE UPON FINISHING NEW 2D VIEWS MODULE
 class OPS_prepare_2d_views_OLD(Operator):   
     bl_idname = "fd_scene.prepare_2d_views_old"    
     bl_label = "Prepare 2d View Scenes"
@@ -2092,7 +2098,7 @@ classes = [
            OPS_Prepare_Plan_view,
            OPS_Prepare_2d_elevations,
            OPS_clear_2d_views,
-           OPS_genereate_views,
+           #OPS_genereate_views,REMOVE UPON FINISHING NEW 2D VIEWS MODULE
            OPS_prepare_2d_views,
            OPS_render_2d_views,
            OPS_render_all_2D_views,
