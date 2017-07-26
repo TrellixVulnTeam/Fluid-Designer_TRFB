@@ -153,7 +153,7 @@ class OPERATOR_move_image_list_item(bpy.types.Operator):
         wm = context.window_manager.mv
         img_list = wm.image_views
         crt_index = wm.image_view_index
-        list_length = len(wm.image_views) - 1 # (index starts at 0)
+        list_length = len(wm.image_views) - 1
         move_to_index = crt_index - 1 if self.direction == 'UP' else crt_index + 1
         
         if self.direction == 'UP' and crt_index == 0 or self.direction == 'DOWN' and crt_index == list_length:
