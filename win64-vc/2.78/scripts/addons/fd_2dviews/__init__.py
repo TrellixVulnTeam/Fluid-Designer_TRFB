@@ -87,7 +87,11 @@ class PANEL_2d_views(bpy.types.Panel):
         
         if len(image_views) > 0:
             panel_box.label("Image Views",icon='RENDERLAYERS')
-            panel_box.template_list("LIST_2d_images"," ",context.window_manager.mv,"image_views",context.window_manager.mv,"image_view_index")
+            row = panel_box.row()
+            row.template_list("LIST_2d_images"," ",context.window_manager.mv,"image_views",context.window_manager.mv,"image_view_index")
+            col = row.column(align=True)
+            col.operator('fd_2d_views.move_2d_image_item', text="", icon='TRIA_UP').direction = 'UP'
+            col.operator('fd_2d_views.move_2d_image_item', text="", icon='TRIA_DOWN').direction = 'DOWN'
             panel_box.operator('2dviews.create_pdf',text="Create PDF",icon='FILE_BLANK')
       
       
@@ -133,6 +137,33 @@ class LIST_2d_images(bpy.types.UIList):
         layout.operator('2dviews.view_image',text="",icon='RESTRICT_VIEW_OFF',emboss=False).image_name = item.name
         layout.operator('2dviews.delete_image',text="",icon='X',emboss=False).image_name = item.name
         
+
+class OPERATOR_move_image_list_item(bpy.types.Operator):
+    bl_idname = "fd_2d_views.move_2d_image_item"
+    bl_label = "Move an item in the 2D image list"
+
+    direction = bpy.props.EnumProperty(items=(('UP', 'Up', "Move Item Up"),
+                                              ('DOWN', 'Down', "Move Item Down")))
+
+    @classmethod
+    def poll(self, context):
+        return len(bpy.context.window_manager.mv.image_views) > 0
+
+    def execute(self, context):
+        wm = context.window_manager.mv
+        img_list = wm.image_views
+        crt_index = wm.image_view_index
+        list_length = len(wm.image_views) - 1 # (index starts at 0)
+        move_to_index = crt_index - 1 if self.direction == 'UP' else crt_index + 1
+        
+        if self.direction == 'UP' and crt_index == 0 or self.direction == 'DOWN' and crt_index == list_length:
+            return {'FINISHED'}
+        else:
+            img_list.move(crt_index, move_to_index)
+            wm.image_view_index = move_to_index
+
+        return{'FINISHED'}
+
         
 class OPERATOR_create_new_view(bpy.types.Operator):
     bl_idname = "fd_2d_views.create_new_view"    
@@ -895,6 +926,8 @@ def register():
     bpy.utils.register_class(OPERATOR_append_to_view)
     bpy.utils.register_class(OPERATOR_create_snap_shot)
     bpy.utils.register_class(OPERATOR_create_pdf)
+    
+    bpy.utils.register_class(OPERATOR_move_image_list_item)
 
 def unregister():
     bpy.utils.unregister_class(PANEL_2d_views)
@@ -909,6 +942,8 @@ def unregister():
     bpy.utils.unregister_class(OPERATOR_append_to_view)
     bpy.utils.unregister_class(OPERATOR_create_snap_shot)
     bpy.utils.unregister_class(OPERATOR_create_pdf)
+    
+    bpy.utils.unregister_class(OPERATOR_move_image_list_item)
 
 if __name__ == "__main__":
     register()
