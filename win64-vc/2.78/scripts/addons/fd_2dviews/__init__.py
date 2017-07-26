@@ -809,45 +809,13 @@ class OPERATOR_create_pdf(bpy.types.Operator):
     
     image_name = bpy.props.StringProperty(name="Object Name",
                                           description="This is the readable name of the object")
-    
-    def sort_images(self,images):
-        image_list = []
-        for image in images:
-            image_list.append(image)
-        
-        imgs = []
-        
-        cover_image = None
-        plan_view_image = None
-        
-        while len(image_list) > 0:
-            img = image_list.pop()
-            if img.use_as_cover_image:
-                cover_image = img
-            elif img.is_plan_view:
-                plan_view_image = img
-            else:
-                imgs.append(img)
-               
-        file_images = []
-                
-        if cover_image:
-            file_images.append(cover_image)
-        
-        if plan_view_image:
-            file_images.append(plan_view_image)
-        
-        for img in imgs:
-            file_images.append(img)
-                
-        return file_images
 
     def execute(self, context):
         pdf_images = []
         props = context.scene.mv
         width, height = landscape(legal)
         
-        images = self.sort_images(context.window_manager.mv.image_views)
+        images = context.window_manager.mv.image_views
         for img in images:
             image = bpy.data.images[img.image_name]
             image.save_render(os.path.join(bpy.app.tempdir, image.name + ".jpg"))
