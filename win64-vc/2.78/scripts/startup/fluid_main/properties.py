@@ -1904,10 +1904,10 @@ class fd_scene(PropertyGroup):
                                 description="This is the readable name of the scene")    
     
     render_type_2d_view = EnumProperty(name="2D View Render Type",
-                                       items=[('GREYSCALE', 'Greyscale', 'Greyscale'),
+                                       items=[('GREYSCALE', 'Black and White', 'Render the view in Black and White'),
                                               #('VIEWPORT', 'Viewport', 'Viewport'),
-                                              ('FULL', 'Full', 'Full')],
-                                       default='GREYSCALE') 
+                                              ('FULL', 'Full Color', 'Render the view with full color (This will take longer to render)')],
+                                       default='GREYSCALE')
     
     plan_view_scene = BoolProperty(name="Plan View Scene",
                                    description="Scene used for rendering project plan view",
