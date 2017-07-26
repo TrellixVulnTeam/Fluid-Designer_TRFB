@@ -55,7 +55,6 @@ MOLDING_ASSEMBLY = os.path.join(os.path.dirname(__file__), "Moldings", "assembli
 BASE_PRO_PATH = os.path.join(os.path.dirname(__file__), "Moldings", "profiles", "base")
 CROWN_PRO_PATH = os.path.join(os.path.dirname(__file__), "Moldings", "profiles", "crown")
 
-
 preview_collections = {}
 
 def enum_carpet(self,context):
@@ -284,7 +283,7 @@ class PANEL_Room_Builder(Panel):
 
         if props.room_type == 'CUSTOM':
             row = box.row()
-            row.operator('fd_roombuilder.draw_walls',text="Draw Walls",icon='GREASEPENCIL')
+            row.operator('fd_assembly.draw_wall',text="Draw Walls",icon='GREASEPENCIL')
             row.operator('fd_roombuilder.collect_walls',icon='FILE_REFRESH')
             self.draw_custom_room_options(layout,context)
         else:
@@ -626,7 +625,12 @@ class OPERATOR_Add_Obstacle(Operator):
         wall_bp = context.scene.objects[self.wall_item.bp_name]
         self.wall = fd_types.Wall(wall_bp)
         self.set_draw_type(context)
-
+        
+        self.obstacle_height = unit.inch(4)
+        self.obstacle_width = unit.inch(3)
+        self.x_location = 0
+        self.z_location = 0
+        
         if self.modify_existing:
             if self.obstacle_bp_name in context.scene.objects:
                 for obstacle in self.wall_item.obstacles:

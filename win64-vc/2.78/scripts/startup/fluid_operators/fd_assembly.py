@@ -905,6 +905,80 @@ class OPS_delete_selected_assembly(Operator):
         layout = self.layout
         layout.label("Assembly Name: " + obj_bp.mv.name_object)
 
+# class OPS_delete_assembly(Operator):
+#     bl_idname = "fd_assembly.delete_selected_assembly"
+#     bl_label = "Delete Selected Assembly"
+#     bl_options = {'UNDO'}
+#     
+#     object_name = StringProperty(name="Object Name")
+#     
+#     @classmethod
+#     def poll(cls, context):
+#         return True
+#         
+#     def get_bp(self,context):
+#         if self.object_name != "":
+#             return bpy.data.objects[self.object_name]
+#         else:
+#             obj = context.object
+#             return utils.get_assembly_bp(obj)
+#     
+#     def get_boolean_objects(self,obj_bp,bool_list):
+#         for child in obj_bp.children:
+#             if child.mv.use_as_bool_obj:
+#                 bool_list.append(child)
+#             if len(child.children) > 0:
+#                 self.get_boolean_objects(child, bool_list)
+#     
+#     def execute(self, context):
+#         obj_bp = self.get_bp(context)
+#         self.make_opening_available(obj_bp)
+#         bool_list = []
+#         self.get_boolean_objects(obj_bp, bool_list)
+#         for bool_obj in bool_list:
+#             self.remove_referenced_modifiers(context, bool_obj)
+#         obj_list = []
+#         obj_list = utils.get_child_objects(obj_bp,obj_list)
+#         utils.delete_obj_list(obj_list)
+#         self.object_name = ""
+#         return {'FINISHED'}
+# 
+#     def remove_referenced_modifiers(self,context,obj_ref):
+#         """ This is removes boolean modifers that use this object
+#             mainly used to remove boolean modifiers for walls.
+#         """
+#         for obj in context.scene.objects:
+#             if obj.mv.type == 'NONE' and obj.type == 'MESH':
+#                 for mod in obj.modifiers:
+#                     if mod.type == 'BOOLEAN':
+#                         if mod.object == obj_ref:
+#                             obj.modifiers.remove(mod)
+# 
+#     def make_opening_available(self,obj_bp):
+#         insert = fd_types.Assembly(obj_bp)
+#         if obj_bp.parent:
+#             for child in obj_bp.parent.children:
+#                 if child.mv.type_group == 'OPENING' and insert.obj_bp.location == child.location:
+#                     if insert.obj_bp.mv.placement_type == 'SPLITTER':
+#                         child.mv.interior_open = True
+#                         child.mv.exterior_open = True
+#                         break
+#                     if insert.obj_bp.mv.placement_type == 'INTERIOR':
+#                         child.mv.interior_open = True
+#                         break
+#                     if insert.obj_bp.mv.placement_type == 'EXTERIOR':
+#                         child.mv.exterior_open = True
+#                         break
+# 
+#     def invoke(self,context,event):
+#         wm = context.window_manager
+#         return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(300))
+# 
+#     def draw(self, context):
+#         obj_bp = self.get_bp(context)
+#         layout = self.layout
+#         layout.label("Assembly Name: " + obj_bp.mv.name_object)
+
 class OPS_copy_selected_assembly(Operator):
     bl_idname = "fd_assembly.copy_selected_assembly"
     bl_label = "Copy Selected Assembly"
@@ -944,6 +1018,75 @@ class OPS_copy_selected_assembly(Operator):
             
             obj_bp.select = True
             context.scene.objects.active = obj_bp
+            
+        return {'FINISHED'}
+
+class OPS_copy_assembly(Operator):
+    bl_idname = "fd_assembly.copy_assembly"
+    bl_label = "Copy Assembly"
+    bl_options = {'UNDO'}
+    
+    object_name = StringProperty(name="Object Name")  
+    
+    @classmethod
+    def poll(cls, context):
+        if context.object:
+            return True
+        else:
+            return False
+    
+    def clear_drivers(self,assembly):
+        assembly.obj_bp.parent = None
+        assembly.obj_bp.driver_remove('location',0)
+        assembly.obj_bp.driver_remove('location',1)
+        assembly.obj_bp.driver_remove('location',2)
+        assembly.obj_x.driver_remove('location',0)
+        assembly.obj_y.driver_remove('location',1)
+        assembly.obj_z.driver_remove('location',2)
+        
+    def execute(self, context):
+        obj = bpy.data.objects[self.object_name]
+        obj_bp = utils.get_assembly_bp(obj)
+        if obj_bp:
+            
+            obj_list = []
+            obj_list = utils.get_child_objects(obj_bp,obj_list)
+            bpy.ops.object.select_all(action='DESELECT')
+            
+            for obj in obj_list:
+                obj.hide = False
+                obj.select = True
+            
+            bpy.ops.object.duplicate()
+            
+            for obj in context.selected_objects:
+                if obj.type == 'EMPTY':
+                    obj.hide = True
+            
+            for obj in obj_list:
+                if obj.type == 'EMPTY':
+                    obj.hide = True
+                if obj.mv.type == 'BPASSEMBLY':
+                    obj.hide = True
+                obj.location = obj.location
+            bpy.ops.object.select_all(action='DESELECT')
+            
+            obj_bp.select = True
+            context.scene.objects.active = obj_bp
+            
+            assembly = fd_types.Assembly(obj_bp)
+            if assembly.obj_bp.mv.drop_id != "":
+                self.clear_drivers(assembly)
+                eval('bpy.ops.' + self.product.obj_bp.mv.drop_id + '("INVOKE_DEFAULT",object_name=assembly.obj_bp.name)')
+                return {'FINISHED'}
+            if assembly.obj_bp.mv.type_group == 'PRODUCT':
+                self.clear_drivers(assembly)
+                eval('bpy.ops.fd_general.drop_product("INVOKE_DEFAULT",object_name=assembly.obj_bp.name)')
+                return {'FINISHED'}
+            if assembly.obj_bp.mv.type_group == 'INSERT':
+                self.clear_drivers(assembly)
+                eval('bpy.ops.fd_general.drop_insert("INVOKE_DEFAULT",object_name=assembly.obj_bp.name)')
+                return {'FINISHED'}
             
         return {'FINISHED'}
 
@@ -1204,6 +1347,7 @@ classes = [
            OPS_delete_selected_product,
            OPS_delete_selected_assembly,
            OPS_copy_selected_assembly,
+           OPS_copy_assembly,
            OPS_copy_parent_assembly,
            OPS_connect_mesh_to_hooks_in_assembly,
            OPS_make_static_product,

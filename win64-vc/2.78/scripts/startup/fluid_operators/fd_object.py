@@ -68,7 +68,9 @@ enum_machine_tokens = [('NONE',"None","None",'SCULPTMODE_HLT', 0),
                        ('SLIDE',"SLIDE","SLIDE", 'SCULPTMODE_HLT', 8),
                        ('CAMLOCK',"CAMLOCK","CAMLOCK", 'SCULPTMODE_HLT', 9),
                        ('MITER',"MITER","MITER", 'SCULPTMODE_HLT', 10),
-                       ('BORE',"BORE","BORE", 'SCULPTMODE_HLT', 11)]   
+                       ('3SIDEDNOTCH',"3SIDEDNOTCH","3SIDEDNOTCH", 'SCULPTMODE_HLT', 12),
+                       ('PLINE',"PLINE","PLINE", 'SCULPTMODE_HLT', 11),
+                       ('BORE',"BORE","BORE", 'SCULPTMODE_HLT', 13)]   
 
 
 class OPS_select_object_by_name(Operator):

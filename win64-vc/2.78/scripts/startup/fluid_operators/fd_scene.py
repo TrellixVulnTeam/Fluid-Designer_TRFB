@@ -1841,9 +1841,22 @@ class OPS_export_mvfd(Operator):
                     #diff = product_bp.matrix_world - child.matrix_world
                     hardware_name = child.mv.name_object if child.mv.name_object != "" else child.name
                     elm_item = self.xml.add_element(elm_hardware,'Hardware',hardware_name)
-                    self.xml.add_element_with_text(elm_item,'XDimension',self.distance(child.dimensions.x))
-                    self.xml.add_element_with_text(elm_item,'YDimension',self.distance(child.dimensions.y))
-                    self.xml.add_element_with_text(elm_item,'ZDimension',self.distance(child.dimensions.z))
+                    
+                    if child.mv.hardware_x_dim != 0:
+                        self.xml.add_element_with_text(elm_item,'XDimension',self.distance(child.mv.hardware_x_dim))
+                    else:
+                        self.xml.add_element_with_text(elm_item,'XDimension',self.distance(child.dimensions.x))
+                        
+                    if child.mv.hardware_y_dim != 0:
+                        self.xml.add_element_with_text(elm_item,'YDimension',self.distance(child.mv.hardware_y_dim))
+                    else:
+                        self.xml.add_element_with_text(elm_item,'YDimension',self.distance(child.dimensions.y))
+                        
+                    if child.mv.hardware_z_dim != 0:
+                        self.xml.add_element_with_text(elm_item,'ZDimension',self.distance(child.mv.hardware_z_dim))
+                    else:
+                        self.xml.add_element_with_text(elm_item,'ZDimension',self.distance(child.dimensions.z))
+                        
                     self.xml.add_element_with_text(elm_item,'XOrigin',self.get_part_x_location(child,child.location.x))
                     self.xml.add_element_with_text(elm_item,'YOrigin',self.get_part_y_location(child,child.location.y))
                     self.xml.add_element_with_text(elm_item,'ZOrigin',self.get_part_z_location(child,child.location.z))                    
@@ -2041,25 +2054,26 @@ class OPS_export_mvfd(Operator):
     def write_machine_tokens(self,elm_part,obj_part):
         elm_tokens = self.xml.add_element(elm_part,"MachineTokens")
         for token in obj_part.mv.mp.machine_tokens:
-            token_name = token.name if token.name != "" else "Unnamed"
-            elm_token = self.xml.add_element(elm_tokens,'MachineToken',token_name)
-            param_dict = token.create_parameter_dictionary()
-            if token.type_token in {'CORNERNOTCH','CHAMFER'}:
-                instructions = token.type_token + token.face + " " + token.edge
-            elif token.type_token == 'SLIDE':
-                instructions = token.type_token
-            else:
-                instructions = token.type_token + token.face
-            self.xml.add_element_with_text(elm_token,'Instruction',instructions)
-            self.xml.add_element_with_text(elm_token,'Par1',param_dict['Par1'])
-            self.xml.add_element_with_text(elm_token,'Par2',param_dict['Par2'])
-            self.xml.add_element_with_text(elm_token,'Par3',param_dict['Par3'])
-            self.xml.add_element_with_text(elm_token,'Par4',param_dict['Par4'])
-            self.xml.add_element_with_text(elm_token,'Par5',param_dict['Par5'])
-            self.xml.add_element_with_text(elm_token,'Par6',param_dict['Par6'])
-            self.xml.add_element_with_text(elm_token,'Par7',param_dict['Par7'])
-            self.xml.add_element_with_text(elm_token,'Par8',param_dict['Par8'])
-            self.xml.add_element_with_text(elm_token,'Par9',param_dict['Par9'])
+            if not token.is_disabled:
+                token_name = token.name if token.name != "" else "Unnamed"
+                elm_token = self.xml.add_element(elm_tokens,'MachineToken',token_name)
+                param_dict = token.create_parameter_dictionary()
+                if token.type_token in {'CORNERNOTCH','CHAMFER','3SIDEDNOTCH'}:
+                    instructions = token.type_token + token.face + " " + token.edge
+                elif token.type_token == 'SLIDE':
+                    instructions = token.type_token
+                else:
+                    instructions = token.type_token + token.face
+                self.xml.add_element_with_text(elm_token,'Instruction',instructions)
+                self.xml.add_element_with_text(elm_token,'Par1',param_dict['Par1'])
+                self.xml.add_element_with_text(elm_token,'Par2',param_dict['Par2'])
+                self.xml.add_element_with_text(elm_token,'Par3',param_dict['Par3'])
+                self.xml.add_element_with_text(elm_token,'Par4',param_dict['Par4'])
+                self.xml.add_element_with_text(elm_token,'Par5',param_dict['Par5'])
+                self.xml.add_element_with_text(elm_token,'Par6',param_dict['Par6'])
+                self.xml.add_element_with_text(elm_token,'Par7',param_dict['Par7'])
+                self.xml.add_element_with_text(elm_token,'Par8',param_dict['Par8'])
+                self.xml.add_element_with_text(elm_token,'Par9',param_dict['Par9'])
  
     def execute(self, context):
         project_name, ext = os.path.splitext(os.path.basename(bpy.data.filepath))
