@@ -1765,7 +1765,7 @@ class fd_scene(PropertyGroup):
     
     render_type_2d_view = EnumProperty(name="2D View Render Type",
                                        items=[('GREYSCALE', 'Greyscale', 'Greyscale'),
-                                              ('VIEWPORT', 'Viewport', 'Viewport'),
+                                              #('VIEWPORT', 'Viewport', 'Viewport'),
                                               ('FULL', 'Full', 'Full')],
                                        default='GREYSCALE') 
     
