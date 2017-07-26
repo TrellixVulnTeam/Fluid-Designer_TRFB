@@ -39,6 +39,7 @@ from reportlab.platypus import Paragraph, Table, TableStyle, SimpleDocTemplate, 
 from reportlab.lib.styles import getSampleStyleSheet
 import reportlab.lib.colors as colors
 
+
 class PANEL_2d_views(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
@@ -69,9 +70,10 @@ class PANEL_2d_views(bpy.types.Panel):
                 elv_scenes.append(scene)
                 
         if len(elv_scenes) < 1:
-            row.operator("2dviews.genereate_2d_views",text="Prepare 2D Views",icon='SCENE_DATA')
+            row.operator("fd_2d_views.genereate_2d_views",text="Prepare 2D Views",icon='SCENE_DATA')
         else:
-            row.operator("2dviews.genereate_2d_views",text="",icon='FILE_REFRESH')
+            row.operator("fd_2d_views.genereate_2d_views",text="",icon='FILE_REFRESH')
+            row.operator("fd_2d_views.create_new_view",text="",icon='ZOOMIN')
             row.operator("2dviews.render_2d_views",text="Render Selected Scenes",icon='SCENE_DATA')
             row.menu('MENU_elevation_scene_options',text="",icon='DOWNARROW_HLT')
             panel_box.template_list("LIST_scenes", 
@@ -87,7 +89,8 @@ class PANEL_2d_views(bpy.types.Panel):
             panel_box.label("Image Views",icon='RENDERLAYERS')
             panel_box.template_list("LIST_2d_images"," ",context.window_manager.mv,"image_views",context.window_manager.mv,"image_view_index")
             panel_box.operator('2dviews.create_pdf',text="Create PDF",icon='FILE_BLANK')
-            
+      
+      
 class MENU_elevation_scene_options(bpy.types.Menu):
     bl_label = "Elevation Scene Options"
 
@@ -97,9 +100,11 @@ class MENU_elevation_scene_options(bpy.types.Menu):
         layout.operator("fd_general.select_all_elevation_scenes",text="Deselect All",icon='CHECKBOX_DEHLT').select_all = False
         layout.separator()
         layout.operator('fd_general.project_info',text="View Project Info",icon='INFO')
-        layout.operator("2dviews.create_new_view",text="Create Snap Shot",icon='SCENE')
+        layout.operator("2dviews.create_snap_shot",text="Create Snap Shot",icon='SCENE')
+        layout.operator("fd_2d_views.append_to_view", text="Append to View", icon='ZOOMIN')
         layout.separator()
         layout.operator("fd_scene.clear_2d_views",text="Clear All 2D Views",icon='X')
+
 
 class LIST_scenes(bpy.types.UIList):
 
@@ -107,9 +112,11 @@ class LIST_scenes(bpy.types.UIList):
         
         if item.mv.plan_view_scene or item.mv.elevation_scene:
             layout.label(item.mv.name_scene,icon='RENDER_REGION')
+            layout.prop(item.mv, 'render_type_2d_view', text="")
             layout.prop(item.mv, 'elevation_selected', text="")
         else:
             layout.label(item.name,icon='SCENE_DATA')
+
 
 class LIST_2d_images(bpy.types.UIList):
 
@@ -126,8 +133,146 @@ class LIST_2d_images(bpy.types.UIList):
         layout.operator('2dviews.view_image',text="",icon='RESTRICT_VIEW_OFF',emboss=False).image_name = item.name
         layout.operator('2dviews.delete_image',text="",icon='X',emboss=False).image_name = item.name
         
+        
+class OPERATOR_create_new_view(bpy.types.Operator):
+    bl_idname = "fd_2d_views.create_new_view"    
+    bl_label = "Create New 2d View"
+    bl_description = "Create New 2d View"
+    bl_options = {'UNDO'}
+    
+    view_name = bpy.props.StringProperty(name="View Name",
+                                         description="Name for New View",
+                                         default="")
+    
+    view_products = []
+    
+    def invoke(self, context, event):
+        wm = context.window_manager
+        self.view_products.clear()
+        
+        #For now only products are selected, could include walls or other objects
+        for obj in context.selected_objects:
+            product_bp = utils.get_bp(obj,'PRODUCT')
+            
+            if product_bp and product_bp not in self.view_products:
+                self.view_products.append(product_bp)
+        
+        return wm.invoke_props_dialog(self)
+    
+    def draw(self, context):
+        layout = self.layout
+        box = layout.box()
+        box.prop(self, 'view_name', text="View Name")
+        box.label("Selected Products:")
+        prod_box = box.box()  
+         
+        if len(self.view_products) > 0:
+            for obj in self.view_products:
+                row = prod_box.row()
+                row.label(obj.mv.name_object, icon='OUTLINER_OB_LATTICE')
+        
+        else:
+            row = prod_box.row()
+            row.label("No Products Selected!", icon='ERROR')
+            warn_box = box.box()
+            row = warn_box.row()
+            row.label("Create Empty View?", icon='QUESTION')
+    
+    def execute(self, context):
+        packed_bps = [{"name": obj_bp.name, "obj_name": obj_bp.mv.name_object} for obj_bp in self.view_products]
+        bpy.ops.fd_2d_views.genereate_2d_views('INVOKE_DEFAULT',
+                                               use_single_scene=True,
+                                               single_scene_name=self.view_name,
+                                               single_scene_objs=packed_bps)
+        return {'FINISHED'}
+    
+
+class OPERATOR_append_to_view(bpy.types.Operator):
+    bl_idname = "fd_2d_views.append_to_view"    
+    bl_label = "Append Product to 2d View"
+    bl_description = "Append Product to 2d View"
+    bl_options = {'UNDO'}
+    
+    products = []
+    
+    def invoke(self, context, event):
+        wm = context.window_manager
+        self.products.clear()
+        
+        #For now only products are selected, could include walls or other objects
+        for obj in context.selected_objects:
+            product_bp = utils.get_bp(obj,'PRODUCT')
+            
+            if product_bp and product_bp not in self.products:
+                self.products.append(product_bp)
+        
+        return wm.invoke_props_dialog(self)
+    
+    def draw(self, context):
+        layout = self.layout
+        box = layout.box()
+        box.label("Selected Products:")
+        prod_box = box.box()  
+         
+        if len(self.products) > 0:
+            for obj in self.products:
+                row = prod_box.row()
+                row.label(obj.mv.name_object, icon='OUTLINER_OB_LATTICE')
+        
+        else:
+            row = prod_box.row()
+            row.label("No Products Selected!", icon='ERROR')
+            warn_box = box.box()
+            row = warn_box.row()
+            row.label("Nothing to Append.", icon='ERROR')
+            
+    def link_dims_to_scene(self, scene, obj_bp):
+        for child in obj_bp.children:
+            if child not in self.ignore_obj_list:
+                if child.mv.type in ('VISDIM_A','VISDIM_B'):
+                    scene.objects.link(child)
+                if len(child.children) > 0:
+                    self.link_dims_to_scene(scene, child)
+                    
+    def group_children(self, grp, obj):
+        if obj.mv.type != 'CAGE':
+            grp.objects.link(obj)
+        for child in obj.children:
+            if len(child.children) > 0:
+                if child.mv.type == 'OBSTACLE':
+                    for cc in child.children:
+                        if cc.mv.type == 'CAGE':
+                            cc.hide_render = False
+                            grp.objects.link(cc)
+                else:
+                    self.group_children(grp,child)
+            else:
+                if not child.mv.is_wall_mesh:
+                    if child.mv.type != 'CAGE':
+                        grp.objects.link(child)  
+        return grp                              
+    
+    def execute(self, context):
+        if len(self.products) < 1:
+            return {'FINISHED'}
+        
+        for scene in bpy.data.scenes:
+            if scene.mv.elevation_selected:
+                grp = bpy.data.groups[scene.name]
+                for prod in self.products:
+                    self.group_children(grp, prod)
+        
+        return {'FINISHED'}
+
+
+class single_scene_objs(bpy.types.PropertyGroup):
+    obj_name = bpy.props.StringProperty(name="Object Name")
+    
+bpy.utils.register_class(single_scene_objs)
+    
+
 class OPERATOR_genereate_2d_views(bpy.types.Operator):
-    bl_idname = "2dviews.genereate_2d_views"    
+    bl_idname = "fd_2d_views.genereate_2d_views"    
     bl_label = "Generate 2d Views"
     bl_description = "Generates 2D Views"
     bl_options = {'UNDO'}
@@ -144,13 +289,22 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
     
     pv_pad = bpy.props.FloatProperty(name="Plan View Padding",
                                      default=1.5)
-    
+        
     main_scene = None
     
     ignore_obj_list = []
     
+    use_single_scene = bpy.props.BoolProperty(name="Use for Creating Single View",
+                                              default=False)
+    
+    single_scene_name = bpy.props.StringProperty(name="Single Scene Name")
+    
+    single_scene_objs = bpy.props.CollectionProperty(type=single_scene_objs,
+                                                     name="Objects for Single Scene",
+                                                     description="Objects to Include When Creating a Single View")
+    
 #     orphan_products = []
-#     
+
     def get_world(self):
         if self.ENV_2D_NAME in bpy.data.worlds:
             return bpy.data.worlds[self.ENV_2D_NAME]
@@ -285,57 +439,58 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
                         child.select = True
                         pv_scene.objects.link(child)
                 wall = fd_types.Wall(obj_bp = obj)
+                if wall.obj_bp and wall.obj_x and wall.obj_y and wall.obj_z:
                 
-                dim = fd_types.Dimension()
-                dim.parent(wall.obj_bp)
-                dim.start_y(value = unit.inch(4) + wall.obj_y.location.y)
-                dim.start_z(value = wall.obj_z.location.z + unit.inch(6))
-                dim.end_x(value = wall.obj_x.location.x)  
-                
-                self.ignore_obj_list.append(dim.anchor)
-                self.ignore_obj_list.append(dim.end_point)
-  
-                bpy.ops.object.text_add()
-                text = context.active_object
-                text.parent = wall.obj_bp
-                text.location = (wall.obj_x.location.x/2,unit.inch(1.5),wall.obj_z.location.z)
-                text.data.size = .1
-                text.data.body = wall.obj_bp.mv.name_object
-                text.data.align_x = 'CENTER'
-                text.data.font = self.font
-                 
-                self.ignore_obj_list.append(dim.anchor)
-                self.ignore_obj_list.append(dim.end_point)
-                 
-                obj_bps = wall.get_wall_groups()
-                #Create Cubes for all products
-                for obj_bp in obj_bps:
-                    if obj_bp.mv.plan_draw_id != "":
-                        eval('bpy.ops.' + obj_bp.mv.plan_draw_id + '(object_name=obj_bp.name)')
-                    else:
-                        assembly = fd_types.Assembly(obj_bp)
-                        assembly_mesh = utils.create_cube_mesh(assembly.obj_bp.mv.name_object,
-                                                            (assembly.obj_x.location.x,
-                                                             assembly.obj_y.location.y,
-                                                             assembly.obj_z.location.z))
-                        assembly_mesh.parent = wall.obj_bp
-                        assembly_mesh.location = assembly.obj_bp.location
-                        assembly_mesh.rotation_euler = assembly.obj_bp.rotation_euler
-                        assembly_mesh.mv.type = 'CAGE'
-                        distance = unit.inch(14) if assembly.obj_bp.location.z > 1 else unit.inch(8)
-                        distance += wall.obj_y.location.y
-                        
-                        dim = fd_types.Dimension()
-                        dim.parent(assembly_mesh)
-                        dim.start_y(value = distance)
-                        dim.start_z(value = 0)
-                        dim.end_x(value = assembly.obj_x.location.x)
-                        
-                        self.ignore_obj_list.append(dim.anchor)
-                        self.ignore_obj_list.append(dim.end_point)
-                        
-                if wall and wall.get_wall_mesh():
-                    wall.get_wall_mesh().select = True
+                    dim = fd_types.Dimension()
+                    dim.parent(wall.obj_bp)
+                    dim.start_y(value = unit.inch(4) + wall.obj_y.location.y)
+                    dim.start_z(value = wall.obj_z.location.z + unit.inch(6))
+                    dim.end_x(value = wall.obj_x.location.x)  
+                    
+                    self.ignore_obj_list.append(dim.anchor)
+                    self.ignore_obj_list.append(dim.end_point)
+      
+                    bpy.ops.object.text_add()
+                    text = context.active_object
+                    text.parent = wall.obj_bp
+                    text.location = (wall.obj_x.location.x/2,unit.inch(1.5),wall.obj_z.location.z)
+                    text.data.size = .1
+                    text.data.body = wall.obj_bp.mv.name_object
+                    text.data.align_x = 'CENTER'
+                    text.data.font = self.font
+                     
+                    self.ignore_obj_list.append(dim.anchor)
+                    self.ignore_obj_list.append(dim.end_point)
+                     
+                    obj_bps = wall.get_wall_groups()
+                    #Create Cubes for all products
+                    for obj_bp in obj_bps:
+                        if obj_bp.mv.plan_draw_id != "":
+                            eval('bpy.ops.' + obj_bp.mv.plan_draw_id + '(object_name=obj_bp.name)')
+                        else:
+                            assembly = fd_types.Assembly(obj_bp)
+                            assembly_mesh = utils.create_cube_mesh(assembly.obj_bp.mv.name_object,
+                                                                (assembly.obj_x.location.x,
+                                                                 assembly.obj_y.location.y,
+                                                                 assembly.obj_z.location.z))
+                            assembly_mesh.parent = wall.obj_bp
+                            assembly_mesh.location = assembly.obj_bp.location
+                            assembly_mesh.rotation_euler = assembly.obj_bp.rotation_euler
+                            assembly_mesh.mv.type = 'CAGE'
+                            distance = unit.inch(14) if assembly.obj_bp.location.z > 1 else unit.inch(8)
+                            distance += wall.obj_y.location.y
+                            
+                            dim = fd_types.Dimension()
+                            dim.parent(assembly_mesh)
+                            dim.start_y(value = distance)
+                            dim.start_z(value = 0)
+                            dim.end_x(value = assembly.obj_x.location.x)
+                            
+                            self.ignore_obj_list.append(dim.anchor)
+                            self.ignore_obj_list.append(dim.end_point)
+                            
+                    if wall and wall.get_wall_mesh():
+                        wall.get_wall_mesh().select = True
                 
         camera = self.create_camera(pv_scene)
         camera.rotation_euler.z = math.radians(-90.0)
@@ -344,67 +499,111 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
         camera.data.ortho_scale += self.pv_pad
     
     def create_elv_view_scene(self, context, assembly):
-        grp = bpy.data.groups.new(assembly.obj_bp.mv.name_object)
-        new_scene = self.create_new_scene(context, grp, assembly.obj_bp)
+        if assembly.obj_bp and assembly.obj_x and assembly.obj_y and assembly.obj_z:
+            grp = bpy.data.groups.new(assembly.obj_bp.mv.name_object)
+            new_scene = self.create_new_scene(context, grp, assembly.obj_bp)
+            
+            self.group_children(grp, assembly.obj_bp)                    
+            wall_mesh = utils.create_cube_mesh(assembly.obj_bp.mv.name_object,
+                                               (assembly.obj_x.location.x,
+                                                assembly.obj_y.location.y,
+                                                assembly.obj_z.location.z))
+            
+            wall_mesh.parent = assembly.obj_bp
+            grp.objects.link(wall_mesh)
+            
+            instance = bpy.data.objects.new(assembly.obj_bp.mv.name_object + " "  + "Instance" , None)
+            new_scene.objects.link(instance)
+            instance.dupli_type = 'GROUP'
+            instance.dupli_group = grp
+            
+            new_scene.world = self.main_scene.world
+            self.link_dims_to_scene(new_scene, assembly.obj_bp)
+            self.add_text(context, assembly)
+            
+            camera = self.create_camera(new_scene)
+            camera.rotation_euler.x = math.radians(90.0)
+            camera.rotation_euler.z = assembly.obj_bp.rotation_euler.z   
+            bpy.ops.object.select_all(action='DESELECT')
+            wall_mesh.select = True
+            bpy.ops.view3d.camera_to_view_selected()
+            camera.data.ortho_scale += self.pv_pad
+            
+    def create_single_elv_view(self, context):
+        grp = bpy.data.groups.new(self.single_scene_name)
         
-        self.group_children(grp, assembly.obj_bp)                    
-        wall_mesh = utils.create_cube_mesh(assembly.obj_bp.mv.name_object,
-                                           (assembly.obj_x.location.x,
-                                            assembly.obj_y.location.y,
-                                            assembly.obj_z.location.z))
+        bpy.ops.scene.new('INVOKE_DEFAULT',type='EMPTY')
+        new_scene = context.scene
+        new_scene.name = grp.name
+        new_scene.mv.name_scene = self.single_scene_name
+        new_scene.mv.elevation_img_name = self.single_scene_name
+        new_scene.mv.plan_view_scene = False
+        new_scene.mv.elevation_scene = True
+        self.create_linesets(new_scene)
         
-        wall_mesh.parent = assembly.obj_bp
-        grp.objects.link(wall_mesh)
+        for item in self.single_scene_objs:
+            obj = bpy.data.objects[item.name]
+            self.group_children(grp, obj)
+            self.link_dims_to_scene(new_scene, obj)
         
-        instance = bpy.data.objects.new(assembly.obj_bp.mv.name_object + " "  + "Instance" , None)
+        instance = bpy.data.objects.new(self.single_scene_name + " "  + "Instance" , None)
         new_scene.objects.link(instance)
         instance.dupli_type = 'GROUP'
         instance.dupli_group = grp
         
         new_scene.world = self.main_scene.world
-        self.link_dims_to_scene(new_scene, assembly.obj_bp)
-        self.add_text(context, assembly)
+        #----------------------------------------------------------------------------------------        
+        
+        #self.link_dims_to_scene(new_scene, assembly.obj_bp)
+        
+        #Skip for now
+        #self.add_text(context, assembly)
         
         camera = self.create_camera(new_scene)
         camera.rotation_euler.x = math.radians(90.0)
-        camera.rotation_euler.z = assembly.obj_bp.rotation_euler.z   
+        #camera.rotation_euler.z = assembly.obj_bp.rotation_euler.z   
         bpy.ops.object.select_all(action='DESELECT')
-        wall_mesh.select = True
+        #wall_mesh.select = True
         bpy.ops.view3d.camera_to_view_selected()
-        camera.data.ortho_scale += self.pv_pad
-        
+        camera.data.ortho_scale += self.pv_pad            
+
     def execute(self, context):
         context.window_manager.mv.use_opengl_dimensions = True
         self.font = opengl_dim.get_custom_font()
-        bpy.ops.fd_scene.clear_2d_views()
-        
-#         for obj in context.selected_objects:
-#             bp = utils.get_parent_assembly_bp(obj)
-#             self.orphan_products.append(bp)
-#         
         self.create_linestyles()
-        
         self.main_scene = context.scene
         context.scene.name = "_Main"
-        self.create_plan_view_scene(context)
         
-        for obj in self.main_scene.objects:
-            if obj.mv.type == 'BPWALL':
-                wall = fd_types.Wall(obj_bp = obj)
-                if len(wall.get_wall_groups()) > 0:
-                    self.create_elv_view_scene(context, wall)
-                    
-#         for obj in context.selected_objects:
-#             print("Getting: ", obj)
-#             if obj.mv.type == 'BPASSEMBLY' and not obj.parent:
-#                 prod = fd_types.Assembly(obj_bp = obj)
-#                 self.create_elv_view_scene(context, prod)
-                    
+        if self.use_single_scene:
+            self.create_single_elv_view(context)
+            
+        else:
+            bpy.ops.fd_scene.clear_2d_views()
+            
+    #         for obj in context.selected_objects:
+    #             bp = utils.get_parent_assembly_bp(obj)
+    #             self.orphan_products.append(bp)
+
+            self.create_plan_view_scene(context)
+            
+            for obj in self.main_scene.objects:
+                if obj.mv.type == 'BPWALL':
+                    wall = fd_types.Wall(obj_bp = obj)
+                    if len(wall.get_wall_groups()) > 0:
+                        self.create_elv_view_scene(context, wall)
+                        
+    #         for obj in context.selected_objects:
+    #             print("Getting: ", obj)
+    #             if obj.mv.type == 'BPASSEMBLY' and not obj.parent:
+    #                 prod = fd_types.Assembly(obj_bp = obj)
+    #                 self.create_elv_view_scene(context, prod)
+                        
         self.clear_unused_linestyles()
         bpy.context.screen.scene = self.main_scene
         wm = context.window_manager.mv
         wm.elevation_scene_index = 0
         return {'FINISHED'}
+
 
 class OPERATOR_render_2d_views(bpy.types.Operator):
     bl_idname = "2dviews.render_2d_views"
@@ -418,7 +617,6 @@ class OPERATOR_render_2d_views(bpy.types.Operator):
         rl = rd.layers.active
         freestyle_settings = rl.freestyle_settings
         
-        rd.engine = 'BLENDER_RENDER'
         rd.use_freestyle = True
         rd.image_settings.file_format = 'JPEG'
         rd.line_thickness = 0.75
@@ -428,6 +626,11 @@ class OPERATOR_render_2d_views(bpy.types.Operator):
         freestyle_settings.crease_angle = 2.617994
         
 #         file_format = scene.render.image_settings.file_format.lower()
+        
+        if scene.mv.render_type_2d_view == 'GREYSCALE':
+            rd.engine = 'BLENDER_RENDER'
+        else:
+            rd.engine = 'CYCLES'           
         
         bpy.ops.render.render('INVOKE_DEFAULT', write_still=True)
 
@@ -500,6 +703,7 @@ class OPERATOR_view_image(bpy.types.Operator):
 
         return {'FINISHED'}
     
+
 class OPERATOR_delete_image(bpy.types.Operator):
     bl_idname = "2dviews.delete_image"
     bl_label = "View Image"
@@ -519,9 +723,10 @@ class OPERATOR_delete_image(bpy.types.Operator):
                 break
 
         return {'FINISHED'}
-    
-class OPERATOR_create_new_view(bpy.types.Operator):
-    bl_idname = "2dviews.create_new_view"
+
+
+class OPERATOR_create_snap_shot(bpy.types.Operator):
+    bl_idname = "2dviews.create_snap_shot"
     bl_label = "Create New View"
     bl_description = "Renders 2d Scenes"
 
@@ -564,7 +769,8 @@ class OPERATOR_create_new_view(bpy.types.Operator):
             return {'FINISHED'}
             
         return {'RUNNING_MODAL'}
-        
+
+
 class OPERATOR_create_pdf(bpy.types.Operator):
     bl_idname = "2dviews.create_pdf"
     bl_label = "Create PDF"
@@ -674,7 +880,8 @@ class OPERATOR_create_pdf(bpy.types.Operator):
             print('Cannot Find ' + os.path.join(fixed_file_path,file_name))
             
         return {'FINISHED'}
-        
+
+
 def register():
     bpy.utils.register_class(PANEL_2d_views)
     bpy.utils.register_class(LIST_scenes)
@@ -685,6 +892,8 @@ def register():
     bpy.utils.register_class(OPERATOR_view_image)
     bpy.utils.register_class(OPERATOR_delete_image)
     bpy.utils.register_class(OPERATOR_create_new_view)
+    bpy.utils.register_class(OPERATOR_append_to_view)
+    bpy.utils.register_class(OPERATOR_create_snap_shot)
     bpy.utils.register_class(OPERATOR_create_pdf)
 
 def unregister():
@@ -697,6 +906,8 @@ def unregister():
     bpy.utils.unregister_class(OPERATOR_view_image)
     bpy.utils.unregister_class(OPERATOR_delete_image)
     bpy.utils.unregister_class(OPERATOR_create_new_view)
+    bpy.utils.unregister_class(OPERATOR_append_to_view)
+    bpy.utils.unregister_class(OPERATOR_create_snap_shot)
     bpy.utils.unregister_class(OPERATOR_create_pdf)
 
 if __name__ == "__main__":
