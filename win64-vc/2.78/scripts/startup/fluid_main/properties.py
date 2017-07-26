@@ -1833,10 +1833,6 @@ class fd_image(PropertyGroup):
                                 default = False,
                                 description="This determines if the image is a 2D Plan View")
     
-    use_as_cover_image = BoolProperty(name="Use as Cover Image",
-                                      default = False,
-                                      description="This determines if the image should be printed on the first page")
-    
     is_elv_view = BoolProperty(name="Is Elv View",
                                default = False,
                                description="This determines if the image is a 2D Elevation View")
