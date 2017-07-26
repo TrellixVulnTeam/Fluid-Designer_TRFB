@@ -58,6 +58,7 @@ class Window(fd_types.Assembly):
         frame.prompt("Array X Offset","Array_X_Offset",[Array_X_Offset])
         frame.assign_material("Glass",MATERIAL_FILE,"Glass")
         frame.assign_material("Frame",MATERIAL_FILE,"White")
+        frame.draw_as_hidden_line()
         
         if self.window_divider != "":
             if self.window_frame == "Window_Frame_Fixed.blend":

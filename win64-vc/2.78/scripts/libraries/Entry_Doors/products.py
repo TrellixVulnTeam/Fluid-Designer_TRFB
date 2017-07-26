@@ -97,6 +97,7 @@ class Entry_Door(fd_types.Assembly):
         door_frame.y_dim('Depth', [Depth])
         door_frame.z_dim('Height', [Height])
         door_frame.assign_material("Frame", MATERIAL_FILE, "White")   
+        door_frame.draw_as_hidden_line()
         
         if self.door_panel != "":
             door_panel = self.add_assembly(os.path.join(DOOR_PANEL,self.door_panel))
