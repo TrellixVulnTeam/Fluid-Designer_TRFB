@@ -30,15 +30,10 @@ bl_info = {
 
 import bpy
 from mv import utils, fd_types, unit, opengl_dim
+from . import report_2d_drawings
 import math
 import os
 import time
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import legal, inch, A4, landscape
-from reportlab.platypus import Paragraph, Table, TableStyle, SimpleDocTemplate, Image, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
-import reportlab.lib.colors as colors
-
 
 class PANEL_2d_views(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
@@ -92,7 +87,19 @@ class PANEL_2d_views(bpy.types.Panel):
             col = row.column(align=True)
             col.operator('fd_2d_views.move_2d_image_item', text="", icon='TRIA_UP').direction = 'UP'
             col.operator('fd_2d_views.move_2d_image_item', text="", icon='TRIA_DOWN').direction = 'DOWN'
-            panel_box.operator('2dviews.create_pdf',text="Create PDF",icon='FILE_BLANK')
+            panel_box.menu('MENU_2dview_reports',icon='FILE_BLANK')
+#             panel_box.operator('2dviews.create_pdf',text="Create PDF",icon='FILE_BLANK')
+      
+      
+class MENU_2dview_reports(bpy.types.Menu):
+    bl_label = "2D Reports"
+    
+    """
+    Report Templates are added to this menu
+    """
+    
+    def draw(self, context):
+        layout = self.layout
       
       
 class MENU_elevation_scene_options(bpy.types.Menu):
@@ -299,6 +306,8 @@ class OPERATOR_append_to_view(bpy.types.Operator):
     
     products = []
     
+    objects = []
+    
     scenes = bpy.props.CollectionProperty(type=single_scene_objs,
                                                      name="Objects for Single Scene",
                                                      description="Objects to Include When Creating a Single View")    
@@ -308,6 +317,7 @@ class OPERATOR_append_to_view(bpy.types.Operator):
     def invoke(self, context, event):
         wm = context.window_manager
         self.products.clear()
+        self.objects.clear()
         
         for i in self.scenes:
             self.scenes.remove(0)
@@ -315,13 +325,16 @@ class OPERATOR_append_to_view(bpy.types.Operator):
         for scene in bpy.data.scenes:
             scene_col = self.scenes.add()
             scene_col.name = scene.name
-        
-        #For now only products are selected, could include walls or other objects
+
         for obj in context.selected_objects:
             product_bp = utils.get_bp(obj,'PRODUCT')
             
             if product_bp and product_bp not in self.products:
                 self.products.append(product_bp)
+        
+        if len(self.products) == 0:
+            for obj in context.selected_objects:
+                self.objects.append(obj)
         
         return wm.invoke_props_dialog(self)
     
@@ -330,61 +343,41 @@ class OPERATOR_append_to_view(bpy.types.Operator):
         box = layout.box()
         box.label("Selected View to Append To:")
         box.template_list("LIST_2d_images"," ",self,"scenes",self,"scene_index")
-        
-        box.label("Selected Products:")
-        prod_box = box.box()  
-         
+
         if len(self.products) > 0:
+            box.label("Selected Products:")
+            prod_box = box.box()              
             for obj in self.products:
                 row = prod_box.row()
                 row.label(obj.mv.name_object, icon='OUTLINER_OB_LATTICE')
-        
         else:
-            row = prod_box.row()
-            row.label("No Products Selected!", icon='ERROR')
-            warn_box = box.box()
-            row = warn_box.row()
-            row.label("Nothing to Append.", icon='ERROR')
-            
-    def link_dims_to_scene(self, scene, obj_bp):
-        for child in obj_bp.children:
-            if child not in self.ignore_obj_list:
-                if child.mv.type in ('VISDIM_A','VISDIM_B'):
-                    scene.objects.link(child)
-                if len(child.children) > 0:
-                    self.link_dims_to_scene(scene, child)
-                    
-    def group_children(self, grp, obj):
-        if obj.mv.type != 'CAGE':
-            grp.objects.link(obj)
-        for child in obj.children:
-            if len(child.children) > 0:
-                if child.mv.type == 'OBSTACLE':
-                    for cc in child.children:
-                        if cc.mv.type == 'CAGE':
-                            cc.hide_render = False
-                            grp.objects.link(cc)
-                else:
-                    self.group_children(grp,child)
+            if len(self.objects) > 0:
+                box.label("Selected Objects:")
+                prod_box = box.box()                           
+                for obj in self.objects:
+                    row = prod_box.row()
+                    row.label(obj.name, icon='OBJECT_DATA')
             else:
-                if not child.mv.is_wall_mesh:
-                    if child.mv.type != 'CAGE':
-                        grp.objects.link(child)  
-        return grp
-    
+                warn_box = box.box()
+                row = warn_box.row()
+                row.label("Nothing to Append.", icon='ERROR')
+            
     def link_children_to_scene(self,scene,obj_bp):
         scene.objects.link(obj_bp)
         for child in obj_bp.children:
             self.link_children_to_scene(scene, child)
     
     def execute(self, context):
-        if len(self.products) < 1:
-            return {'FINISHED'}
-
         scene = bpy.data.scenes[self.scene_index]
         
         for product in self.products:
             self.link_children_to_scene(scene, product)
+            
+        print("OBJS",self.objects)
+            
+        for obj in self.objects:
+            print('LINK',obj,scene)
+            self.link_children_to_scene(scene, obj)
 
         return {'FINISHED'}
     
@@ -511,9 +504,9 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
                 else:
                     self.group_children(grp,child)
             else:
-                if not child.mv.is_wall_mesh:
-                    if child.mv.type != 'CAGE' and obj not in self.ignore_obj_list:
-                        grp.objects.link(child)  
+#                 if not child.mv.is_wall_mesh:
+                if child.mv.type != 'CAGE' and obj not in self.ignore_obj_list:
+                    grp.objects.link(child)  
         return grp
     
     def create_new_scene(self, context, grp, obj_bp):
@@ -539,7 +532,7 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
         text.data.body = assembly.obj_bp.mv.name_object
         text.data.align_x = 'RIGHT'
         text.data.font = self.font        
-    
+        
     def create_plan_view_scene(self,context):
         bpy.ops.scene.new('INVOKE_DEFAULT',type='EMPTY')   
         pv_scene = context.scene
@@ -626,13 +619,13 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
             new_scene = self.create_new_scene(context, grp, assembly.obj_bp)
             
             self.group_children(grp, assembly.obj_bp)                    
-            wall_mesh = utils.create_cube_mesh(assembly.obj_bp.mv.name_object,
-                                               (assembly.obj_x.location.x,
-                                                assembly.obj_y.location.y,
-                                                assembly.obj_z.location.z))
-            
-            wall_mesh.parent = assembly.obj_bp
-            grp.objects.link(wall_mesh)
+#             wall_mesh = utils.create_cube_mesh(assembly.obj_bp.mv.name_object,
+#                                                (assembly.obj_x.location.x,
+#                                                 assembly.obj_y.location.y,
+#                                                 assembly.obj_z.location.z))
+#             
+#             wall_mesh.parent = assembly.obj_bp
+#             grp.objects.link(wall_mesh)
             
             instance = bpy.data.objects.new(assembly.obj_bp.mv.name_object + " "  + "Instance" , None)
             new_scene.objects.link(instance)
@@ -646,8 +639,9 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
             camera = self.create_camera(new_scene)
             camera.rotation_euler.x = math.radians(90.0)
             camera.rotation_euler.z = assembly.obj_bp.rotation_euler.z   
-            bpy.ops.object.select_all(action='DESELECT')
-            wall_mesh.select = True
+            bpy.ops.object.select_all(action='SELECT')
+#             bpy.ops.object.select_all(action='DESELECT')
+#             wall_mesh.select = True
             bpy.ops.view3d.camera_to_view_selected()
             camera.data.ortho_scale += self.pv_pad
             
@@ -702,10 +696,6 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
         else:
             bpy.ops.fd_scene.clear_2d_views()
             
-    #         for obj in context.selected_objects:
-    #             bp = utils.get_parent_assembly_bp(obj)
-    #             self.orphan_products.append(bp)
-
             self.create_plan_view_scene(context)
             
             for obj in self.main_scene.objects:
@@ -713,12 +703,6 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
                     wall = fd_types.Wall(obj_bp = obj)
                     if len(wall.get_wall_groups()) > 0:
                         self.create_elv_view_scene(context, wall)
-                        
-    #         for obj in context.selected_objects:
-    #             print("Getting: ", obj)
-    #             if obj.mv.type == 'BPASSEMBLY' and not obj.parent:
-    #                 prod = fd_types.Assembly(obj_bp = obj)
-    #                 self.create_elv_view_scene(context, prod)
                         
         self.clear_unused_linestyles()
         bpy.context.screen.scene = self.main_scene
@@ -908,90 +892,11 @@ class OPERATOR_create_snap_shot(bpy.types.Operator):
             
         return {'RUNNING_MODAL'}
 
-
-class OPERATOR_create_pdf(bpy.types.Operator):
-    bl_idname = "2dviews.create_pdf"
-    bl_label = "Create PDF"
-    bl_description = "This creates a pdf of all of the images"
-    
-    image_name = bpy.props.StringProperty(name="Object Name",
-                                          description="This is the readable name of the object")
-
-    def execute(self, context):
-        pdf_images = []
-        props = context.scene.mv
-        width, height = landscape(legal)
-        
-        images = context.window_manager.mv.image_views
-        for img in images:
-            image = bpy.data.images[img.image_name]
-            image.save_render(os.path.join(bpy.app.tempdir, image.name + ".jpg"))
-            pdf_images.append(os.path.join(bpy.app.tempdir, image.name + ".jpg"))
-
-        if bpy.data.filepath == "":
-            file_path = bpy.app.tempdir
-            room_name = "Unsaved"
-        else:
-            project_path = os.path.dirname(bpy.data.filepath)
-            room_name, ext = os.path.splitext(os.path.basename(bpy.data.filepath))
-            file_path = os.path.join(project_path,room_name)
-            if not os.path.exists(file_path):
-                os.makedirs(file_path)
-
-        file_name = '2D Views.pdf'
-        
-        c = canvas.Canvas(os.path.join(file_path,file_name), pagesize=landscape(legal))
-        logo = os.path.join(os.path.dirname(__file__),"logo.jpg")
-        for img in pdf_images:
-            #PICTURE
-            c.drawImage(img,20,80,width=width-40, height=height-100, mask='auto',preserveAspectRatio=True)  
-            #LOGO
-            c.drawImage(logo,25,20,width=200, height=60, mask='auto',preserveAspectRatio=True) 
-            #PICTURE BOX
-            c.rect(20,80,width-40,height-100)
-            #LOGO BOX
-            c.rect(20,20,220,60)
-            #COMMENT BOX
-            c.setFont("Times-Roman",9)
-            c.drawString(width-20-250+5, 67, "COMMENTS:")
-            c.rect(width-20-248,20,248,60)
-            #CLIENT
-            c.drawString(245, 67, "CLIENT: " + props.client_name)
-            c.rect(240,60,250,20)
-            #PHONE
-            c.drawString(245, 47, "PHONE: " + props.client_phone)
-            c.rect(240,40,250,20)
-            #EMAIL
-            c.drawString(245, 27, "EMAIL: " + props.client_email)
-            c.rect(240,20,250,20)                  
-            #JOBNAME
-            c.drawString(495, 67, "JOB NAME: " + props.job_name)
-            c.rect(490,60,250,20)
-            #JOBNAME
-            c.drawString(495, 47, "ROOM: " + room_name)
-            c.rect(490,40,250,20)
-            #DRAWN BY
-            c.drawString(495, 27, "DRAWN BY: " + props.designer_name)
-            c.rect(490,20,250,20)
-            c.showPage()
-            
-        c.save()
-
-        #FIX FILE PATH To remove all double backslashes 
-        fixed_file_path = os.path.normpath(file_path)
-
-        if os.path.exists(os.path.join(fixed_file_path,file_name)):
-            os.system('start "Title" /D "'+fixed_file_path+'" "' + file_name + '"')
-        else:
-            print('Cannot Find ' + os.path.join(fixed_file_path,file_name))
-            
-        return {'FINISHED'}
-
-
 def register():
     bpy.utils.register_class(PANEL_2d_views)
     bpy.utils.register_class(LIST_scenes)
     bpy.utils.register_class(LIST_2d_images)
+    bpy.utils.register_class(MENU_2dview_reports)
     bpy.utils.register_class(MENU_elevation_scene_options)
     bpy.utils.register_class(OPERATOR_genereate_2d_views)
     bpy.utils.register_class(OPERATOR_render_2d_views)
@@ -1000,14 +905,16 @@ def register():
     bpy.utils.register_class(OPERATOR_create_new_view)
     bpy.utils.register_class(OPERATOR_append_to_view)
     bpy.utils.register_class(OPERATOR_create_snap_shot)
-    bpy.utils.register_class(OPERATOR_create_pdf)
     
     bpy.utils.register_class(OPERATOR_move_image_list_item)
+    
+    report_2d_drawings.register()
 
 def unregister():
     bpy.utils.unregister_class(PANEL_2d_views)
     bpy.utils.unregister_class(LIST_scenes)
     bpy.utils.unregister_class(LIST_2d_images)
+    bpy.utils.unregister_class(MENU_2dview_reports)
     bpy.utils.unregister_class(MENU_elevation_scene_options)
     bpy.utils.unregister_class(OPERATOR_genereate_2d_views)
     bpy.utils.unregister_class(OPERATOR_render_2d_views)
@@ -1016,9 +923,10 @@ def unregister():
     bpy.utils.unregister_class(OPERATOR_create_new_view)
     bpy.utils.unregister_class(OPERATOR_append_to_view)
     bpy.utils.unregister_class(OPERATOR_create_snap_shot)
-    bpy.utils.unregister_class(OPERATOR_create_pdf)
     
     bpy.utils.unregister_class(OPERATOR_move_image_list_item)
+
+    report_2d_drawings.unregister()
 
 if __name__ == "__main__":
     register()
