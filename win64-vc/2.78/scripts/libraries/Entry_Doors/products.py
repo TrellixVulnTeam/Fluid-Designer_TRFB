@@ -80,7 +80,7 @@ class Entry_Door(fd_types.Assembly):
             self.add_prompt(name="Hinge Placement", prompt_type='DISTANCE', value=unit.inch(18.0), tab_index=1)
             
             if self.double_door != True:
-                self.add_prompt(name="Door Swing", prompt_type='COMBOBOX', items=["Left Swing", "Right Swing"], value=False, tab_index=0)
+                self.add_prompt(name="Door Swing", prompt_type='COMBOBOX', items=["Left Swing", "Right Swing"], value=0, tab_index=0)
         
         Width = self.get_var('dim_x', 'Width')
         Height = self.get_var('dim_z', 'Height')
@@ -153,7 +153,8 @@ class Entry_Door(fd_types.Assembly):
             door_handle_right.z_loc(value = HANDLE_HEIGHT)
             door_handle_right.assign_material("Handle Color", MATERIAL_FILE, "Chrome")
                 
-        self.update()       
+        self.update()
+     
   
 class Sliding_Doors(fd_types.Assembly):
     library_name = "Entry Doors"
@@ -222,6 +223,7 @@ class Sliding_Doors(fd_types.Assembly):
         door_panel_right.assign_material("Glass",MATERIAL_FILE,"Glass")  
                 
         self.update()
+
         
 class Pocket_Doors(fd_types.Assembly):
     library_name = "Entry Doors"
@@ -293,6 +295,7 @@ class Pocket_Doors(fd_types.Assembly):
             door_panel_right.assign_material("Glass", MATERIAL_FILE, "Glass")
                 
         self.update()
+
         
 class Bi_Fold_Doors(fd_types.Assembly):
     library_name = "Entry Doors"
@@ -356,6 +359,7 @@ class Bi_Fold_Doors(fd_types.Assembly):
         self.add_tab(name='Formulas', tab_type='HIDDEN')
         
         self.add_prompt(name="Open Door", prompt_type='PERCENTAGE', value=0, tab_index=0)
+        self.add_prompt(name="Door Swing", prompt_type='COMBOBOX', items=["Left Swing", "Right Swing"], value=0, tab_index=0)
         self.add_prompt(name="Reverse Swing", prompt_type='CHECKBOX', tab_index=0)
         self.add_prompt(name="Frame Width", prompt_type='DISTANCE', value=unit.inch(3.25), tab_index=1)
         self.add_prompt(name="Panel Depth", prompt_type='DISTANCE', value=unit.inch(1.75), tab_index=1)
@@ -369,6 +373,7 @@ class Bi_Fold_Doors(fd_types.Assembly):
         Frame_Width = self.get_var('Frame Width')
         Panel_Depth = self.get_var('Panel Depth')
         Door_Gap = self.get_var('Door Gap')
+        Swing = self.get_var('Door Swing')
         Reverse_Swing = self.get_var('Reverse Swing')
 
         door_frame = self.add_assembly(os.path.join(DOOR_FRAME_PATH,self.door_frame))
@@ -415,7 +420,174 @@ class Bi_Fold_Doors(fd_types.Assembly):
             door_panel_left_2.x_dim('(Width-Frame_Width*2-Door_Gap*2)*0.5', [Width, Frame_Width, Door_Gap])
             door_panel_left_2.x_loc('(Width-Frame_Width*2)*0.5+Door_Gap*0.5', [Width, Frame_Width, Door_Gap])
                        
-        self.update()        
+        self.update()
+        
+        
+class PROMPTS_Entry_Door_Prompts(bpy.types.Operator):
+    bl_idname = "cabinetlib.entry_door_prompts"
+    bl_label = "Entry Door Prompts" 
+    bl_options = {'UNDO'}
+    
+    object_name = bpy.props.StringProperty(name="Object Name")
+    
+    width = bpy.props.FloatProperty(name="Width",unit='LENGTH',precision=4)
+    height = bpy.props.FloatProperty(name="Height",unit='LENGTH',precision=4)
+    depth = bpy.props.FloatProperty(name="Depth",unit='LENGTH',precision=4)
+
+    door_rotation = bpy.props.FloatProperty(name="Door Rotation",subtype='ANGLE',min=0,max=math.radians(110))
+    
+    door_swing = bpy.props.EnumProperty(name="Door Swing",items=[('Left Swing',"Left Swing","Left Swing"),
+                                                                 ('Right Swing',"Right Swing","Right Swing")])
+    product = None
+    
+    open_door_prompt = None
+    
+    door_swing_prompt = None
+    
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def check(self, context):
+        self.product.obj_x.location.x = self.width
+         
+        if self.product.obj_bp.mv.mirror_y:
+            self.product.obj_y.location.y = -self.depth
+        else:
+            self.product.obj_y.location.y = self.depth
+         
+        if self.product.obj_bp.mv.mirror_z:
+            self.product.obj_z.location.z = -self.height
+        else:
+            self.product.obj_z.location.z = self.height
+             
+        if self.open_door_prompt:
+            self.open_door_prompt.set_value(self.door_rotation)
+            
+        if self.door_swing_prompt:
+            self.door_swing_prompt.set_value(self.door_swing)            
+             
+        self.product.obj_bp.location = self.product.obj_bp.location
+        self.product.obj_bp.location = self.product.obj_bp.location
+            
+        return True
+
+    def execute(self, context):
+        return {'FINISHED'}
+
+    def invoke(self,context,event):
+        obj = bpy.data.objects[self.object_name]
+        obj_product_bp = utils.get_bp(obj,'PRODUCT')
+        self.product = fd_types.Assembly(obj_product_bp)
+        if self.product.obj_bp:
+            self.depth = math.fabs(self.product.obj_y.location.y)
+            self.height = math.fabs(self.product.obj_z.location.z)
+            self.width = math.fabs(self.product.obj_x.location.x)
+            
+            try:
+                self.open_door_prompt = self.product.get_prompt("Door Rotation")
+                self.door_rotation = self.open_door_prompt.value() 
+            except:
+                pass
+            
+            try:
+                self.door_swing_prompt = self.product.get_prompt("Door Swing")  
+                self.door_swing = self.door_swing_prompt.value()         
+            except:
+                pass
+                
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self, width=480)
+
+    def draw_product_size(self,layout):
+        row = layout.row()
+        box = row.box()
+        col = box.column(align=True)
+
+        row1 = col.row(align=True)
+        if self.object_has_driver(self.product.obj_x):
+            row1.label('Width: ' + str(unit.inch(math.fabs(self.product.obj_x.location.x))))
+        else:
+            row1.label('Width:')
+            row1.prop(self,'width',text="")
+            row1.prop(self.product.obj_x,'hide',text="")
+        
+        row1 = col.row(align=True)
+        if self.object_has_driver(self.product.obj_z):
+            row1.label('Height: ' + str(unit.inch(math.fabs(self.product.obj_z.location.z))))
+        else:
+            row1.label('Height:')
+            row1.prop(self,'height',text="")
+            row1.prop(self.product.obj_z,'hide',text="")
+        
+        row1 = col.row(align=True)
+        if self.object_has_driver(self.product.obj_y):
+            row1.label('Depth: ' + str(unit.inch(math.fabs(self.product.obj_y.location.y))))
+        else:
+            row1.label('Depth:')
+            row1.prop(self,'depth',text="")
+            row1.prop(self.product.obj_y,'hide',text="")
+            
+    def object_has_driver(self,obj):
+        if obj.animation_data:
+            if len(obj.animation_data.drivers) > 0:
+                return True
+            
+    def draw_product_prompts(self,layout):
+
+        if "Main Options" in self.product.obj_bp.mv.PromptPage.COL_MainTab:
+            door_swing = self.product.get_prompt("Door Swing")
+            reverse_swing = self.product.get_prompt("Reverse Swing")
+            open_door = self.product.get_prompt("Open Door")
+            open_left_door = self.product.get_prompt("Open Left Door")
+            open_right_door = self.product.get_prompt("Open Right Door")
+            
+            box = layout.box()
+            col = box.column(align=True)
+            col.label("Main Options:")
+            row = col.row()
+            row.label("Open Door")
+            
+            if open_door:
+                row.prop(open_door, "PercentageValue", text="")
+            elif open_left_door:
+                row.prop(open_left_door, "PercentageValue", text="Panel 1")
+                row.prop(open_right_door, "PercentageValue", text="Panel 2")
+            else:
+                row.prop(self,'door_rotation',text="",slider=True)
+                 
+            if door_swing:
+                col = box.column()
+                row = col.row()                
+                row.label("Door Swing")
+                row.prop(self, 'door_swing',text="")
+            col = box.column()
+            
+            if reverse_swing:
+                row = col.row()                
+                row.label("Reverse Swing")                
+                row.prop(reverse_swing,'CheckBoxValue',text="")            
+    
+    def draw_product_placment(self,layout):
+        box = layout.box()
+        row = box.row()
+        row.label('Location:')
+        row.prop(self.product.obj_bp,'location',index=0,text="")
+
+    def draw(self, context):
+        layout = self.layout
+        if self.product.obj_bp:
+            if self.product.obj_bp.name in context.scene.objects:
+                box = layout.box()
+                
+                split = box.split(percentage=.8)
+                split.label(self.product.obj_bp.mv.name_object + " | " + self.product.obj_bp.cabinetlib.spec_group_name,icon='LATTICE_DATA')
+                split.menu('MENU_Current_Cabinet_Menu',text="Menu",icon='DOWNARROW_HLT')
+                
+                self.draw_product_size(box)
+                self.draw_product_prompts(box)
+                self.draw_product_placment(box)        
+        
   
 class PRODUCT_Entry_Door_Frame(Entry_Door):
     
@@ -861,171 +1033,7 @@ class PRODUCT_Bi_Fold_Double_Door_Glass_Panel(Bi_Fold_Doors):
         self.double_door = True
         self.door_frame = "Door_Frame.blend"
         self.door_panel = "Door_Panel_Glass.blend"
-                
-class PROMPTS_Entry_Door_Prompts(bpy.types.Operator):
-    bl_idname = "cabinetlib.entry_door_prompts"
-    bl_label = "Entry Door Prompts" 
-    bl_options = {'UNDO'}
-    
-    object_name = bpy.props.StringProperty(name="Object Name")
-    
-    width = bpy.props.FloatProperty(name="Width",unit='LENGTH',precision=4)
-    height = bpy.props.FloatProperty(name="Height",unit='LENGTH',precision=4)
-    depth = bpy.props.FloatProperty(name="Depth",unit='LENGTH',precision=4)
-
-    door_rotation = bpy.props.FloatProperty(name="Door Rotation",subtype='ANGLE',min=0,max=math.radians(110))
-    
-    door_swing = bpy.props.EnumProperty(name="Door Swing",items=[('Left Swing',"Left Swing","Left Swing"),
-                                                                 ('Right Swing',"Right Swing","Right Swing")])
-    product = None
-    
-    open_door_prompt = None
-    
-    door_swing_prompt = None
-    
-    @classmethod
-    def poll(cls, context):
-        return True
-
-    def check(self, context):
-        self.product.obj_x.location.x = self.width
-         
-        if self.product.obj_bp.mv.mirror_y:
-            self.product.obj_y.location.y = -self.depth
-        else:
-            self.product.obj_y.location.y = self.depth
-         
-        if self.product.obj_bp.mv.mirror_z:
-            self.product.obj_z.location.z = -self.height
-        else:
-            self.product.obj_z.location.z = self.height
-             
-        if self.open_door_prompt:
-            self.open_door_prompt.set_value(self.door_rotation)
-            
-        if self.door_swing_prompt:
-            self.door_swing_prompt.set_value(self.door_swing)            
-             
-        self.product.obj_bp.location = self.product.obj_bp.location
-        self.product.obj_bp.location = self.product.obj_bp.location
-            
-        return True
-
-    def execute(self, context):
-        return {'FINISHED'}
-
-    def invoke(self,context,event):
-        obj = bpy.data.objects[self.object_name]
-        obj_product_bp = utils.get_bp(obj,'PRODUCT')
-        self.product = fd_types.Assembly(obj_product_bp)
-        if self.product.obj_bp:
-            self.depth = math.fabs(self.product.obj_y.location.y)
-            self.height = math.fabs(self.product.obj_z.location.z)
-            self.width = math.fabs(self.product.obj_x.location.x)
-            
-            try:
-                self.open_door_prompt = self.product.get_prompt("Door Rotation")
-                self.door_rotation = self.open_door_prompt.value() 
-            except:
-                pass
-            
-            try:
-                self.door_swing_prompt = self.product.get_prompt("Door Swing")  
-                self.door_swing = self.door_swing_prompt.value()         
-            except:
-                pass
-                
-        wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=480)
-
-    def draw_product_size(self,layout):
-        row = layout.row()
-        box = row.box()
-        col = box.column(align=True)
-
-        row1 = col.row(align=True)
-        if self.object_has_driver(self.product.obj_x):
-            row1.label('Width: ' + str(unit.inch(math.fabs(self.product.obj_x.location.x))))
-        else:
-            row1.label('Width:')
-            row1.prop(self,'width',text="")
-            row1.prop(self.product.obj_x,'hide',text="")
-        
-        row1 = col.row(align=True)
-        if self.object_has_driver(self.product.obj_z):
-            row1.label('Height: ' + str(unit.inch(math.fabs(self.product.obj_z.location.z))))
-        else:
-            row1.label('Height:')
-            row1.prop(self,'height',text="")
-            row1.prop(self.product.obj_z,'hide',text="")
-        
-        row1 = col.row(align=True)
-        if self.object_has_driver(self.product.obj_y):
-            row1.label('Depth: ' + str(unit.inch(math.fabs(self.product.obj_y.location.y))))
-        else:
-            row1.label('Depth:')
-            row1.prop(self,'depth',text="")
-            row1.prop(self.product.obj_y,'hide',text="")
-            
-    def object_has_driver(self,obj):
-        if obj.animation_data:
-            if len(obj.animation_data.drivers) > 0:
-                return True
-            
-    def draw_product_prompts(self,layout):
-
-        if "Main Options" in self.product.obj_bp.mv.PromptPage.COL_MainTab:
-            door_swing = self.product.get_prompt("Door Swing")
-            reverse_swing = self.product.get_prompt("Reverse Swing")
-            open_door = self.product.get_prompt("Open Door")
-            open_left_door = self.product.get_prompt("Open Left Door")
-            open_right_door = self.product.get_prompt("Open Right Door")
-            
-            box = layout.box()
-            col = box.column(align=True)
-            col.label("Main Options:")
-            row = col.row()
-            row.label("Open Door")
-            
-            if open_door:
-                row.prop(open_door, "PercentageValue", text="")
-            elif open_left_door:
-                row.prop(open_left_door, "PercentageValue", text="Panel 1")
-                row.prop(open_right_door, "PercentageValue", text="Panel 2")
-            else:
-                row.prop(self,'door_rotation',text="",slider=True)
-                 
-            if door_swing:
-                col = box.column()
-                row = col.row()                
-                row.label("Door Swing")
-                row.prop(self, 'door_swing',text="")
-            col = box.column()
-            
-            if reverse_swing:
-                row = col.row()                
-                row.label("Reverse Swing")                
-                row.prop(reverse_swing,'CheckBoxValue',text="")            
-    
-    def draw_product_placment(self,layout):
-        box = layout.box()
-        row = box.row()
-        row.label('Location:')
-        row.prop(self.product.obj_bp,'location',index=0,text="")
-
-    def draw(self, context):
-        layout = self.layout
-        if self.product.obj_bp:
-            if self.product.obj_bp.name in context.scene.objects:
-                box = layout.box()
-                
-                split = box.split(percentage=.8)
-                split.label(self.product.obj_bp.mv.name_object + " | " + self.product.obj_bp.cabinetlib.spec_group_name,icon='LATTICE_DATA')
-                split.menu('MENU_Current_Cabinet_Menu',text="Menu",icon='DOWNARROW_HLT')
-                
-                self.draw_product_size(box)
-                self.draw_product_prompts(box)
-                self.draw_product_placment(box)        
+       
         
 def register():
     bpy.utils.register_class(PROMPTS_Entry_Door_Prompts)
