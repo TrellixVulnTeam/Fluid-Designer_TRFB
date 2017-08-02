@@ -672,6 +672,7 @@ class OPERATOR_Add_Obstacle(Operator):
         self.obstacle.obj_y.location.y = self.wall.obj_y.location.y + unit.inch(2)
         self.obstacle.obj_z.location.z = self.obstacle_height
         self.obstacle.obj_bp.location.y = - unit.inch(1)
+        self.obstacle.draw_as_hidden_line()
         
         Width = self.obstacle.get_var('dim_x','Width')
         
@@ -1244,7 +1245,7 @@ class OPERATOR_Build_Room(Operator):
         self.door.obj_bp.mv.type_group = 'PRODUCT'
         self.door.obj_bp.mv.product_type = "Entry Door"
         self.door.obj_bp.parent = self.entry_wall.obj_bp
-        
+        self.door.draw_as_hidden_line()
         objs = utils.get_child_objects(self.door.obj_bp)
         for obj_bool in objs:
             obj_bool.draw_type = 'TEXTURED'

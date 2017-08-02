@@ -1944,6 +1944,82 @@ class OPS_create_single_dimension(Operator):
         context.window_manager.mv.use_opengl_dimensions = True
         return {'FINISHED'}
 
+class OPS_add_annotation(bpy.types.Operator):
+    bl_idname = "fd_general.add_annotation"
+    bl_label = "Add Annotation"
+
+    annotation_text = bpy.props.StringProperty(name="Annotation Text",
+                                          description="Enter in the name of the annoation")    
+
+    header_text = "Place Annotation"
+    
+    annotation = None
+    drawing_plane = None
+    
+    def place_annotation(self,context,event):
+        selected_point, selected_obj = utils.get_selection_point(context,event,floor=self.drawing_plane)
+        self.annotation.anchor.location = selected_point
+        if event.type == 'LEFTMOUSE':
+            return self.finish_drop(context, event)
+        
+        return {'RUNNING_MODAL'}
+    
+    def create_drawing_plane(self,context):
+        bpy.ops.mesh.primitive_plane_add()
+        self.drawing_plane = context.active_object
+        self.drawing_plane.location = (0,0,0)
+        self.drawing_plane.draw_type = 'WIRE'
+        self.drawing_plane.dimensions = (100,100,1)   
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self, width=utils.get_prop_dialog_width(550))
+
+    def draw(self,context):
+        layout = self.layout
+        layout.prop(self,'annotation_text')
+
+    def execute(self, context):
+        bpy.ops.object.select_all(action='DESELECT')
+        self.create_drawing_plane(context)
+        
+        self.annotation = fd_types.Dimension()
+        self.annotation.end_x(value = unit.inch(0))
+        self.annotation.anchor.select = True
+        self.annotation.set_label(self.annotation_text)
+        
+        context.scene.objects.active = self.annotation.anchor
+        bpy.ops.fd_general.toggle_dimension_handles(turn_on=True)
+        context.window_manager.mv.use_opengl_dimensions = True
+        
+        context.window_manager.modal_handler_add(self)
+        return {'RUNNING_MODAL'}
+        
+    def modal(self, context, event):
+        context.area.tag_redraw()
+        context.area.header_text_set(text=self.header_text)
+        
+        if event.type in {'MIDDLEMOUSE', 'WHEELUPMOUSE', 'WHEELDOWNMOUSE'}:
+            return {'PASS_THROUGH'}
+        
+        if event.type in {'ESC'}:
+            self.cancel_drop(context,event)
+            return {'FINISHED'}
+        
+        return self.place_annotation(context,event)    
+        
+    def cancel_drop(self,context,event):
+        utils.delete_object_and_children(self.annotation.anchor)
+        utils.delete_object_and_children(self.drawing_plane)
+        bpy.context.window.cursor_set('DEFAULT')
+        return {'CANCELLED'}
+        
+    def finish_drop(self,context,event):
+        utils.delete_object_and_children(self.drawing_plane)
+        bpy.context.window.cursor_set('DEFAULT')
+        context.area.header_text_set()
+        return {'FINISHED'}
+
 class OPS_Add_Dimension(Operator):
     bl_idname = "fd_general.add_dimension"
     bl_label = "Add Dimension" 
@@ -2867,6 +2943,7 @@ classes = [
            OPS_check_for_updates,
            OPS_dimension_interface,
            OPS_toggle_dimension_handles,
+           OPS_add_annotation,
            OPS_create_single_dimension,
            OPS_Add_Dimension,
            OPS_select_all_products,
