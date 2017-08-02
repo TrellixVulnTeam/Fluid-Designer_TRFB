@@ -314,8 +314,40 @@ class Bi_Fold_Doors(fd_types.Assembly):
     
     double_door = False
     
-    def add_hardware(self, panel_assembly, placement='left'):
+    def add_single_door_hardware(self, panel_assembly, placement='left'):
+        assert placement in ('left', 'right'), "Invalid arg - '{}'".format(placement)
         
+        Width = panel_assembly.get_var("dim_x", "Width")
+        Height = panel_assembly.get_var("dim_z", "Height")
+        Hinge_Offset = self.get_var("Hinge Placement", 'Hinge_Offset')
+        RS = self.get_var('Reverse Swing', 'RS')
+        DS = self.get_var('Door Swing', 'DS')
+        
+        hinge_bottom = self.add_object(HINGE)
+        hinge_bottom.obj.parent = panel_assembly.obj_bp
+        hinge_bottom.set_name("Bottom Hinge")
+        hinge_bottom.z_loc("Hinge_Offset", [Hinge_Offset])
+        hinge_bottom.y_rot('IF(OR(AND(DS==0,RS==False),AND(DS==1,RS)),radians(-90),radians(90))', [RS, DS])
+        hinge_bottom.z_rot('IF(OR(AND(DS==0,RS==False),AND(DS==1,RS)),radians(0),radians(180))', [RS, DS])
+        hinge_bottom.assign_material("Hinge Color", MATERIAL_FILE, "Chrome")
+        
+        hinge_top = self.add_object(HINGE)
+        hinge_top.obj.parent = panel_assembly.obj_bp
+        hinge_top.set_name("Top Hinge")
+        hinge_top.z_loc("Height-Hinge_Offset", [Hinge_Offset, Height])
+        hinge_top.y_rot('IF(OR(AND(DS==0,RS==False),AND(DS==1,RS)),radians(-90),radians(90))', [RS, DS])
+        hinge_top.z_rot('IF(OR(AND(DS==0,RS==False),AND(DS==1,RS)),radians(0),radians(180))', [RS, DS])
+        hinge_top.assign_material("Hinge Color", MATERIAL_FILE, "Chrome")
+        
+        if placement == 'right':
+            hinge_bottom.x_loc("Width", [Width])
+            hinge_bottom.y_rot('IF(OR(AND(DS==0,RS==False),AND(DS==1,RS)),radians(90),radians(-90))', [RS, DS])
+            hinge_bottom.z_rot('IF(OR(AND(DS==0,RS==False),AND(DS==1,RS)),radians(0),radians(180))', [RS, DS])
+            hinge_top.x_loc("Width", [Width])
+            hinge_top.y_rot('IF(OR(AND(DS==0,RS==False),AND(DS==1,RS)),radians(90),radians(-90))', [RS, DS])
+            hinge_top.z_rot('IF(OR(AND(DS==0,RS==False),AND(DS==1,RS)),radians(0),radians(180))', [RS, DS])
+    
+    def add_double_door_hardware(self, panel_assembly, placement='left'):
         assert placement in ('left', 'right'), "Invalid arg - '{}'".format(placement)
         
         Width = panel_assembly.get_var("dim_x", "Width")
@@ -340,7 +372,7 @@ class Bi_Fold_Doors(fd_types.Assembly):
             hinge_bottom.x_loc("Width", [Width])
             hinge_bottom.y_rot(value=90)
             hinge_top.x_loc("Width", [Width])
-            hinge_top.y_rot(value=90)     
+            hinge_top.y_rot(value=90)            
     
     def set_materials(self, assembly):
         assembly.assign_material("Door", MATERIAL_FILE, "White")
@@ -368,11 +400,11 @@ class Bi_Fold_Doors(fd_types.Assembly):
         Width = self.get_var('dim_x','Width')
         Height = self.get_var('dim_z','Height')
         Depth = self.get_var('dim_y','Depth')
-        Open_Door = self.get_var('Open Door')
+        Open = self.get_var('Open Door', 'Open')
         Frame_Width = self.get_var('Frame Width')
         Panel_Depth = self.get_var('Panel Depth')
         Door_Gap = self.get_var('Door Gap')
-        Reverse_Swing = self.get_var('Reverse Swing')
+        RS = self.get_var('Reverse Swing', 'RS')
         
         door_frame = self.add_assembly(os.path.join(DOOR_FRAME_PATH,self.door_frame))
         door_frame.set_name("Door Frame")
@@ -383,30 +415,31 @@ class Bi_Fold_Doors(fd_types.Assembly):
         
         if not self.double_door:
             self.add_prompt(name="Door Swing", prompt_type='COMBOBOX', items=["Left Swing", "Right Swing"], value=0, tab_index=0)
-            Swing = self.get_var('Door Swing')
+            DS = self.get_var('Door Swing', 'DS')
             
             door_panel_left_1 = self.add_assembly(os.path.join(DOOR_PANEL, self.door_panel))
             door_panel_left_1.set_name("Door Panel Left 1")
-            door_panel_left_1.x_loc('IF(Reverse_Swing,Width-Frame_Width-Panel_Depth*Open_Door,Frame_Width+Panel_Depth*Open_Door)',
-                                    [Frame_Width, Open_Door, Panel_Depth, Reverse_Swing, Width])
-            door_panel_left_1.y_loc('Depth*0.5+IF(Reverse_Swing,-Panel_Depth*0.5,Panel_Depth*0.5)', [Depth, Panel_Depth, Reverse_Swing])
+            door_panel_left_1.x_loc('IF(DS==0,Frame_Width+Panel_Depth*Open,Width-Frame_Width-Panel_Depth*Open)', [Frame_Width, Open, Panel_Depth, DS, Width])
+            door_panel_left_1.y_loc('Depth*0.5+IF(RS,-Panel_Depth,Panel_Depth)*0.5', [Depth, Panel_Depth, RS])
             door_panel_left_1.x_dim('(Width-Frame_Width*2-Door_Gap*2)*0.5', [Width, Frame_Width, Door_Gap])
+            door_panel_left_1.y_dim('IF(OR(AND(DS==0,RS==False),AND(DS==1,RS)),-Panel_Depth, Panel_Depth)', [RS, Panel_Depth, DS])
             door_panel_left_1.z_dim('Height-INCH(3.25)', [Height])
-            door_panel_left_1.z_rot('IF(Reverse_Swing,radians(180),0)+radians(-90)*Open_Door', [Open_Door, Reverse_Swing])
+            door_panel_left_1.z_rot('IF(DS==0,0,radians(180))+radians(-90)*IF(OR(AND(RS,DS==0),AND(RS==False,DS==1)),-Open,Open)', [Open, RS, DS])
             door_panel_left_1.prompt('Hardware Config', value='Right')
             self.set_materials(door_panel_left_1)
-            self.add_hardware(door_panel_left_1, placement='right')
+            self.add_single_door_hardware(door_panel_left_1, placement='right')
             
             door_panel_left_2 = self.add_assembly(os.path.join(DOOR_PANEL, self.door_panel))
             door_panel_left_2.set_name("Door Panel Left 2")
             door_panel_left_2.obj_bp.parent = door_panel_left_1.obj_bp
             door_panel_left_2.x_loc('(Width-Frame_Width*2)*0.5+Door_Gap*0.5', [Width, Frame_Width, Door_Gap])
             door_panel_left_2.x_dim('(Width-Frame_Width*2-Door_Gap*2)*0.5', [Width, Frame_Width, Door_Gap])
+            door_panel_left_2.y_dim('IF(OR(AND(DS==0,RS==False),AND(DS==1,RS)),-Panel_Depth, Panel_Depth)', [RS, Panel_Depth, DS])
             door_panel_left_2.z_dim('Height-INCH(3.25)', [Height])
-            door_panel_left_2.z_rot('radians(180)-(radians(180)-(radians(90)*Open_Door)*2)', [Open_Door])
+            door_panel_left_2.z_rot('radians(180)-(radians(180)-(radians(90)*IF(OR(AND(RS,DS==0),AND(RS==False,DS==1)),-Open,Open))*2)', [Open, RS, DS])
             door_panel_left_2.prompt('Hardware Config', value='Left')
             self.set_materials(door_panel_left_2)
-            self.add_hardware(door_panel_left_2)
+            self.add_single_door_hardware(door_panel_left_2)
             
         else:
             mirror_obj = self.add_empty()
@@ -415,15 +448,14 @@ class Bi_Fold_Doors(fd_types.Assembly):
                         
             door_panel_left_1 = self.add_assembly(os.path.join(DOOR_PANEL, self.door_panel))
             door_panel_left_1.set_name("Door Panel Left 1")
-            door_panel_left_1.x_loc('IF(Reverse_Swing,Width-Frame_Width-Panel_Depth*Open_Door,Frame_Width+Panel_Depth*Open_Door)',
-                                    [Frame_Width, Open_Door, Panel_Depth, Reverse_Swing, Width])
-            door_panel_left_1.y_loc('Depth*0.5+IF(Reverse_Swing,-Panel_Depth*0.5,Panel_Depth*0.5)', [Depth, Panel_Depth, Reverse_Swing])
+            door_panel_left_1.x_loc('IF(RS,Width-Frame_Width-Panel_Depth*Open,Frame_Width+Panel_Depth*Open)', [Frame_Width, Open, Panel_Depth, RS, Width])
+            door_panel_left_1.y_loc('Depth*0.5+IF(RS,-Panel_Depth*0.5,Panel_Depth*0.5)', [Depth, Panel_Depth, RS])
             door_panel_left_1.x_dim('(Width-Frame_Width*2-Door_Gap*2)*0.25', [Width, Frame_Width, Door_Gap])
             door_panel_left_1.z_dim('Height-INCH(3.25)', [Height])
-            door_panel_left_1.z_rot('IF(Reverse_Swing,radians(180),0)+radians(-90)*Open_Door', [Open_Door, Reverse_Swing])
+            door_panel_left_1.z_rot('IF(RS,radians(180),0)+radians(-90)*Open', [Open, RS])
             door_panel_left_1.prompt('Hardware Config', value='Right')
             self.set_materials(door_panel_left_1)
-            self.add_hardware(door_panel_left_1, placement='right')
+            self.add_double_door_hardware(door_panel_left_1, placement='right')
             self.set_mirror_modifier(door_panel_left_1, "Mirror X", mirror_obj.obj)
             
             door_panel_left_2 = self.add_assembly(os.path.join(DOOR_PANEL, self.door_panel))
@@ -432,10 +464,10 @@ class Bi_Fold_Doors(fd_types.Assembly):
             door_panel_left_2.x_loc('(Width-Frame_Width*2)*0.25+Door_Gap*0.5', [Width, Frame_Width, Door_Gap])
             door_panel_left_2.x_dim('(Width-Frame_Width*2-Door_Gap*2)*0.25', [Width, Frame_Width, Door_Gap])
             door_panel_left_2.z_dim('Height-INCH(3.25)', [Height])
-            door_panel_left_2.z_rot('radians(180)-(radians(180)-(radians(90)*Open_Door)*2)', [Open_Door])
+            door_panel_left_2.z_rot('radians(180)-(radians(180)-(radians(90)*Open)*2)', [Open])
             door_panel_left_2.prompt('Hardware Config', value='Left')
             self.set_materials(door_panel_left_2)
-            self.add_hardware(door_panel_left_2)
+            self.add_double_door_hardware(door_panel_left_2)
             self.set_mirror_modifier(door_panel_left_2, "Mirror X", mirror_obj.obj)
                        
         self.update()
