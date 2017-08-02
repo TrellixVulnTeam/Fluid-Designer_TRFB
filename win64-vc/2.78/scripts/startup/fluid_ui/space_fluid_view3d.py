@@ -1634,6 +1634,7 @@ class VIEW3D_MT_dimensiontools(Menu):
         layout.operator("fd_general.toggle_dimension_handles",text="Hide Dimension Handles",icon='OUTLINER_OB_EMPTY').turn_on = False
         layout.operator("fd_general.add_dimension", text="Add Dimension to Selected Assembly", icon='CURVE_NCURVE')
         layout.operator("fd_general.create_single_dimension", text="Add Single Dimension", icon='ZOOMIN')
+        layout.operator("fd_general.add_annotation", text="Add Annotation", icon='ZOOMIN')
         layout.separator()
         layout.operator("fd_general.dimension_interface", text="Dimension Options",icon='INFO')
         
