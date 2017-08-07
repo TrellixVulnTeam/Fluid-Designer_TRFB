@@ -700,64 +700,68 @@ class Assembly():
                             return right_wall
 
     def get_collision_location(self,direction='LEFT'):
+        wall = None
         if self.obj_bp.parent:
             wall = Wall(self.obj_bp.parent)
-        list_obj_bp = wall.get_wall_groups()
-        list_obj_left_bp = []
-        list_obj_right_bp = []
-        for index, obj_bp in enumerate(list_obj_bp):
-            if obj_bp.name == self.obj_bp.name:
-                list_obj_left_bp = list_obj_bp[:index]
-                list_obj_right_bp = list_obj_bp[index + 1:]
-                break
-        if direction == 'LEFT':
-            list_obj_left_bp.reverse()
-            for obj_bp in list_obj_left_bp:
-                prev_group = Assembly(obj_bp)
-                if self.has_height_collision(prev_group):
-                    return obj_bp.location.x + prev_group.calc_width()
+        if wall:
+            list_obj_bp = wall.get_wall_groups()
+            list_obj_left_bp = []
+            list_obj_right_bp = []
+            for index, obj_bp in enumerate(list_obj_bp):
+                if obj_bp.name == self.obj_bp.name:
+                    list_obj_left_bp = list_obj_bp[:index]
+                    list_obj_right_bp = list_obj_bp[index + 1:]
+                    break
+            if direction == 'LEFT':
+                list_obj_left_bp.reverse()
+                for obj_bp in list_obj_left_bp:
+                    prev_group = Assembly(obj_bp)
+                    if self.has_height_collision(prev_group):
+                        return obj_bp.location.x + prev_group.calc_width()
+                
+                # CHECK NEXT WALL
+                left_wall =  wall.get_connected_wall('LEFT')
+                if left_wall:
+                    rotation_difference = math.degrees(wall.obj_bp.rotation_euler.z) - math.degrees(left_wall.obj_bp.rotation_euler.z)
+                    if rotation_difference < 0 or rotation_difference > 180:
+                        list_obj_bp = left_wall.get_wall_groups()
+                        for obj in list_obj_bp:
+                            prev_group = Assembly(obj)
+                            product_x = obj.location.x
+                            product_width = prev_group.calc_width()
+                            x_dist = left_wall.obj_x.location.x  - (product_x + product_width)
+                            product_depth = math.fabs(self.obj_y.location.y)
+                            if x_dist <= product_depth:
+                                if self.has_height_collision(prev_group):
+                                    return prev_group.calc_depth()
+                return 0
             
-            # CHECK NEXT WALL
-            left_wall =  wall.get_connected_wall('LEFT')
-            if left_wall:
-                rotation_difference = math.degrees(wall.obj_bp.rotation_euler.z) - math.degrees(left_wall.obj_bp.rotation_euler.z)
-                if rotation_difference < 0 or rotation_difference > 180:
-                    list_obj_bp = left_wall.get_wall_groups()
-                    for obj in list_obj_bp:
-                        prev_group = Assembly(obj)
-                        product_x = obj.location.x
-                        product_width = prev_group.calc_width()
-                        x_dist = left_wall.obj_x.location.x  - (product_x + product_width)
-                        product_depth = math.fabs(self.obj_y.location.y)
-                        if x_dist <= product_depth:
-                            if self.has_height_collision(prev_group):
-                                return prev_group.calc_depth()
-            return 0
+            if direction == 'RIGHT':
+                for obj_bp in list_obj_right_bp:
+                    next_group = Assembly(obj_bp)
+                    if self.has_height_collision(next_group):
+                        return obj_bp.location.x - next_group.calc_x()
         
-        if direction == 'RIGHT':
-            for obj_bp in list_obj_right_bp:
-                next_group = Assembly(obj_bp)
-                if self.has_height_collision(next_group):
-                    return obj_bp.location.x - next_group.calc_x()
-    
-            # CHECK NEXT WALL
-            right_wall =  wall.get_connected_wall('RIGHT')
-            if right_wall:
-                rotation_difference = math.degrees(wall.obj_bp.rotation_euler.z) - math.degrees(right_wall.obj_bp.rotation_euler.z)
-                if rotation_difference > 0 or rotation_difference < -180:
-                    list_obj_bp = right_wall.get_wall_groups()
-                    for obj in list_obj_bp:
-                        next_group = Assembly(obj)
-                        product_x = obj.location.x
-                        product_width = next_group.calc_width()
-                        product_depth = math.fabs(self.obj_y.location.y)
-                        if product_x <= product_depth:
-                            if self.has_height_collision(next_group):
-                                wall_length = wall.obj_x.location.x
-                                product_depth = next_group.calc_depth()
-                                return wall_length - product_depth
-    
-            return wall.obj_x.location.x
+                # CHECK NEXT WALL
+                right_wall =  wall.get_connected_wall('RIGHT')
+                if right_wall:
+                    rotation_difference = math.degrees(wall.obj_bp.rotation_euler.z) - math.degrees(right_wall.obj_bp.rotation_euler.z)
+                    if rotation_difference > 0 or rotation_difference < -180:
+                        list_obj_bp = right_wall.get_wall_groups()
+                        for obj in list_obj_bp:
+                            next_group = Assembly(obj)
+                            product_x = obj.location.x
+                            product_width = next_group.calc_width()
+                            product_depth = math.fabs(self.obj_y.location.y)
+                            if product_x <= product_depth:
+                                if self.has_height_collision(next_group):
+                                    wall_length = wall.obj_x.location.x
+                                    product_depth = next_group.calc_depth()
+                                    return wall_length - product_depth
+        
+                return wall.obj_x.location.x
+        else:
+            return 0
 
     def set_name(self,name):
         self.obj_bp.mv.name = name
