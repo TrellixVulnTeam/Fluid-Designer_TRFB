@@ -38,6 +38,7 @@ class Window(fd_types.Assembly):
     
     def draw(self):
         self.create_assembly()
+        self.obj_bp.mv.dont_export = True
         
         self.add_tab(name='Main Options',tab_type='VISIBLE')
         self.add_prompt(name="Array X",prompt_type='QUANTITY',value=1,tab_index=0)

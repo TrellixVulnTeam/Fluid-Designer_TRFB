@@ -1240,7 +1240,7 @@ class OPERATOR_Build_Room(Operator):
                                           self.props.entry_door_fn[self.props.entry_door_type]))
         
         self.door = fd_types.Assembly(bp)
-        
+        self.door.obj_bp.mv.dont_export = True
         self.door.obj_bp.mv.mirror_y = False
         self.door.obj_bp.mv.type_group = 'PRODUCT'
         self.door.obj_bp.mv.product_type = "Entry Door"

@@ -71,6 +71,7 @@ class Entry_Door(fd_types.Assembly):
     
     def draw(self):
         self.create_assembly()
+        self.obj_bp.mv.dont_export = True
         
         if self.door_panel != "":
             self.add_tab(name='Main Options', tab_type='VISIBLE')
@@ -173,7 +174,8 @@ class Sliding_Doors(fd_types.Assembly):
     
     def draw(self):
         self.create_assembly()
-            
+        self.obj_bp.mv.dont_export = True
+        
         self.add_tab(name='Main Options',tab_type='VISIBLE')
         self.add_tab(name='Formulas', tab_type='HIDDEN')
         
@@ -244,6 +246,7 @@ class Pocket_Doors(fd_types.Assembly):
     
     def draw(self):
         self.create_assembly()
+        self.obj_bp.mv.dont_export = True
             
         self.add_tab(name='Main Options', tab_type='VISIBLE')
         self.add_tab(name='Formulas', tab_type='HIDDEN')
@@ -386,6 +389,7 @@ class Bi_Fold_Doors(fd_types.Assembly):
     
     def draw(self):
         self.create_assembly()
+        self.obj_bp.mv.dont_export = True
             
         self.add_tab(name='Main Options', tab_type='VISIBLE')
         self.add_tab(name='Formulas', tab_type='HIDDEN')

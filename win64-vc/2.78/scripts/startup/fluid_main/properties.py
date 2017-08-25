@@ -1666,6 +1666,10 @@ class fd_object(PropertyGroup):
                                     description="Use this object to hook to deform a mesh. Only for Empties",
                                     default=False)
     
+    dont_export = BoolProperty(name="Dont Export",
+                               description="If this is true then the assembly will not be exported for manufacturing",
+                               default=False)    
+    
     use_as_bool_obj = BoolProperty(name="Use As Boolean Object",
                                    description="Use this object cut a hole in the selected mesh",
                                    default=False)

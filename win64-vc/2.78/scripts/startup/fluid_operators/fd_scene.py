@@ -1530,13 +1530,14 @@ class OPS_export_mvfd(Operator):
         for scene in bpy.data.scenes:
             if not scene.mv.plan_view_scene and not scene.mv.elevation_scene:
                 for obj in scene.objects:
-                    if obj.mv.type == 'BPWALL':
-                        self.walls.append(obj)
-                    if obj.mv.type == 'BPASSEMBLY':
-                        if obj.mv.type_group == 'PRODUCT':
-                            self.products.append(obj)
-                    if obj.cabinetlib.type_mesh == 'BUYOUT' and obj.parent is None:
-                        self.buyout_products.append(obj)
+                    if not obj.mv.dont_export:
+                        if obj.mv.type == 'BPWALL':
+                            self.walls.append(obj)
+                        if obj.mv.type == 'BPASSEMBLY':
+                            if obj.mv.type_group == 'PRODUCT':
+                                self.products.append(obj)
+                        if obj.cabinetlib.type_mesh == 'BUYOUT' and obj.parent is None:
+                            self.buyout_products.append(obj)
     
     def write_properties(self,project_node):
         elm_properties = self.xml.add_element(project_node,'Properties')
