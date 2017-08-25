@@ -66,3 +66,20 @@ win64-vc/2.76/scripts/startup/main_fd/library_builder_nodes.py
 #Temp folder
 *tmp/
 win64-vc/2.78/scripts/startup/fluid_main/nds.py
+
+# WIP addons ---------------------------------------------------
+*fd_2dviews_new/
+*fd_lib_mgr/
+
+# WIP addon libs
+*wx/
+*wxPython-4.0.0b1.dist-info
+win64-vc/2.78/Python/Scripts/helpviewer.exe
+win64-vc/2.78/Python/Scripts/img2png.exe
+win64-vc/2.78/Python/Scripts/img2xpm.exe
+win64-vc/2.78/Python/Scripts/pyslices.exe
+win64-vc/2.78/Python/Scripts/pyshell.exe
+win64-vc/2.78/Python/Scripts/img2py.exe
+win64-vc/2.78/Python/Scripts/pywxrc.exe
+win64-vc/2.78/Python/Scripts/pyslicesshell.exe
+win64-vc/2.78/Python/Scripts/pycrust.exe
