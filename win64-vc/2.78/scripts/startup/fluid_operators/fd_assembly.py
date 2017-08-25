@@ -1077,7 +1077,7 @@ class OPS_copy_assembly(Operator):
             assembly = fd_types.Assembly(obj_bp)
             if assembly.obj_bp.mv.drop_id != "":
                 self.clear_drivers(assembly)
-                eval('bpy.ops.' + self.product.obj_bp.mv.drop_id + '("INVOKE_DEFAULT",object_name=assembly.obj_bp.name)')
+                eval('bpy.ops.' + assembly.obj_bp.mv.drop_id + '("INVOKE_DEFAULT",object_name=assembly.obj_bp.name)')
                 return {'FINISHED'}
             if assembly.obj_bp.mv.type_group == 'PRODUCT':
                 self.clear_drivers(assembly)
