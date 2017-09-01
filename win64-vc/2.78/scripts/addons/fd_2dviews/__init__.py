@@ -559,7 +559,7 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
                     dim = fd_types.Dimension()
                     dim.parent(wall.obj_bp)
                     dim.start_y(value = unit.inch(4) + wall.obj_y.location.y)
-                    dim.start_z(value = wall.obj_z.location.z + unit.inch(6))
+                    dim.start_z(value = wall.obj_z.location.z + unit.inch(8))
                     dim.end_x(value = wall.obj_x.location.x)  
                     
                     self.ignore_obj_list.append(dim.anchor)
@@ -592,7 +592,7 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
                             assembly_mesh.location = assembly.obj_bp.location
                             assembly_mesh.rotation_euler = assembly.obj_bp.rotation_euler
                             assembly_mesh.mv.type = 'CAGE'
-                            distance = unit.inch(14) if assembly.obj_bp.location.z > 1 else unit.inch(8)
+                            distance = unit.inch(14)
                             distance += wall.obj_y.location.y
                             
                             dim = fd_types.Dimension()
