@@ -71,6 +71,7 @@ class Entry_Door(fd_types.Assembly):
     
     def draw(self):
         self.create_assembly()
+        self.obj_bp["ISENTRYDOOR"] = True
         self.obj_bp.mv.dont_export = True
         
         if self.door_panel != "":
