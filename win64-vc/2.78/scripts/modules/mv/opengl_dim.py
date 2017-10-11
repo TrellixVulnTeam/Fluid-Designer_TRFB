@@ -206,18 +206,20 @@ def draw_text(x_pos, y_pos, display_text, rgb, fsize, i_props, anchor_co, endpoi
     #- height of one line
     mwidth, mheight = blf.dimensions(font_id, "Tp")  # uses high/low letters
 
+    origional_x = x_pos
+    origional_y = y_pos
+
     # split lines
     mylines = display_text.split("|")
-    idx = len(mylines) - 1
     maxwidth = 0
     maxheight = len(mylines) * mheight
 
     #---------- Draw all lines-+
-    for line in mylines:
+    for index, line in enumerate(mylines):
         text_width, text_height = blf.dimensions(font_id, line)
-        
-        y_pos += mheight * idx
-        x_pos -= text_width * 0.5
+
+        y_pos -= mheight * index
+        x_pos -= text_width * 0.5     
         
         if not check_overlap_2d_point(anchor_co, endpoint_co):
             #if vertical line text placement
@@ -234,19 +236,26 @@ def draw_text(x_pos, y_pos, display_text, rgb, fsize, i_props, anchor_co, endpoi
                 elif i_props.h_line_text_placement == 'BOTTOM':
                     y_pos -= text_height + i_props.line_to_text_pad
         
-        blf.position(font_id,
-                     x_pos + i_props.gl_text_x,
-                     y_pos + i_props.gl_text_y,
-                     0)
+            blf.position(font_id,
+                         x_pos + i_props.gl_text_x,
+                         y_pos + i_props.gl_text_y,
+                         0)
+        else:
+            blf.position(font_id,
+                         x_pos,
+                         y_pos,
+                         0)
         
         bgl.glColor4f(rgb[0], rgb[1], rgb[2], rgb[3])
         blf.draw(font_id, " " + line)
         
-        # sub line
-        idx -= 1
         # saves max width
         if maxwidth < text_width:
             maxwidth = text_width
+            
+        #Reset original position for multiple lines
+        x_pos = origional_x
+        y_pos = origional_y
 
     return maxwidth, maxheight
 
