@@ -503,6 +503,12 @@ class OPERATOR_Add_Obstacle(Operator):
                                     unit='LENGTH',
                                     precision=4)
 
+    obstacle_depth = FloatProperty(name="Obstacle Depth",
+                                    description="Enter the Depth of the Obstacle",
+                                    default=unit.inch(1),
+                                    unit='LENGTH',
+                                    precision=4)
+
     x_location = FloatProperty(name="X Location",
                                description="Enter the X Location of the Obstacle",
                                default=unit.inch(0),
@@ -541,6 +547,8 @@ class OPERATOR_Add_Obstacle(Operator):
             
             self.obstacle.obj_z.location.z = self.obstacle_height
             self.obstacle.obj_x.location.x = self.obstacle_width
+            self.obstacle.obj_y.location.y = -self.obstacle_depth
+            self.obstacle.obj_bp.location.y = 0
             
             if self.base_point == 'TOP_LEFT':
                 self.obstacle.obj_bp.location.x = self.x_location
@@ -642,6 +650,7 @@ class OPERATOR_Add_Obstacle(Operator):
                 self.obstacle = fd_types.Assembly(obj_bp)
                 self.obstacle_height = self.obstacle.obj_z.location.z
                 self.obstacle_width = self.obstacle.obj_x.location.x
+                self.obstacle_depth = math.fabs(self.obstacle.obj_y.location.y)
                 
                 if self.base_point == 'TOP_LEFT':
                     self.x_location = self.obstacle.obj_bp.location.x
@@ -671,7 +680,7 @@ class OPERATOR_Add_Obstacle(Operator):
         self.obstacle.obj_x.location.x = self.obstacle_width
         self.obstacle.obj_y.location.y = self.wall.obj_y.location.y + unit.inch(2)
         self.obstacle.obj_z.location.z = self.obstacle_height
-        self.obstacle.obj_bp.location.y = - unit.inch(1)
+        self.obstacle.obj_bp.location.y = 0
         self.obstacle.draw_as_hidden_line()
         
         Width = self.obstacle.get_var('dim_x','Width')
@@ -747,6 +756,10 @@ class OPERATOR_Add_Obstacle(Operator):
         row.prop(self,"obstacle_height",text="")
         
         row = col.row()
+        row.label("Obstacle Depth:")
+        row.prop(self,"obstacle_depth",text="")        
+        
+        row = col.row()
         row.label("Obstacle X Location:")
         row.prop(self,"x_location",text="")
         
@@ -787,6 +800,12 @@ class OPERATOR_Add_Floor_Obstacle(Operator):
                                    unit='LENGTH',
                                    precision=4)
 
+    obstacle_height = FloatProperty(name="Obstacle Height",
+                                   description="Enter the Height of the Obstacle",
+                                   default=unit.inch(1),
+                                   unit='LENGTH',
+                                   precision=4)
+
     x_location = FloatProperty(name="X Location",
                                description="Enter the X Location of the Obstacle",
                                default=unit.inch(0),
@@ -809,10 +828,13 @@ class OPERATOR_Add_Floor_Obstacle(Operator):
     def check(self, context):
         if self.obstacle and self.plane:
             
-            self.obstacle.obj_bp.location.z = unit.inch(-1)
+            self.obstacle.obj_bp.location.z = 0
             self.obstacle.obj_y.location.y = self.obstacle_depth
             self.obstacle.obj_x.location.x = self.obstacle_width
-            self.obstacle.obj_z.location.z = unit.inch(2)
+            if self.plane.fd_roombuilder.is_ceiling:
+                self.obstacle.obj_z.location.z = -self.obstacle_height
+            else:
+                self.obstacle.obj_z.location.z = self.obstacle_height            
             
             if self.base_point == 'FRONT_LEFT':
                 self.obstacle.obj_bp.location.x = self.x_location
@@ -871,23 +893,25 @@ class OPERATOR_Add_Floor_Obstacle(Operator):
                  
                 obj_bp = context.scene.objects[self.obstacle_bp_name]
                 self.obstacle = fd_types.Assembly(obj_bp)
-                self.obstacle.obj_bp.location.z = unit.inch(-1)
-                self.obstacle.obj_y.location.y = self.obstacle_depth
-                self.obstacle.obj_x.location.x = self.obstacle_width
-                self.obstacle.obj_z.location.z = unit.inch(2)
+                if self.plane.fd_roombuilder.is_ceiling:
+                    self.obstacle_height = -self.obstacle.obj_z.location.z
+                else:
+                    self.obstacle_height = self.obstacle.obj_z.location.z
+                self.obstacle_width = self.obstacle.obj_x.location.x
+                self.obstacle_depth = self.obstacle.obj_y.location.y
                 
                 if self.base_point == 'FRONT_LEFT':
-                    self.obstacle.obj_bp.location.x = self.x_location
-                    self.obstacle.obj_bp.location.y = self.y_location
+                    self.x_location = self.obstacle.obj_bp.location.x
+                    self.y_location = self.obstacle.obj_bp.location.y
                 if self.base_point == 'FRONT_RIGHT':
-                    self.obstacle.obj_bp.location.x = self.plane.dimensions.x - self.x_location - self.obstacle_width
-                    self.obstacle.obj_bp.location.y = self.y_location
+                    self.x_location = self.plane.dimensions.x - self.obstacle.obj_bp.location.x - self.obstacle_width
+                    self.y_location = self.obstacle.obj_bp.location.y
                 if self.base_point == 'BACK_LEFT':
-                    self.obstacle.obj_bp.location.x = self.x_location
-                    self.obstacle.obj_bp.location.y = self.plane.dimensions.y - self.y_location - self.obstacle_depth
+                    self.x_location = self.x_location
+                    self.y_location = self.plane.dimensions.y - self.obstacle.obj_bp.location.y - self.obstacle_depth
                 if self.base_point == 'BACK_RIGHT':
-                    self.obstacle.obj_bp.location.x = self.plane.dimensions.x - self.x_location - self.obstacle_width
-                    self.obstacle.obj_bp.location.y = self.plane.dimensions.y - self.y_location - self.obstacle_depth                    
+                    self.x_location = self.plane.dimensions.x - self.obstacle.obj_bp.location.x - self.obstacle_width
+                    self.y_location = self.plane.dimensions.y - self.obstacle.obj_bp.location.y - self.obstacle_depth
                     
                 utils.delete_object_and_children(obj_bp)
             
@@ -904,7 +928,10 @@ class OPERATOR_Add_Floor_Obstacle(Operator):
         self.obstacle.obj_bp.parent = self.plane
         self.obstacle.obj_x.location.x = self.obstacle_width
         self.obstacle.obj_y.location.y = self.obstacle_depth
-        self.obstacle.obj_z.location.z = - unit.inch(1)
+        if self.plane.fd_roombuilder.is_ceiling:
+            self.obstacle.obj_z.location.z = -self.obstacle_height
+        else:
+            self.obstacle.obj_z.location.z = self.obstacle_height
         self.obstacle.obj_bp.location.y = self.y_location
         
         Width = self.obstacle.get_var('dim_x','Width')
@@ -974,6 +1001,10 @@ class OPERATOR_Add_Floor_Obstacle(Operator):
         row = col.row()
         row.label("Obstacle Width:")
         row.prop(self,"obstacle_width",text="")
+        
+        row = col.row()
+        row.label("Obstacle Height:")
+        row.prop(self,"obstacle_height",text="")        
         
         row = col.row()
         row.label("Obstacle Depth:")
