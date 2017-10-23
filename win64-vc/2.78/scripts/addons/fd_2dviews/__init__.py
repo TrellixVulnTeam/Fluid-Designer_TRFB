@@ -544,6 +544,12 @@ class OPERATOR_genereate_2d_views(bpy.types.Operator):
         grp = bpy.data.groups.new("Plan View")
         
         for obj in self.main_scene.objects:
+            if obj.mv.type == 'OBSTACLE':
+                pv_scene.objects.link(obj)
+                for child in obj.children:
+                    child.hide_render = False
+                    pv_scene.objects.link(child)
+                                        
             if obj.mv.type == 'BPWALL':
                 pv_scene.objects.link(obj)
                 #Only link all of the wall meshes
