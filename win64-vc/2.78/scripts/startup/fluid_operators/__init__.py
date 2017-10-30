@@ -29,6 +29,7 @@ from . import fd_world
 from . import fd_text_editor
 from . import fd_api_doc
 from . import keyconfigs
+from . import fd_export
 
 def register():
     fd_assembly.register()
@@ -43,6 +44,7 @@ def register():
     fd_text_editor.register()
     fd_api_doc.register()
     keyconfigs.register()
+    fd_export.register()
     
 def unregister():    
     fd_assembly.unregister()
@@ -55,3 +57,5 @@ def unregister():
     fd_world.unregister()
     fd_text_editor.unregister()
     fd_api_doc.unregister()
+    fd_export.unregister()
+    

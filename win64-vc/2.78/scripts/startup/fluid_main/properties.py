@@ -1670,6 +1670,14 @@ class fd_object(PropertyGroup):
                                description="If this is true then the assembly will not be exported for manufacturing",
                                default=False)    
     
+    export_product_subassemblies = BoolProperty(name="Export Product Subassemblies",
+                                         description="If this is true then all of the inserts marked as a subassembly will be export to microvellum as a unique subassembly",
+                                         default=False)
+    
+    export_as_subassembly = BoolProperty(name="Export As Subassembly",
+                                         description="If this is true then the assembly will be exported as a subassembly",
+                                         default=False)
+    
     use_as_bool_obj = BoolProperty(name="Use As Boolean Object",
                                    description="Use this object cut a hole in the selected mesh",
                                    default=False)

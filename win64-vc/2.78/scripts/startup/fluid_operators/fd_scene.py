@@ -2117,8 +2117,8 @@ classes = [
            OPS_prepare_2d_views,
            OPS_render_2d_views,
            OPS_render_all_2D_views,
-           OPS_render_all_elevation_scenes,
-           OPS_export_mvfd
+           OPS_render_all_elevation_scenes
+#            OPS_export_mvfd
            ]
 
 def register():
