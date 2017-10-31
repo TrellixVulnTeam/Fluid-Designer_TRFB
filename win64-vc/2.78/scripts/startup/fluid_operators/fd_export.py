@@ -193,6 +193,10 @@ class OPS_export_mvfd(Operator):
         for child in obj_bp.children:
             if child.mv.export_as_subassembly:
                 assembly = fd_types.Assembly(child)
+                hide = assembly.get_prompt("Hide")
+                if hide:
+                    if hide.value():
+                        continue #SKIP HIDDEN SUBASSEMBLIES
                 comment = ""
                 for achild in assembly.obj_bp.children:
                     if achild.mv.comment != "":
@@ -226,6 +230,10 @@ class OPS_export_mvfd(Operator):
         for child in obj_bp.children:
             if child.mv.export_as_subassembly:
                 assembly = fd_types.Assembly(child)
+                hide = assembly.get_prompt("Hide")
+                if hide:
+                    if hide.value():
+                        continue #SKIP HIDDEN SUBASSEMBLIES
                 comment = ""
                 for achild in assembly.obj_bp.children:
                     if achild.mv.comment != "":
@@ -243,12 +251,12 @@ class OPS_export_mvfd(Operator):
                 self.xml.add_element_with_text(elm_item,'ZDimension',self.distance(assembly.obj_z.location.z))
                 self.xml.add_element_with_text(elm_item,'Comment',comment)
                 
-                elm_prompts = self.xml.add_element(elm_subassembly,"Prompts")
-                self.write_prompts_for_assembly(elm_prompts, assembly)                    
+                elm_prompts = self.xml.add_element(elm_item,"Prompts")
+                self.write_prompts_for_assembly(elm_prompts, assembly)
                 
                 elm_parts = self.xml.add_element(elm_item,"Parts")
                 self.write_parts_for_subassembly(elm_parts,assembly.obj_bp,spec_group)
-            
+                
                 elm_hardware = self.xml.add_element(elm_item,"Hardware")
                 self.write_hardware_for_assembly(elm_hardware,assembly.obj_bp)                
             
@@ -292,7 +300,7 @@ class OPS_export_mvfd(Operator):
                         z_loc = self.location(loc_pos[2][3])
                         self.xml.add_element_with_text(elm_item,'XOrigin',x_loc)
                         self.xml.add_element_with_text(elm_item,'YOrigin',y_loc)
-                        self.xml.add_element_with_text(elm_item,'ZOrigin',z_loc)                        
+                        self.xml.add_element_with_text(elm_item,'ZOrigin',z_loc)
                         
                     self.xml.add_element_with_text(elm_item,'Comment',child.mv.comment)
                     self.write_machine_tokens(elm_item,child)
