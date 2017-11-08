@@ -1743,6 +1743,10 @@ class fd_object(PropertyGroup):
     hardware_z_dim = FloatProperty(name="Hardware Z Dimension",
                                    description="The hardware size override for the z dimension. Used in MV Export",
                                    unit="LENGTH")
+
+    associative_rotation = FloatProperty(name="Associative Rotation",
+                                   description="This is the Associative Hardware Rotation needed for hardware machining",
+                                   unit="ROTATION")
     
     mp = PointerProperty(name="Machine Point",
                          description="Machining Point",

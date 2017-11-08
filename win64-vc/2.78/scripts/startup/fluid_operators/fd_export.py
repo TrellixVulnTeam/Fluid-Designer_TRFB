@@ -290,9 +290,17 @@ class OPS_export_mvfd(Operator):
                         self.xml.add_element_with_text(elm_item,'ZDimension',self.distance(child.dimensions.z))
                         
                     if recursive:
-                        self.xml.add_element_with_text(elm_item,'XOrigin',self.get_part_x_location(child,child.location.x))
-                        self.xml.add_element_with_text(elm_item,'YOrigin',self.get_part_y_location(child,child.location.y))
-                        self.xml.add_element_with_text(elm_item,'ZOrigin',self.get_part_z_location(child,child.location.z))   
+                        product_bp = utils.get_bp(child,'PRODUCT')
+                        loc_pos = product_bp.matrix_world.inverted() * child.matrix_world
+                        x_loc = self.location(loc_pos[0][3])
+                        y_loc = self.location(loc_pos[1][3])
+                        z_loc = self.location(loc_pos[2][3])
+#                         self.xml.add_element_with_text(elm_item,'XOrigin',self.get_part_x_location(child,child.location.x))
+#                         self.xml.add_element_with_text(elm_item,'YOrigin',self.get_part_y_location(child,child.location.y))
+#                         self.xml.add_element_with_text(elm_item,'ZOrigin',self.get_part_z_location(child,child.location.z))                                        
+                        self.xml.add_element_with_text(elm_item,'XOrigin',x_loc)
+                        self.xml.add_element_with_text(elm_item,'YOrigin',y_loc)
+                        self.xml.add_element_with_text(elm_item,'ZOrigin',z_loc)   
                     else:
                         loc_pos = child.parent.matrix_world.inverted() * child.matrix_world
                         x_loc = self.location(loc_pos[0][3])
@@ -304,6 +312,8 @@ class OPS_export_mvfd(Operator):
                         
                     self.xml.add_element_with_text(elm_item,'Comment',child.mv.comment)
                     self.write_machine_tokens(elm_item,child)
+                    
+                    self.xml.add_element_with_text(elm_item,'AssociativeHardwareRotation',str(child.mv.associative_rotation))
                     
             if recursive:
                 self.write_hardware_for_assembly(elm_hardware, child, recursive=recursive)
