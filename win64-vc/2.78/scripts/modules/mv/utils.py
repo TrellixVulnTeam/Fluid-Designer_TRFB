@@ -443,6 +443,16 @@ def apply_hook_modifiers(obj):
         if mod.type == 'HOOK':
             bpy.ops.object.modifier_apply(modifier=mod.name)
 
+def get_edgebanding_thickness_from_pointer_name(pointer_name,spec_group):
+    """ This function returns the thickness from an edge pointer
+    """
+    if pointer_name in spec_group.edgeparts:
+        pointer = spec_group.edgeparts[pointer_name]
+        thickness = round(unit.meter_to_active_unit(pointer.thickness),4)
+        return thickness
+    else:
+        return 0
+
 def get_edgebanding_name_from_pointer_name(pointer_name,spec_group):
     if pointer_name in spec_group.edgeparts:
         pointer = spec_group.edgeparts[pointer_name]

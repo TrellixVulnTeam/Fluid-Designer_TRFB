@@ -58,6 +58,7 @@ class OPS_export_mvfd(Operator):
     buyout_products = []
     
     buyout_materials = []
+    edgeband_materials = {}
     solid_stock_materials = {}
     
     xml = None
@@ -294,10 +295,7 @@ class OPS_export_mvfd(Operator):
                         loc_pos = product_bp.matrix_world.inverted() * child.matrix_world
                         x_loc = self.location(loc_pos[0][3])
                         y_loc = self.location(loc_pos[1][3])
-                        z_loc = self.location(loc_pos[2][3])
-#                         self.xml.add_element_with_text(elm_item,'XOrigin',self.get_part_x_location(child,child.location.x))
-#                         self.xml.add_element_with_text(elm_item,'YOrigin',self.get_part_y_location(child,child.location.y))
-#                         self.xml.add_element_with_text(elm_item,'ZOrigin',self.get_part_z_location(child,child.location.z))                                        
+                        z_loc = self.location(loc_pos[2][3])                                     
                         self.xml.add_element_with_text(elm_item,'XOrigin',x_loc)
                         self.xml.add_element_with_text(elm_item,'YOrigin',y_loc)
                         self.xml.add_element_with_text(elm_item,'ZOrigin',z_loc)   
@@ -340,6 +338,20 @@ class OPS_export_mvfd(Operator):
             if assembly.obj_bp.location.z > 0:
                 elm_prompt = self.xml.add_element(elm_prompts,'Prompt',"HeightAboveFloor")
                 self.xml.add_element_with_text(elm_prompt,'Value',"0")    
+    
+    def get_edgebanding_name(self,obj,edge,spec_group):
+        if obj.mv.edgeband_material_name != "" and edge != "":
+            thickness = utils.get_edgebanding_thickness_from_pointer_name(edge,spec_group)
+            edge_mat_name = obj.mv.edgeband_material_name
+            if edge_mat_name not in self.edgeband_materials and edge_mat_name != "":
+                self.edgeband_materials[edge_mat_name] = thickness
+            return edge_mat_name
+        else:
+            thickness = utils.get_edgebanding_thickness_from_pointer_name(edge,spec_group)
+            edge_mat_name = utils.get_edgebanding_name_from_pointer_name(edge,spec_group)
+            if edge_mat_name not in self.edgeband_materials and edge_mat_name != "":
+                self.edgeband_materials[edge_mat_name] = thickness                
+            return edge_mat_name
     
     def write_part_node(self,node,obj,spec_group,recursive=False):
         if obj.mv.type == 'BPASSEMBLY':
@@ -393,26 +405,11 @@ class OPS_export_mvfd(Operator):
             self.xml.add_element_with_text(elm_part,'YRotation',self.angle(assembly.obj_bp.rotation_euler.y))
             self.xml.add_element_with_text(elm_part,'ZRotation',self.angle(assembly.obj_bp.rotation_euler.z))
             
-            if obj.mv.edgeband_material_name != "" and obj.mv.edge_w1 != "":
-                self.xml.add_element_with_text(elm_part,'EdgeWidth1',obj.mv.edgeband_material_name)
-            else:
-                self.xml.add_element_with_text(elm_part,'EdgeWidth1',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_w1,spec_group))
-                
-            if obj.mv.edgeband_material_name != "" and obj.mv.edge_l1 != "":
-                self.xml.add_element_with_text(elm_part,'EdgeLength1',obj.mv.edgeband_material_name)
-            else:
-                self.xml.add_element_with_text(elm_part,'EdgeLength1',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_l1,spec_group))
-                
-            if obj.mv.edgeband_material_name != "" and obj.mv.edge_w2 != "":
-                self.xml.add_element_with_text(elm_part,'EdgeWidth2',obj.mv.edgeband_material_name)
-            else:
-                self.xml.add_element_with_text(elm_part,'EdgeWidth2',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_w2,spec_group))
-                
-            if obj.mv.edgeband_material_name != "" and obj.mv.edge_l2 != "":
-                self.xml.add_element_with_text(elm_part,'EdgeLength2',obj.mv.edgeband_material_name)
-            else:
-                self.xml.add_element_with_text(elm_part,'EdgeLength2',utils.get_edgebanding_name_from_pointer_name(obj.mv.edge_l2,spec_group))
-                    
+            self.xml.add_element_with_text(elm_part,'EdgeWidth1',self.get_edgebanding_name(obj, obj.mv.edge_w1, spec_group))
+            self.xml.add_element_with_text(elm_part,'EdgeWidth2',self.get_edgebanding_name(obj, obj.mv.edge_w2, spec_group))
+            self.xml.add_element_with_text(elm_part,'EdgeLength1',self.get_edgebanding_name(obj, obj.mv.edge_l1, spec_group))
+            self.xml.add_element_with_text(elm_part,'EdgeLength2',self.get_edgebanding_name(obj, obj.mv.edge_l2, spec_group))
+            
             self.xml.add_element_with_text(elm_part,'DrawToken3D',"DRAW3DBOX CABINET")
             self.xml.add_element_with_text(elm_part,'ElvToken2D',"DRAW2DBOX CABINET")
             self.xml.add_element_with_text(elm_part,'BasePoint',self.get_part_base_point(assembly))
@@ -421,7 +418,7 @@ class OPS_export_mvfd(Operator):
             self.xml.add_element_with_text(elm_part,'Par2',"")
             self.xml.add_element_with_text(elm_part,'Par3',"")
             
-            self.write_machine_tokens(elm_part, obj)    
+            self.write_machine_tokens(elm_part, obj)
     
     def write_materials(self,project_node):
         elm_materials = self.xml.add_element(project_node,"Materials")
@@ -445,11 +442,10 @@ class OPS_export_mvfd(Operator):
 
     def write_edgebanding(self,project_node):
         elm_edgebanding = self.xml.add_element(project_node,"Edgebanding")
-        for edgeband in bpy.context.scene.cabinetlib.edgebanding:
-            edgeband_name = edgeband.name if edgeband.name != "" else "Unnamed"
-            elm_edge = self.xml.add_element(elm_edgebanding,'Edgeband',edgeband_name)
+        for edgeband in self.edgeband_materials:
+            elm_edge = self.xml.add_element(elm_edgebanding,'Edgeband',edgeband)
             self.xml.add_element_with_text(elm_edge,'Type',"3")
-            self.xml.add_element_with_text(elm_edge,'Thickness',str(unit.meter_to_active_unit(edgeband.thickness)))
+            self.xml.add_element_with_text(elm_edge,'Thickness',str(self.edgeband_materials[edgeband]))
 
     def write_buyout_materials(self,project_node):
         elm_buyouts = self.xml.add_element(project_node,"Buyouts")

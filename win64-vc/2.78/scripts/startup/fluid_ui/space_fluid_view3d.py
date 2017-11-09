@@ -1098,7 +1098,17 @@ def draw_object_materials(layout,obj):
             row.prop_search(obj.cabinetlib,"edgepart_name",spec_group,"edgeparts",icon='EDGESEL',text="")
             row = layout.row(align=True)
             row.label('Material Name: ' + utils.get_material_name(obj))
-
+            row = layout.row(align=True)
+            if obj.mv.edge_w1 != "":
+                row.label('Edge W1 Name: ' + obj.mv.edge_w1)
+            if obj.mv.edge_w2 != "":
+                row.label('Edge W2 Name: ' + obj.mv.edge_w2)
+            row = layout.row(align=True)
+            if obj.mv.edge_l1 != "":
+                row.label('Edge L1 Name: ' + obj.mv.edge_l1)
+            if obj.mv.edge_l2 != "":
+                row.label('Edge L2 Name: ' + obj.mv.edge_l2)
+                        
         if obj.cabinetlib.type_mesh == 'EDGEBANDING':
             row = layout.row(align=True)
             row.prop_search(obj.cabinetlib,"edgepart_name",spec_group,"edgeparts",icon='EDGESEL',text="")
