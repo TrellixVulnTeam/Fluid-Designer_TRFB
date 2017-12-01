@@ -770,7 +770,7 @@ class OPERATOR_Add_Obstacle(Operator):
 
 class OPERATOR_Add_Floor_Obstacle(Operator):
     bl_idname = "fd_roombuilder.add_floor_obstacle"
-    bl_label = "Add Floor Obstacle" 
+    bl_label = "Add Floor or Ceiling Obstacle" 
     bl_options = {'UNDO'}
 
     obstacle_bp_name = StringProperty(name="Obstacle BP Name",

@@ -1108,6 +1108,7 @@ class Machine_Token(PropertyGroup):
     
     tool_comp = EnumProperty(name="Tool Compensation",
                              items=[('R',"R","Right"),
+                                    ('C',"C","Center"),
                                     ('L',"L","Left")],
                              description="The offset of the router bit",
                              default='R')
