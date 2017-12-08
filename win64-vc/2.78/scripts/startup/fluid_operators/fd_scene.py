@@ -754,14 +754,18 @@ class OPS_clear_2d_views(Operator):
     bl_options = {'UNDO'}     
      
     def execute(self, context):
+        
         for scene in bpy.data.scenes:
             if scene.mv.elevation_scene or scene.mv.plan_view_scene:
                 context.screen.scene = scene
                 bpy.ops.scene.delete()                         
-                 
+                
+        for grp in bpy.data.groups:
+            bpy.data.groups.remove(grp,do_unlink=True)            
+
         for view in context.window_manager.mv.image_views:
             context.window_manager.mv.image_views.remove(0)
-                 
+
         return {'FINISHED'}
     
 #REMOVE UPON FINISHING NEW 2D VIEWS MODULE
