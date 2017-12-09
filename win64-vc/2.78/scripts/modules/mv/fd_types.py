@@ -985,7 +985,12 @@ class Assembly():
         if ui.group_tabs == 'INFO':
             box = col.box()
             self.draw_transform(box)
-            box.prop(self.obj_bp.mv,'comment')
+            row = box.row(align=True)
+            row.label("Comments:")
+            row = box.row(align=True)
+            row.prop(self.obj_bp.mv,'comment',text="")
+            row.prop(self.obj_bp.mv,'comment_2',text="")
+            row.prop(self.obj_bp.mv,'comment_3',text="")
             box.prop(self.obj_bp.mv,'opening_name')
         if ui.group_tabs == 'PROMPTS':
             box = col.box()
